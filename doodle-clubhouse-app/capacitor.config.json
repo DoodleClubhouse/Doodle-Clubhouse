@@ -1,0 +1,11 @@
+{
+  "appId": "com.doodleclubhouse.app",
+  "appName": "Doodle Clubhouse",
+  "webDir": "www",
+  "backgroundColor": "#1C2B6B",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#1C2B6B"
+  }
+}

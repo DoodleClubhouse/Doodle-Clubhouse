@@ -1,0 +1,52 @@
+# Codemagic builds the iPhone/iPad app on a Mac in the cloud and sends it to TestFlight.
+# Before the first build: follow LAUNCH-STEPS.md (connect your Apple account and GitHub to Codemagic).
+workflows:
+  ios-release:
+    name: Doodle Clubhouse (iOS)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Doodle Clubhouse        # the name you give your App Store Connect API key in Codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.doodleclubhouse.app
+      vars:
+        APP_STORE_APPLE_ID: 0000000000           # replace with your app's "Apple ID" number from App Store Connect > App Information
+      node: 20
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install packages
+        script: npm install
+      - name: Download the app fonts
+        script: |
+          mkdir -p www/fonts
+          curl -fL -o www/fonts/BagelFatOne-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/bagelfatone/BagelFatOne-Regular.ttf"
+          curl -fL -o www/fonts/Nunito.ttf "https://github.com/google/fonts/raw/main/ofl/nunito/Nunito%5Bwght%5D.ttf"
+      - name: Create the iOS project, icons and splash screen
+        script: |
+          [ -d ios ] || npx cap add ios
+          npx capacitor-assets generate --ios --iconBackgroundColor '#1C2B6B' --splashBackgroundColor '#1C2B6B'
+          npx cap sync ios
+      - name: App name and permissions
+        script: |
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Doodle Clubhouse" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'Doodle Clubhouse saves your drawings and animations to Photos when you tap Save.'" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" || true
+      - name: Code signing
+        script: xcode-project use-profiles
+      - name: Build number
+        script: |
+          cd ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          agvtool new-version -all $((LATEST + 1))
+      - name: Build the app
+        script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
