@@ -12,7 +12,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.doodleclubhouse.app
       vars:
-        APP_STORE_APPLE_ID: 0000000000           # replace with your app's "Apple ID" number from App Store Connect > App Information
+        APP_STORE_APPLE_ID: 6820435072           # replace with your app's "Apple ID" number from App Store Connect > App Information
       node: 20
       xcode: latest
       cocoapods: default
