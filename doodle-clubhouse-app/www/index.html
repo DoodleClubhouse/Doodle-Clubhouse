@@ -4789,6 +4789,10 @@
   addEventListener('load', alignLogo);
   setTimeout(alignLogo, 300);
   try { new ResizeObserver(() => requestAnimationFrame(alignLogo)).observe(document.querySelector('.tools')); } catch {}
+  // the Extra pop-out tucks itself away after 7 seconds without a tap on it
+  let extrasT = 0;
+  function armExtrasTimer(){ clearTimeout(extrasT); if (panel === 'extras') extrasT = setTimeout(() => { if (panel === 'extras') setPanel('extras'); }, 7000); }
+  document.addEventListener('pointerdown', e => { if (panel === 'extras' && e.target.closest && e.target.closest('#extras')) armExtrasTimer(); }, true);
   function setPanel(name){
     panel = panel === name ? '' : name;
     // the Brush Pack tab uses the same tray as Tools, showing only the pack's brushes
@@ -4796,6 +4800,7 @@
     document.body.dataset.tset = panel === 'brushes' ? 'pack' : 'basic';
     try { layoutSide(); } catch {}
     requestAnimationFrame(() => { try { alignLogo(); } catch {} });
+    armExtrasTimer();
     panelBtns.forEach(b => b.setAttribute('aria-expanded', b.dataset.panel === panel));
     requestAnimationFrame(() => { fitTools(); fit(); });   // opening Pages just shrinks the whole paper to fit above it
     placeExtras();
