@@ -767,6 +767,44 @@
   }
   @media (prefers-reduced-motion:reduce){ .btn{transition:none} .paper.shake{animation:none} }
   #psizeLbl{display:none!important}
+
+  /* ---------- round 3 ---------- */
+  /* colour boxes: the whole label is the button (the Pencil taps the label, never the colour box itself) */
+  label.custom{cursor:pointer; touch-action:manipulation}
+  label.custom input[type=color]{pointer-events:none}
+  button, .sw, label.custom, .tool{touch-action:manipulation}
+  /* iPad / computer: the logo sits centred above the tool panel */
+  @media (min-width:761px) and (min-height:501px){ .logo{width:176px; display:flex; justify-content:center} }
+  /* Brush Pack bought: no dark box or price tag, the brushes just join the other tools */
+  .premium.unlocked{background:none; padding:0; border-radius:0}
+  .premium.unlocked > .group-label{display:none!important}
+  .premium.unlocked .tool.pro{border-color:var(--ink); box-shadow:0 2px 0 var(--ink)}
+  .premium.unlocked .tool.pro[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  @media (max-width:760px), (max-height:500px){
+    body[data-panel="tools"] .premium.unlocked{padding:0; background:none; flex:1 1 100%}
+    body[data-panel="tools"] .premium.unlocked .premium-grid{flex:1 1 0; min-width:0; flex-wrap:nowrap}
+    body[data-panel="tools"] .premium.unlocked .premium-grid .tool{flex:1 1 0; width:auto; min-width:0; max-width:36px; height:auto; aspect-ratio:1}
+  }
+  /* phone turned sideways: the menu buttons stand in a column down the left, and their trays slide out to the right */
+  @media (max-height:500px) and (orientation:landscape){
+    body{display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); column-gap:8px}
+    header{grid-column:1 / -1; grid-row:1}
+    main{grid-column:2; grid-row:2; min-height:0; min-width:0}
+    .dock, body[data-paper-mode="fit"] .dock{grid-column:1; grid-row:2; flex-direction:column; width:64px; margin:0 0 max(8px, env(safe-area-inset-bottom, 0px)) 0; align-self:stretch}
+    body[data-paper-mode="fit"] .dock{margin-left:max(8px, env(safe-area-inset-left, 0px))}
+    .dock button{flex-direction:column; gap:3px; padding:4px 2px; font-size:10px}
+    .dock button svg, .dock .cdot{width:22px; height:22px}
+    .tools, .film, .more-sheet, .extras,
+    body[data-panel="tools"] .tools, body[data-panel="colors"] .tools{
+      left:calc(max(8px, env(safe-area-inset-left, 0px)) + 74px)!important; right:auto; top:calc(env(safe-area-inset-top, 0px) + 54px)!important; bottom:auto!important;
+      max-height:calc(100vh - 66px - env(safe-area-inset-top, 0px))
+    }
+    body[data-panel="tools"] .tools{width:min(500px, calc(100vw - 110px))}
+    body[data-panel="colors"] .tools{width:min(460px, calc(100vw - 110px))}
+    .film{right:calc(max(8px, env(safe-area-inset-right, 0px)) + 4px)!important; top:auto!important; bottom:max(8px, env(safe-area-inset-bottom, 0px))!important}
+    html body .tray-min svg, html body[data-panel] .tools .tray-min svg, html body .film .tray-min svg, html body .more-sheet .tray-min svg, html body .extras .tray-min svg{transform:none!important}
+    html body .more-sheet .tray-min svg{transform:rotate(180deg)!important}
+  }
 </style>
 
 <header>
@@ -1235,7 +1273,7 @@
     b.className = 'sw'; b.style.background = col; b.dataset.color = col;
     b.title = col; b.setAttribute('aria-label', 'Color ' + col);
     b.setAttribute('aria-pressed', col === color);
-    b.onclick = () => setColor(col);
+    b.onclick = () => { setColor(col); try { custom.value = col.toLowerCase(); } catch {} };   // the Mix box shows the crayon you picked
     swWrap.appendChild(b);
   });
   const custom = document.getElementById('customColor');
@@ -2508,11 +2546,15 @@
     const l = pts[pts.length - 1]; g.lineTo(l.x, l.y);
   }
   // draw a pencil curve; with Apple Pencil pressure the line swells and thins smoothly along the way
-  function pencilDraw(g, pts, w){
-    if (!pts.some(q => q.k !== undefined && Math.abs(q.k - 1) > .01)){ g.lineWidth = w; pencilPath(g, pts); g.stroke(); return; }
+  // rb (rainbow brush): { h0, rate } - the colour runs through the rainbow along the length of the curve
+  function pencilDraw(g, pts, w, rb){
+    if (!rb && !pts.some(q => q.k !== undefined && Math.abs(q.k - 1) > .01)){ g.lineWidth = w; pencilPath(g, pts); g.stroke(); return; }
     pts = pencilSoften(pts);
     const K = q => q.k || 1;
-    const seg = (a, b) => { g.lineWidth = Math.max(.6, w * (K(a) + K(b)) / 2); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); };
+    let run = 0;
+    const seg = (a, b) => { g.lineWidth = Math.max(.6, w * (K(a) + K(b)) / 2);
+      if (rb){ run += Math.hypot(b.x - a.x, b.y - a.y); g.strokeStyle = `hsl(${(rb.h0 + run * rb.rate) % 360} 90% 58%)`; }
+      g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); };
     if (pts.length === 1){ seg(pts[0], { x: pts[0].x + .01, y: pts[0].y, k: K(pts[0]) }); return; }
     let P0 = pts[0], prev = pts[0];
     for (let i = 1; i < pts.length - 1; i++){
@@ -2532,7 +2574,7 @@
   function pencilRender(){
     pencilRaf = 0; const st = pencilS; if (!st) return;
     if (live.width !== W || live.height !== H){ live.width = W; live.height = H; }
-    lctx.clearRect(0, 0, W, H); pencilInk(lctx); pencilDraw(lctx, st.kind === 'brush' ? brushTaper(st.pts) : st.pts, st.base);
+    lctx.clearRect(0, 0, W, H); pencilInk(lctx); pencilDraw(lctx, st.kind === 'brush' ? brushTaper(st.pts) : st.pts, st.base, st.rb);
   }
   let pencilSnd = null, pencilT = 0, pencilDir = null;
   // pencil: a steady, even line. With the Apple Pencil (and "lock width" off) it varies only a little with pressure.
@@ -2558,8 +2600,8 @@
   // the paintbrush starts from a fine point and swells into the stroke
   const brushTaper = pts => pts.map((q, i) => i < 9 ? { x: q.x, y: q.y, k: q.k * (.08 + .92 * Math.sin(i / 9 * Math.PI / 2)) } : q);
   function pencilStart(p){
-    const kind = tool === 'brush' ? 'brush' : 'pencil', base = kind === 'brush' ? size * 1.5 : size;
-    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p };
+    const kind = tool === 'brush' ? 'brush' : tool === 'rainbow' ? 'rainbow' : 'pencil', base = kind === 'brush' ? size * 1.5 : size;
+    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null };
     const k0 = kind === 'brush' ? (widthLocked ? 1 : .6 * (p.pen ? .45 + p.p * 1.25 : 1)) : pencilK(p);
     pencilS.pts.push({ x: p.x, y: p.y, k: k0 }); pencilS.s.k = k0;
     if (kind === 'pencil') try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
@@ -2599,9 +2641,10 @@
     // the brush tapers off as you lift, like a real calligraphy stroke
     if (st.kind === 'brush'){ const n = st.pts.length; for (let i = Math.max(1, n - 9); i < n; i++) st.pts[i].k *= .05 + .95 * Math.sin((n - 1 - i) / 9 * Math.PI / 2); }
     if (st.kind === 'brush') st.pts = brushTaper(st.pts);
-    pencilInk(ctx); pencilDraw(ctx, st.pts, st.base);
+    pencilInk(ctx); pencilDraw(ctx, st.pts, st.base, st.rb);
+    if (st.rb){ let d = 0; const sp = pencilSoften(st.pts); for (let i = 1; i < sp.length; i++) d += Math.hypot(sp[i].x - sp[i - 1].x, sp[i].y - sp[i - 1].y); hue = (st.rb.h0 + d * .6) % 360; }   // next stroke carries on through the rainbow
     // speed art redraws this exact curve (no masking), so crossings never show bits of the line early
-    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L }; }
+    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
   }
   // Highlighter: redraw whole stroke from base so overlaps don't darken within one stroke
   let markerPts = [], markerBase = null;
@@ -2861,8 +2904,8 @@
     else if (tool === 'glitter'){ glitterState = { carry:0 }; seg(p, p); }
     else if (tool === 'fur'){ furState = { carry:0, dir:0 }; }
     else if (tool === 'soft'){ softR = Math.max(8, size * 2.2); softDab = makeSoftDab(color, softR); softState = { carry:0 }; seg(p, p); }
-    else if (tool !== 'pencil' && tool !== 'brush') seg(p, {x:p.x+.1, y:p.y, p:p.p, pen:p.pen});
-    if (tool === 'pencil' || tool === 'brush') pencilStart(p);
+    else if (tool !== 'pencil' && tool !== 'brush' && tool !== 'rainbow') seg(p, {x:p.x+.1, y:p.y, p:p.p, pen:p.pen});
+    if (tool === 'pencil' || tool === 'brush' || tool === 'rainbow') pencilStart(p);
     if (BRUSH_SND.has(tool)){ try { brushSoundStop(); brushSnd = makeBrushSound(tool); brushSndT = performance.now(); } catch {} }
   });
   let filling = false, activeType = '', activePointer = null, stampTrail = null, eraserSnd = null, eraserT = 0;
@@ -2895,7 +2938,7 @@
       } else if (tool === 'marker'){ markerPts.push(p); }
       else if (tool === 'spray'){ sprayPt = p; }
       else if (TEX.has(tool)){ const q = tx.pts[tx.pts.length-1]; if (Math.hypot(p.x-q.x, p.y-q.y) > 2) tx.pts.push(p); }
-      else if ((tool === 'pencil' || tool === 'brush') && pencilS){ pencilMove(p); }
+      else if ((tool === 'pencil' || tool === 'brush' || tool === 'rainbow') && pencilS){ pencilMove(p); }
       else { if (tool === 'brush') updateBrushSpeed(last, p); seg(last, p); }
       last = p;
     }
@@ -3319,14 +3362,23 @@
     $('gateMsg').textContent = ok ? 'Thanks, grown-up! You can unlock it now.'
       : (e.target.value.length >= String(gateAns).length ? 'Not quite. Try again.' : 'Ask a grown-up to answer this before buying.');
   });
-  $('closePay').onclick = () => { $('payOverlay').hidden = true; pendingTool = null; };
+  $('closePay').onclick = () => { $('payOverlay').hidden = true; pendingTool = null; resetScroll(); };
+  // iPhone: the keyboard (grown-up question) or the App Store sheet can nudge the whole screen up; always put it back
+  function resetScroll(){ try { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch {} }
+  document.addEventListener('focusout', () => setTimeout(resetScroll, 60));
+  if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (!document.activeElement || !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) resetScroll(); });
+  addEventListener('scroll', () => { if (!document.activeElement || !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) resetScroll(); }, { passive: true });
   function grantUnlock(fromPaywall){
     const was = unlocked;
     unlocked = framesUnlocked = true;
     try { localStorage.setItem(UNLOCK_KEY, '1'); localStorage.setItem(FRAMES_KEY, '1'); } catch {}
     syncLock();
-    if (!fromPaywall){ if (!was) toast('Brush Pack restored!'); return; }
-    $('payOverlay').hidden = true;
+    const payOpen = !$('payOverlay').hidden;
+    $('payOverlay').hidden = true;   // bought: the buy window always closes by itself
+    try { document.activeElement && document.activeElement.blur(); } catch {}
+    resetScroll(); setTimeout(resetScroll, 350);
+    try { fitTools(); fit(); } catch {}
+    if (!fromPaywall && !payOpen){ if (!was) toast('Brush Pack restored!'); return; }
     toast('Brush Pack unlocked: new brushes, unlimited pages and no watermark!');
     if (payProduct === 'frames'){ addFrame(pendingCopy); return; }
     setTool(pendingTool || 'brush'); pendingTool = null;
@@ -3378,6 +3430,37 @@
     syncLock(); toast('Purchases locked again');
   };
   syncLock();
+
+  // ---------- instant taps ----------
+  // Buttons react the moment the finger or Apple Pencil lifts, instead of waiting for the browser's own (sometimes
+  // slow, sometimes missing with the Pencil) click. The browser's late click that follows is ignored.
+  const TAP_SEL = 'button, [role="button"], .sw, label.custom';
+  let tapDown = null, tapFired = null;
+  document.addEventListener('pointerdown', e => {
+    tapDown = null;
+    if (e.pointerType === 'mouse' || (typeof picking !== 'undefined' && picking)) return;
+    const el = e.target && e.target.closest && e.target.closest(TAP_SEL);
+    if (el && !el.disabled && !el.closest('[inert]')) tapDown = { el, x: e.clientX, y: e.clientY, id: e.pointerId, t: performance.now() };
+  }, true);
+  document.addEventListener('pointercancel', () => { tapDown = null; }, true);
+  document.addEventListener('pointerup', e => {
+    const d = tapDown; tapDown = null;
+    if (!d || e.pointerId !== d.id || d.el.disabled) return;
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 16 || performance.now() - d.t > 900) return;   // a drag or a long hold isn't a tap
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    if (!under || !(d.el === under || d.el.contains(under))) return;
+    tapFired = { el: d.el, t: performance.now() };
+    d.el.click();
+  }, true);
+  document.addEventListener('click', e => {
+    const f = tapFired; if (!f || !e.isTrusted) return;
+    if (performance.now() - f.t < 800 && (e.target === f.el || f.el.contains(e.target) || (f.el.control && e.target === f.el.control))){ e.preventDefault(); e.stopImmediatePropagation(); }
+    if (performance.now() - f.t >= 800 || e.target === f.el || f.el.contains(e.target)) tapFired = null;
+  }, true);
+  // background saving waits until hands are off the screen, so it never gets in the way of a tap or a stroke
+  let lastInputAt = 0;
+  ['pointerdown', 'pointermove', 'pointerup'].forEach(t => document.addEventListener(t, () => { lastInputAt = performance.now(); }, { capture: true, passive: true }));
+  window.quietFor = ms => !drawing && performance.now() - lastInputAt >= ms;
   if (NATIVE){
     $('wallNote').textContent = 'Doodles you pin up stay here on this device. Tap one to open it big, then tap Share to save it to Photos or send it.';
     $('shareDoodle').hidden = false;
@@ -3547,12 +3630,14 @@
     if (st) paths.push(st);
     speedRecord.paths = paths;
     clearTimeout(speedT); speedPending = true;
-    speedT = setTimeout(() => {
+    const shoot = () => {
+      if (window.quietFor && !window.quietFor(120)){ speedT = setTimeout(shoot, 150); return; }   // wait for a pause in drawing
       speedPending = false; const ps = speedRecord.paths; speedRecord.paths = null;
       speedChain = speedChain.then(async () => {
         const pg = pageId(frames[cur]); const b = await speedShot(); if (b) speedPush(b, ps, pg);
       }).catch(() => {});
-    }, 140);
+    };
+    speedT = setTimeout(shoot, 140);
   }
   // switching pages: a picture of the page now showing, marked as a straight cut (no fade, no other page underneath)
   function speedPageCut(){
@@ -3727,7 +3812,7 @@
   function schedulePersist(){
     clearTimeout(persistT);
     persistT = setTimeout(async () => {
-      if (busy || playing) return schedulePersist();
+      if (busy || playing || (window.quietFor && !window.quietFor(1200))) return schedulePersist();
       await commit();
       await speedChain; dbPut({ v: 2, cur, speed, W, H, blobs: frames.map(f => f.blob), speedLog });
     }, 900);
@@ -4054,7 +4139,7 @@
           const n = Math.min(stk.pts.length, left); left -= n;
           const v = stk.vec, m = Math.max(1, Math.min(v.pts.length, Math.round(n / stk.pts.length * v.pts.length)));
           out.strokeStyle = v.col;
-          pencilDraw(out, v.pts.slice(0, m).map(q => ({ x: q[0] * iw, y: q[1] * ih, k: q[2] || 1 })), Math.max(1, v.w * L2));
+          pencilDraw(out, v.pts.slice(0, m).map(q => ({ x: q[0] * iw, y: q[1] * ih, k: q[2] || 1 })), Math.max(1, v.w * L2), v.rb ? { h0: v.rb.h0, rate: v.rb.rate / iw } : null);
         }
         return scratch;
       }
