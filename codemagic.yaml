@@ -29,6 +29,10 @@ workflows:
       - name: Create the iOS project, icons and splash screen
         script: |
           [ -d ios ] || npx cap add ios
+          # Apple needs iOS 15 or newer as the minimum (from April 2027)
+          sed -i '' -E "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9]+\.[0-9]+;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g" ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' -E "s/platform :ios, '[0-9]+\.[0-9]+'/platform :ios, '15.0'/" ios/App/Podfile
+          grep -m1 "IPHONEOS_DEPLOYMENT_TARGET" ios/App/App.xcodeproj/project.pbxproj; grep -m1 "platform :ios" ios/App/Podfile
           npx capacitor-assets generate --ios --iconBackgroundColor '#1C2B6B' --splashBackgroundColor '#1C2B6B'
           npx cap sync ios
       - name: App name and permissions
