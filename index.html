@@ -1067,13 +1067,15 @@
     html body[data-panel="colors"] .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--plank), 0 0 0 4px var(--ink)}
     html body[data-panel="colors"] .tools > section.sec-colors > .group-label{display:none!important}
   }
-  #szPop{position:fixed; z-index:9; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; opacity:0; transition:opacity .25s}
+  #szPop{position:fixed; z-index:9; transform:translate(-50%,0); display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; opacity:0; transition:opacity .25s}
   #szPop.on{opacity:1; transition:opacity .08s}
   #szPop i{display:block; border-radius:50%; box-shadow:0 0 0 2px #fff, 0 0 0 4px rgba(26,31,58,.55), 0 4px 12px rgba(0,0,0,.25)}
   #szPop b{font:800 12px/1 var(--body); color:#fff; background:rgba(26,31,58,.8); padding:4px 8px; border-radius:999px}
   @media (max-height:500px) and (orientation:landscape){
     html body[data-panel="colors"] .sz-prev{display:none!important}
   }
+  .toast{width:max-content; max-width:calc(100vw - 24px); text-align:center; line-height:1.25}
+  @media (max-width:760px), (max-height:500px){ .toast{font-size:13px; padding:8px 14px} }
 </style>
 
 <header>
@@ -1701,7 +1703,7 @@
     dot.style.width = dot.style.height = d + 'px';
     dot.style.background = color.toLowerCase() === '#ffffff' ? '#fff' : color;
     szPop.querySelector('b').textContent = size + ' px';
-    szPop.style.left = (pr.left + pr.width / 2) + 'px'; szPop.style.top = (pr.top + pr.height / 2) + 'px';
+    const tm = paperTopMid(); szPop.style.left = tm.x + 'px'; szPop.style.top = tm.y + 'px';
     szPop.classList.add('on'); clearTimeout(szPopT); szPopT = setTimeout(() => szPop.classList.remove('on'), 800);
   }
   // ---------- Brush Pack engines: pixel, soft, chalk, glitter ----------
@@ -3458,10 +3460,16 @@
   // ---------- UI: clear, pin, wall ----------
   const $ = id => document.getElementById(id);
   // top = true shows the bubble at the top middle of the drawing area (used for paper size)
+  // the top middle of the paper as seen on screen (kept inside the drawing area when zoomed in)
+  function paperTopMid(){
+    const p = document.querySelector('.paper').getBoundingClientRect(), b = document.getElementById('board').getBoundingClientRect();
+    const l = Math.max(p.left, b.left), rt = Math.min(p.right, b.right);
+    return { x: (l + rt) / 2, y: Math.max(p.top, b.top) + 14 };
+  }
   const toast = (msg, top) => {
     const t = $('toast'); t.textContent = msg; t.hidden = false;
-    if (top){ const r = document.getElementById('board').getBoundingClientRect(); t.style.top = (r.top + 14) + 'px'; t.style.bottom = 'auto'; t.style.left = (r.left + r.width / 2) + 'px'; }
-    else { t.style.top = ''; t.style.bottom = ''; t.style.left = ''; }
+    // help bubbles always pop up at the top middle of the paper
+    const r = paperTopMid(); t.style.top = r.y + 'px'; t.style.bottom = 'auto'; t.style.left = r.x + 'px';
     clearTimeout(toast.t); toast.t = setTimeout(()=> t.hidden = true, 2000);
   };
   // the trash can at the top: one question, the same for a single drawing or a whole animation
