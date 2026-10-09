@@ -1076,6 +1076,7 @@
   }
   .toast{width:max-content; max-width:calc(100vw - 24px); text-align:center; line-height:1.25}
   @media (max-width:760px), (max-height:500px){ .toast{font-size:13px; padding:8px 14px} }
+  #dockFrames, .pages-n{display:none!important}   /* the Pages buttons just say 'Pages' */
 </style>
 
 <header>
@@ -1167,7 +1168,7 @@
       </div>
     </section>
     <button class="extra-btn" id="extrasBtn" data-panel="extras" aria-expanded="false" title="Page size, paper and wall color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg><span>Extra</span></button>
-    <button class="extra-btn" id="pagesBtn" data-panel="frames" aria-expanded="false" title="Animation pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages <span class="tnum pages-n">1</span></span></button>
+    <button class="extra-btn" id="pagesBtn" data-panel="frames" aria-expanded="false" title="Animation pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages<span class="tnum pages-n">1</span></span></button>
   </aside>
 
   <div class="stage">
@@ -1209,7 +1210,7 @@
   <button data-panel="brushes" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3l3 3-9 9-3-3z"/><path d="M9 12c-3 0-5 2-5 5 0 1-1 2-2 3 4 1 9 0 9-5z"/></svg>Brushes</button>
   <button data-panel="colors" aria-expanded="false"><span class="cdot" id="dockColor"></span>Color</button>
   <button data-panel="extras" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg>Extra</button>
-  <button data-panel="frames" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages <span class="tnum" id="dockFrames">1</span></span></button>
+  <button data-panel="frames" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages<span class="tnum" id="dockFrames">1</span></span></button>
 </nav>
 <div class="extras" id="extras" role="dialog" aria-label="Extras">
 <button class="tray-min" title="Hide extras" aria-label="Hide extras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
