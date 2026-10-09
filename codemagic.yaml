@@ -52,4 +52,4 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        submit_to_testflight: false   # just upload; internal testers get it without Apple beta review
