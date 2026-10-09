@@ -165,6 +165,10 @@
   .perk{border:2px solid var(--ink); border-radius:10px; padding:10px; background:#fff}
   .perk canvas{width:100%; height:60px; display:block; border-radius:6px; background:var(--paper); touch-action:auto; cursor:default}
   .perk b{display:block; margin-top:6px}
+  .fxdemo{display:flex; align-items:center; justify-content:center; height:60px; border-radius:6px; background:var(--paper)}
+  .fxdemo svg{height:80%; width:auto}
+  .pay .fxdemo{height:38px}
+  @media (max-width:420px){ .pay .fxdemo{height:30px} }
   .gate{background:#FFF3C9; border:2px dashed var(--plank-edge); border-radius:10px; padding:10px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
   .gate label{font-weight:800}
   .gate input{width:70px; font:800 16px var(--body); padding:6px 8px; border:2px solid var(--ink); border-radius:8px}
@@ -1020,6 +1024,9 @@
       <div class="perk"><canvas id="demoFur" width="300" height="80" aria-hidden="true"></canvas><b>Fur</b>Fluffy hair for pets, grass and furry monsters</div>
       <div class="perk"><canvas id="demoChalk" width="300" height="80" aria-hidden="true"></canvas><b>Chalk</b>Dusty and scratchy, great on the chalkboard</div>
       <div class="perk"><canvas id="demoMirror" width="300" height="80" aria-hidden="true"></canvas><b>Mirror</b>Draw one side, it copies the other</div>
+      <div class="perk perk-fx"><span class="fxdemo" data-fx="wormhole"></span><b>Wormhole</b>Sucks your art into a swirl</div>
+      <div class="perk perk-fx"><span class="fxdemo" data-fx="blacklight"></span><b>Black light</b>Lights out, your colors glow neon</div>
+      <div class="perk perk-fx"><span class="fxdemo" data-fx="tornado"></span><b>Tornado</b>A twister spins your art around</div>
       <div class="perk perk-wide" hidden><canvas id="demoFill" width="300" height="80" aria-hidden="true"></canvas><b>Paint bucket</b>Fill a whole shape with one tap</div>
     </div>
     <div class="perks" id="perksFrames" hidden>
@@ -1271,6 +1278,7 @@
   c.addEventListener('pointerdown', () => { if (FX_TOOLS.has(tool) && !(typeof picking !== 'undefined' && picking)) fxIcon.hidden = true; }, true);   // tapped the paper: the icon has done its job
   function cursorFor(t){ return FX_TOOLS.has(t) ? 'none' : t === 'dynamite' ? DYN_CURSOR : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? 'crosshair' : 'crosshair'; }
   // ---------- premium lock ----------
+  document.querySelectorAll('.fxdemo').forEach(el => { const b = document.querySelector(`.tool[data-tool="${el.dataset.fx}"] > svg`); if (b) el.innerHTML = b.outerHTML; });   // paywall shows the 3 effect icons
   const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror','wormhole','blacklight','tornado']);   // the paint bucket is free
   const UNLOCK_KEY = 'doodle-clubhouse-brushpack';
   let unlocked = false; try { unlocked = localStorage.getItem(UNLOCK_KEY) === '1'; } catch {}
