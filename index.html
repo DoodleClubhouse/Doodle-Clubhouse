@@ -966,6 +966,20 @@
     html body[data-panel="frames"] .film .seg{display:grid!important; grid-template-columns:1fr 1fr; flex:1 1 100%}
     html body[data-panel="frames"] .film .seg button{min-width:0!important; padding:4px!important}
   }
+  /* phone sideways Pages column: skinnier; copy + delete, then download + ghost, then the 3 speeds */
+  @media (max-height:500px) and (orientation:landscape){
+    html body[data-panel="frames"] .film{width:86px!important; padding:5px!important}
+    html body[data-panel="frames"] main{margin-left:94px}
+    html body[data-panel="frames"] .film .strip .frame{width:70px!important; max-height:70px}
+    html body[data-panel="frames"] .film .film-side{display:grid!important; grid-template-columns:1fr 1fr; gap:4px!important; justify-items:center}
+    html body[data-panel="frames"] .film .film-row{display:contents!important}
+    html body[data-panel="frames"] .film #dupFrame{order:1} html body[data-panel="frames"] .film #delFrame{order:2}
+    html body[data-panel="frames"] .film #exportAnimBtn{order:3} html body[data-panel="frames"] .film #ghostBtn{order:4}
+    html body[data-panel="frames"] .film .seg{order:5; grid-column:1 / -1; display:flex!important; width:100%}
+    html body[data-panel="frames"] .film .seg button{flex:1 1 0; min-width:0!important; padding:5px 0!important; display:flex!important; justify-content:center; align-items:center; overflow:hidden}
+    html body[data-panel="frames"] .film .seg button svg{height:9px!important; width:auto!important; flex:none}
+    html body[data-panel="frames"] .film .film-side .btn.sm.ico{padding:4px 7px!important}
+  }
 </style>
 
 <header>
@@ -1080,7 +1094,7 @@
         </div>
         <div class="film-row">
           <div class="seg" role="group" aria-label="Speed">
-            <button data-speed="slow" aria-pressed="false" title="Slow" aria-label="Slow"><svg viewBox="0 0 10 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/></svg></button><button data-speed="medium" aria-pressed="true" title="Medium" aria-label="Medium"><svg viewBox="0 0 19 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/></svg></button><button data-speed="fast" aria-pressed="false" title="Fast" aria-label="Fast"><svg viewBox="0 0 28 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/><path d="M19 2l8 6-8 6z"/></svg></button><button data-speed="turbo" aria-pressed="false" title="Super fast (15 a second)" aria-label="Super fast"><svg viewBox="0 0 26 16" height="14" fill="currentColor" aria-hidden="true"><path d="M13.5 1 6 9h5l-1.5 6L17 7h-5z"/><path d="M1 3l5 5-5 5zM20 3l5 5-5 5z" opacity=".7"/></svg></button>
+            <button data-speed="medium" aria-pressed="true" title="Medium" aria-label="Medium"><svg viewBox="0 0 19 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/></svg></button><button data-speed="fast" aria-pressed="false" title="Fast" aria-label="Fast"><svg viewBox="0 0 28 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/><path d="M19 2l8 6-8 6z"/></svg></button><button data-speed="turbo" aria-pressed="false" title="Super fast (15 a second)" aria-label="Super fast"><svg viewBox="0 0 26 16" height="14" fill="currentColor" aria-hidden="true"><path d="M13.5 1 6 9h5l-1.5 6L17 7h-5z"/><path d="M1 3l5 5-5 5zM20 3l5 5-5 5z" opacity=".7"/></svg></button>
           </div>
           <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: show the last page faintly so you can line things up" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
         </div>
@@ -3402,7 +3416,7 @@
     frames = p.blobs.map(b => ({ thumb: mk(TW, TH), blob: b || null, dirty: !b }));
     await Promise.all(frames.map(async f => { if (f.blob){ const b = await bmpOf(f.blob, TW, TH); f.thumb.getContext('2d').drawImage(b, 0, 0, TW, TH); } }));
     cur = Math.min(p.cur || 0, frames.length - 1);
-    speed = FPS[p.speed] ? p.speed : 'medium'; syncSpeed();
+    speed = FPS[p.speed] && p.speed !== 'slow' ? p.speed : 'medium'; syncSpeed();
     speedReset(); speedLog = Array.isArray(p.speedLog) ? p.speedLog.filter(Boolean).map(e => e instanceof Blob ? { b: e, paths: [] } : e) : [];
     await paintBlob(frames[cur].blob);
     resetHistory(); renderStrip(); await drawGhost(); syncDock(); schedulePersist();
@@ -4584,7 +4598,7 @@
       frames = blobs.map(b => ({ thumb: mk(TW, TH), blob: b, dirty: false }));
       await Promise.all(frames.map(async f => { const b = await bmpOf(f.blob, TW, TH); f.thumb.getContext('2d').drawImage(b, 0, 0, TW, TH); }));
       cur = Math.min(saved.cur || 0, frames.length - 1);
-      speed = FPS[saved.speed] ? saved.speed : 'medium';
+      speed = FPS[saved.speed] && saved.speed !== 'slow' ? saved.speed : 'medium';
       speedLog = Array.isArray(saved.speedLog) ? saved.speedLog.filter(Boolean).map(e => e instanceof Blob ? { b: e, paths: [] } : e) : [];
       await paintBlob(frames[cur].blob);
     } else {
