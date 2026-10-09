@@ -333,7 +333,7 @@
     .sign::before,.sign::after{display:none}
     .top-actions{flex-wrap:nowrap; gap:6px}
     .top-actions .btn{padding:8px 9px}
-    .top-actions .lbl, #clear, #openWall, #pinIt, #speedBtn{display:none}
+    .top-actions .lbl, #openWall, #pinIt, #speedBtn{display:none}
     #moreBtn{display:inline-flex}
     .zoom-ctl #zoomReset{display:none}
     .zoom-ctl button{padding:8px 8px; min-width:30px}
@@ -767,6 +767,47 @@
   }
   @media (prefers-reduced-motion:reduce){ .btn{transition:none} .paper.shake{animation:none} }
   #psizeLbl{display:none!important}
+
+  @media (max-height:380px) and (orientation:landscape){
+    html body[data-panel="tools"] .tools .tool-grid, html body[data-panel="tools"] .tools .premium-grid{grid-template-columns:repeat(3, 33px)!important; gap:4px!important}
+    html body[data-panel="tools"] .tools .tool-grid .tool, html body[data-panel="tools"] .tools .premium-grid .tool, html body[data-panel="tools"] .tools .tool.dyn, html body[data-panel="tools"] .tools .tool-grid > .gridbtn{width:33px!important; height:33px!important}
+  }
+  /* Delete all: always up in the top bar (so it's not needed in the ... menu) */
+  .more-sheet [data-proxy="clear"]{display:none!important}
+  #clear{display:inline-flex!important}
+  @media (max-width:420px) and (orientation:portrait){ .top-actions .btn{padding:7px 7px} .top-actions .btn svg{width:18px; height:18px} .zoom-ctl button{padding:7px 6px; min-width:26px} }
+  /* phone sideways: a tray opens as a tall column beside the menu buttons, and the paper slides over to make room (never covered) */
+  @media (max-height:500px) and (orientation:landscape){
+    html body[data-panel="tools"] main, html body[data-panel="colors"] main, html body[data-panel="extras"] main{margin-left:164px}
+    html body[data-panel="frames"] main{margin-bottom:104px}
+    html body[data-panel="tools"] .tools, html body[data-panel="colors"] .tools, html body[data-panel="extras"] .extras{
+      left:calc(max(8px, env(safe-area-inset-left, 0px)) + 72px)!important; top:calc(env(safe-area-inset-top, 0px) + 54px)!important;
+      bottom:max(8px, env(safe-area-inset-bottom, 0px))!important; right:auto!important; width:156px!important; max-width:none!important; max-height:none!important;
+      display:flex!important; flex-direction:column!important; flex-wrap:nowrap!important; align-items:stretch!important; justify-content:flex-start;
+      gap:6px!important; padding:36px 8px 8px!important; overflow-y:auto!important; overflow-x:hidden!important
+    }
+    /* tools: three neat columns */
+    html body[data-panel="tools"] .tools > section.sec-tools{display:block!important; flex:none!important; width:auto!important}
+    html body[data-panel="tools"] .tools .tool-grid, html body[data-panel="tools"] .tools .premium-grid{display:grid!important; grid-template-columns:repeat(3, 36px)!important; gap:5px!important; justify-content:center}
+    html body[data-panel="tools"] .tools .tool-grid .tool, html body[data-panel="tools"] .tools .premium-grid .tool, html body[data-panel="tools"] .tools .tool.dyn,
+    html body[data-panel="tools"] .tools .tool-grid > .gridbtn{width:36px!important; height:36px!important; max-width:none!important; min-width:0!important; flex:none!important; aspect-ratio:auto!important; padding:0!important; display:grid!important; place-items:center}
+    html body[data-panel="tools"] .tools .premium{padding:6px!important}
+    html body[data-panel="tools"] .tools .premium:not(.unlocked) .group-label{display:flex!important; flex-direction:row!important; width:auto!important; justify-content:space-between; align-items:center; font-size:9px; margin:0 0 6px!important}
+    html body[data-panel="tools"] .tools .premium.unlocked{padding:0!important}
+    html body[data-panel="tools"] .tools .tool svg{width:19px!important; height:19px!important}
+    /* colors: crayons in rows of five, then Mix, then the size slider */
+    html body[data-panel="colors"] .tools > section.sec-colors{display:flex!important; flex-direction:column; gap:8px}
+    html body[data-panel="colors"] .swatches{display:grid!important; grid-template-columns:repeat(5, 24px)!important; gap:4px!important; margin:0!important; flex:none!important; justify-content:center}
+    html body[data-panel="colors"] .swatches > *{width:24px!important; height:24px!important}
+    html body[data-panel="colors"] .custom-row{margin:0!important; justify-content:center}
+    html body[data-panel="colors"] .size-row{flex:none!important; flex-wrap:wrap; justify-content:center; min-width:0!important; width:100%}
+    html body[data-panel="colors"] .size-row input{width:100%!important; flex:1 1 100%}
+    /* extras: page shape, paper and wall colour in tidy little grids */
+    html body[data-panel="extras"] .extras section{display:flex!important; flex-direction:column; align-items:center; gap:6px; padding:0!important; border:0!important}
+    html body[data-panel="extras"] .extras .sec-paper{border-top:2px dashed rgba(29,42,40,.3)!important; padding-top:8px!important}
+    html body[data-panel="extras"] .extras .size-opts, html body[data-panel="extras"] .extras .paper-opts{display:grid!important; grid-template-columns:repeat(2, 42px)!important; gap:6px!important}
+    html body[data-panel="extras"] .extras .wall-pick{margin:0!important}
+  }
 
   /* ---------- round 3 ---------- */
   /* colour boxes: the whole label is the button (the Pencil taps the label, never the colour box itself) */
