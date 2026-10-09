@@ -640,6 +640,9 @@
   #moreExport{display:none!important}
   #moreExport:not([hidden]){display:inline-flex!important}
   /* on bigger screens New page and Speed art already sit in the top bar */
+  /* speed art button: red, so it stands out */
+  #speedBtn, .more-sheet [data-proxy="speedBtn"]{background:var(--pop); color:#fff}
+  #speedBtn:hover, .more-sheet [data-proxy="speedBtn"]:hover{background:#E8484D}
   @media (min-width:761px) and (min-height:501px){ .more-sheet [data-proxy="clear"], .more-sheet [data-proxy="speedBtn"]{display:none} }
 
   /* sideways screens (iPad, computers): Pages is a button under Extra, and the pages bar pops out from it (the drawing gets the full height) */
@@ -658,7 +661,7 @@
   #brushRing::after{content:""; position:absolute; left:50%; top:50%; width:3px; height:3px; margin:-1.5px 0 0 -1.5px; border-radius:50%; background:rgba(20,20,30,.85); box-shadow:0 0 0 1px rgba(255,255,255,.8)}
   #brushRing[hidden]{display:none}
   /* dynamite + wormhole share one row */
-  .dyn-row{grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px}
+  .dyn-row{grid-column:1/-1; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:5px}
   .dyn-row .tool.dyn span{font-size:9.5px; letter-spacing:-.1px}
   .tool.dyn span{display:none !important}
   .dyn-row .tool.dyn{justify-content:center; align-items:center}
@@ -666,8 +669,54 @@
   .dyn-row .tool.dyn{grid-column:auto; flex-direction:column; font-size:11px; gap:3px; padding:6px 2px; min-width:0}
   .dyn-row .tool.dyn svg{width:22px; height:22px; flex:none}
   .tool.dyn[data-tool="wormhole"]{background:#E8DEFF}
+  /* magic effects in the Brush Pack: same tile look as the other pack brushes, icons a bit bigger */
+  .tool.pro.fx > svg{width:28px; height:28px}
+  .tool.pro.fx > span:not(.lock){display:none}
+  /* phones: the Brush Pack wraps onto two rows now that it has 9 items */
+  @media (max-width:760px), (max-height:500px){
+    html body[data-panel="tools"] .tools > .premium{flex:1 1 100%; min-width:0; max-width:100%}
+    html body[data-panel="tools"] .premium .premium-grid{flex-wrap:wrap; flex:1 1 0; min-width:0; row-gap:8px}
+  }
+  .tool.pro.fx[aria-pressed="true"]{background:var(--plank); color:var(--ink)}
+  /* eyedropper + lock-width now live in the tool grid, looking like the other tool buttons */
+  .tool-grid > .gridbtn{aspect-ratio:1; border:2px solid var(--ink); background:var(--paper); border-radius:10px; display:grid; place-items:center; padding:0; color:var(--ink); box-shadow:0 2px 0 var(--ink); margin:0}
+  .tool-grid > .gridbtn svg{width:22px; height:22px}
+  @media (max-width:760px) and (orientation:portrait){
+    html body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid > .tool, html body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid > .gridbtn{flex:none; width:32px; height:32px; max-width:none; aspect-ratio:auto}
+    html body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid{column-gap:3px}
+    html body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid > .tool svg, html body[data-panel="tools"] .tool-grid > .gridbtn svg{width:19px; height:19px}
+  }
+  @media (max-width:760px), (max-height:500px){ body[data-panel="tools"] .tool-grid > .gridbtn{width:36px; height:36px; flex:none; padding:0} }
+  /* shapes pop-up (press and hold the line tool) */
+  .tool[data-tool="line"]{position:relative}
+  .tool[data-tool="line"]::after{content:""; position:absolute; right:4px; bottom:4px; border:4px solid transparent; border-right-color:currentColor; border-bottom-color:currentColor; opacity:.55; border-radius:1px}
+  .shape-pop{position:fixed; z-index:45; display:flex; gap:6px; padding:8px; background:var(--plank); border:3px solid var(--ink); border-radius:14px; box-shadow:0 5px 0 var(--ink), 0 12px 24px rgba(0,0,0,.25)}
+  .shape-pop[hidden]{display:none}
+  .shape-pop .tool{width:44px; height:44px; padding:8px; display:grid; place-items:center}
+  .shape-pop .tool svg{width:24px; height:24px}
+  /* dynamite now sits with the drawing tools (right after the eraser); the other effects flow in after it */
+  .tool-grid > .tool.dyn{grid-column:auto; display:grid; place-items:center; padding:6px}
+  .tool-grid > .tool.dyn svg{width:28px; height:28px}
+  @media (min-width:761px) and (min-height:501px){ .dyn-row{display:contents} }
+  .tool.dyn[data-tool="blacklight"]{background:#E4D6FF}
+  .tool.dyn[data-tool="flood"]{background:#DDF1FF}
+  .tool.dyn[data-tool="tornado"]{background:#E9EDF3}
+  .tool.dyn[data-tool="quake"]{background:#F6E4CF}
+  .tool.dyn[data-tool="blacklight"][aria-pressed="true"], .tool.dyn[data-tool="flood"][aria-pressed="true"], .tool.dyn[data-tool="tornado"][aria-pressed="true"], .tool.dyn[data-tool="quake"][aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  /* effect tools: the button's icon floats over the paper (follows the mouse / Pencil) until you tap */
+  #fxIcon{position:fixed; left:0; top:0; width:58px; height:58px; pointer-events:none; z-index:40; transform:translate(-50%,-50%); filter:drop-shadow(0 4px 3px rgba(0,0,0,.28))}
+  #fxIcon[hidden]{display:none}
+  #fxIcon svg{width:100%; height:100%; display:block}
+  #fxIcon.idle{animation:fxBob 1.3s ease-in-out infinite}
+  @keyframes fxBob{50%{transform:translate(-50%,-60%) rotate(-7deg)}}
   .tool.dyn[data-tool="wormhole"][aria-pressed="true"]{background:var(--ink); color:#C9B2FF}
   @media (max-width:760px), (max-height:500px){ body[data-panel="tools"] .dyn-row{display:contents} }
+  /* upright phone: the 6 big-effect buttons get their own row under the drawing tools, at full size */
+  @media (max-width:760px) and (orientation:portrait){
+    body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid{flex-wrap:wrap; row-gap:5px}
+    body[data-panel="tools"] .sec-tools:not(.premium) .dyn-row{display:flex; flex:1 1 100%; gap:4px}
+    body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid .tool{flex:none; width:36px; height:36px; max-width:none; aspect-ratio:auto}
+  }
   /* upright phone: Play sits beside the pages strip, so the pop-out is only two short rows */
   @media (max-width:760px) and (orientation:portrait){
     .film .btn.play{order:-2; align-self:stretch; padding:0 12px; min-height:44px}
@@ -756,12 +805,11 @@
         <button class="tool" data-tool="soft" title="Soft brush (O)" aria-label="Soft brush" aria-pressed="false"><svg viewBox="0 0 24 24"><defs><radialGradient id="softIco"><stop offset="0" stop-color="currentColor"/><stop offset=".5" stop-color="currentColor" stop-opacity=".45"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#softIco)"/></svg></button>
         <button class="tool" data-tool="spray" title="Splatter spray (S): hold still for drips!" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="8" height="11" rx="2"/><path d="M8 10V7h4v3M17 5h.01M20 7h.01M17 9h.01M20 3h.01"/></svg></button>
         <button class="tool" data-tool="fill" title="Paint bucket (K)" aria-pressed="false"><svg viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-38 13 12)"><ellipse cx="13" cy="5.5" rx="6.2" ry="2.3"/><path d="M6.8 5.5l1.4 11.7c.2 1.1 2.2 2 4.8 2s4.6-.9 4.8-2l1.4-11.7"/><path d="M19.2 5.5c3.2.3 3.4 5.3.3 6.6"/><path d="M9.8 7.4c1.8 1.4 4.6 1.4 6.4 0" /><path d="M9.7 11l.3 2.6M10.3 15.4l.1.8"/></g><path d="M5 14.8s-2.7 3.1-2.7 4.8a2.7 2.7 0 0 0 5.4 0c0-1.7-2.7-4.8-2.7-4.8z" fill="#6EC6FF"/></svg></button>
-        <button class="tool" data-tool="line" title="Straight line (L)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 19L19 5"/></svg></button>
         <button class="tool" data-tool="eraser" title="Eraser (E)" aria-pressed="false"><svg viewBox="0 0 20 25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 16L14 3.5 18.5 8 6 20.5z" fill="#FF9EC0"/><path d="M6 20.5L18.5 8V11.5L6 24z" fill="#F0628F"/><path d="M1.5 16L6 20.5V24L1.5 19.5z" fill="#E04B7B"/><path d="M10.5 7L14 3.5 18.5 8 15 11.5z" fill="#FFFDF7"/><path d="M15 11.5L18.5 8V11.5L15 15z" fill="#D5DDEB"/></svg></button>
-        <div class="dyn-row">
         <button class="tool dyn" data-tool="dynamite" title="Dynamite: tap the page to blow it all away (Y)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(14 11 15)" stroke="#111" stroke-width="1.2" stroke-linejoin="round"><rect x="4.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="8.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="12.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="4" y="12.5" width="13" height="2" fill="#5C5C66"/><rect x="4" y="17" width="13" height="2" fill="#5C5C66"/><ellipse cx="6.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="10.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="14.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><path d="M10.5 9c0-3 3-4 6-5" fill="none" stroke-linecap="round"/></g><path d="M20.5 1.2l.8 2 2-.4-1.2 1.6 1.4 1.4-2-.2-.4 2-1-1.8-1.8 1 .6-2-1.9-.8 2-.6z" fill="#FFA21F" stroke="#D7263D" stroke-width=".6"/></svg><span>Dynamite</span></button>
-        <button class="tool dyn" data-tool="wormhole" title="Wormhole: tap the page and it sucks your art in (W)" aria-label="Wormhole" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#2B1B5E"/><path d="M12 12c0-2 2.6-2.6 3.6-.6 1.3 2.5-1.6 5.6-4.6 4.8-4.2-1.1-4.6-6.8-1-9.2 4.6-3 10.4.6 10.2 5.8" fill="none" stroke="#B88CFF" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12c0 2-2.6 2.6-3.6.6-1.3-2.5 1.6-5.6 4.6-4.8 4.2 1.1 4.6 6.8 1 9.2-4.6 3-10.4-.6-10.2-5.8" fill="none" stroke="#6EC6FF" stroke-width="1.5" stroke-linecap="round" opacity=".9"/><circle cx="12" cy="12" r="1.8" fill="#0B0620"/></svg><span>Wormhole</span></button>
-        </div>
+        <button class="tool" data-tool="line" title="Straight line (L)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 19L19 5"/></svg></button>
+        <button class="btn sm ico gridbtn" id="lockWidth" title="Lock brush width: lines stay the same width however hard you press or fast you draw" aria-label="Lock brush width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="11" width="10" height="8" rx="1.8"/><path d="M9.5 11V8.5a2.5 2.5 0 0 1 5 0V11"/><path d="M2 15h3M3.5 13.5 2 15l1.5 1.5M22 15h-3M20.5 13.5 22 15l-1.5 1.5"/></svg></button>
+        <button class="btn sm ico gridbtn" id="eyedrop" title="Eyedropper: tap the page to pick a color from it" aria-label="Eyedropper" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L18 8l-2-2z"/><path d="M15.5 7.5L6 17l-1 3 3-1 9.5-9.5"/></svg></button>
       </div>
     </section>
     <section class="premium sec-tools" id="premium">
@@ -785,13 +833,16 @@
         <button class="tool pro" data-tool="mirror" title="Mirror (M): draw on one side, it copies on the other" aria-label="Mirror" aria-pressed="false">
           <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 6C4 6 3 12 5 15s4 3 4 3"/><path d="M15 6c5 0 6 6 4 9s-4 3-4 3"/></svg>
         </button>
+        <button class="tool pro fx" data-tool="wormhole" title="Wormhole: tap the page and it sucks your art in (W)" aria-label="Wormhole" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.3" fill="#2B1B5E" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 12c0-2 2.6-2.6 3.6-.6 1.3 2.5-1.6 5.6-4.6 4.8-4.2-1.1-4.6-6.8-1-9.2 4.6-3 10.4.6 10.2 5.8" fill="none" stroke="#B88CFF" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12c0 2-2.6 2.6-3.6.6-1.3-2.5 1.6-5.6 4.6-4.8 4.2 1.1 4.6 6.8 1 9.2-4.6 3-10.4-.6-10.2-5.8" fill="none" stroke="#6EC6FF" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="1.9" fill="#0B0620" stroke="#111" stroke-width=".8"/><circle cx="7.6" cy="6.4" r=".7" fill="#fff"/></svg><span>Wormhole</span></button>
+        <button class="tool pro fx" data-tool="blacklight" title="Black light: tap and the lights go out, your colors glow neon!" aria-label="Black light" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.6 12C5.3 5.8 18.7 5.8 22.4 12 18.7 18.2 5.3 18.2 1.6 12Z" fill="#1B0B3A" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/><path d="M4 12C7.2 8 16.8 8 20 12 16.8 16 7.2 16 4 12Z" fill="none" stroke="#4FE3FF" stroke-width="3" opacity=".35"/><path d="M4 12C7.2 8 16.8 8 20 12 16.8 16 7.2 16 4 12Z" fill="none" stroke="#4FE3FF" stroke-width="1.3"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#FF4FD8" stroke-width="3" opacity=".35"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#FF4FD8" stroke-width="1.4"/><circle cx="12" cy="12" r="1.2" fill="#FF4FD8"/><circle cx="13.4" cy="10.7" r="1" fill="none" stroke="#4FE3FF" stroke-width=".9"/><path d="M19.6 3.4v2M18.6 4.4h2M4.4 19.2v1.6M3.6 20h1.6" stroke="#FFF24F" stroke-width=".9" stroke-linecap="round"/></svg><span>Black light</span></button>
+        <button class="tool pro fx" data-tool="tornado" title="Tornado: a twister spins your art around and drops it back down mixed up" aria-label="Tornado" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.4 6C2.4 3 21.6 3 21.6 6 21.6 8.6 17.6 9.7 16.1 11.3 14.7 12.9 15.7 14.7 14.1 16.5 12.9 17.9 12.7 19.7 10.9 21.1 10.4 21.5 9.8 21.2 10 20.6 10.4 19.4 9.6 18.2 9.8 16.6 10 14.8 8.4 13.2 7.4 11.6 6 9.6 2.4 8.6 2.4 6Z" fill="#9ED9F7"/><ellipse cx="12" cy="5.7" rx="8.2" ry="2.2" fill="#D9F2FF" stroke="#4FAEE8" stroke-width="1"/><path d="M12.2 5.7C13.7 5.7 14.1 4.7 12.6 4.4 10.4 4 8.8 5.2 9.7 6.2 10.8 7.3 15.6 7.1 16.8 5.7" fill="none" stroke="#2E86DE" stroke-width="1.2" stroke-linecap="round"/><path d="M4.6 9.3C8.6 10.7 15.6 10.7 19.1 9.1M7.8 12.9C10.2 13.7 13.7 13.7 15.3 12.7M9.9 16.5C11.1 17.1 12.9 17 13.9 16.3" fill="none" stroke="#4FAEE8" stroke-width="1.4" stroke-linecap="round"/><path d="M1.6 11.4C3.4 13.5 9.3 14.1 12.2 13.7M12.4 17.7C15 17.9 18.4 17.3 19.3 16M6.9 20.1C8.3 20.7 9.7 20.7 10.7 20.3" fill="none" stroke="#2E86DE" stroke-width="1.7" stroke-linecap="round"/></svg><span>Tornado</span></button>
       </div>
       <button class="reset-link" id="relock" hidden>Lock purchases again (for testing)</button>
     </section>
     <section class="sec-colors">
       <div class="group-label">Crayons</div>
       <div class="swatches" id="swatches"></div>
-      <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label><button class="btn sm ico" id="eyedrop" title="Eyedropper: tap the page to pick a color from it" aria-label="Eyedropper" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L18 8l-2-2z"/><path d="M15.5 7.5L6 17l-1 3 3-1 9.5-9.5"/></svg></button><button class="btn sm ico" id="lockWidth" title="Lock brush width: lines stay the same width however hard you press or fast you draw" aria-label="Lock brush width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="11" width="10" height="8" rx="1.8"/><path d="M9.5 11V8.5a2.5 2.5 0 0 1 5 0V11"/><path d="M2 15h3M3.5 13.5 2 15l1.5 1.5M22 15h-3M20.5 13.5 22 15l-1.5 1.5"/></svg></button></div>
+      <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label></div>
     </section>
     <section class="sec-colors">
       <div class="group-label">Brush size</div>
@@ -1198,9 +1249,26 @@
   toolBtns.forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool, b.dataset.stamp)));
   // the mouse pointer shows a little bundle of dynamite while that tool is picked
   const DYN_CURSOR = 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cg%20transform%3D%22rotate%2814%2011%2015%29%22%20stroke%3D%22%23111%22%20stroke-width%3D%221.1%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%224.5%22%20y%3D%229%22%20width%3D%224%22%20height%3D%2212.5%22%20rx%3D%221.6%22%20fill%3D%22%23EE2A24%22/%3E%3Crect%20x%3D%228.5%22%20y%3D%229%22%20width%3D%224%22%20height%3D%2212.5%22%20rx%3D%221.6%22%20fill%3D%22%23EE2A24%22/%3E%3Crect%20x%3D%2212.5%22%20y%3D%229%22%20width%3D%224%22%20height%3D%2212.5%22%20rx%3D%221.6%22%20fill%3D%22%23EE2A24%22/%3E%3Crect%20x%3D%224%22%20y%3D%2212.5%22%20width%3D%2213%22%20height%3D%222%22%20fill%3D%22%235C5C66%22/%3E%3Crect%20x%3D%224%22%20y%3D%2217%22%20width%3D%2213%22%20height%3D%222%22%20fill%3D%22%235C5C66%22/%3E%3Cellipse%20cx%3D%226.5%22%20cy%3D%229%22%20rx%3D%222%22%20ry%3D%22.8%22%20fill%3D%22%23F7D23E%22/%3E%3Cellipse%20cx%3D%2210.5%22%20cy%3D%229%22%20rx%3D%222%22%20ry%3D%22.8%22%20fill%3D%22%23F7D23E%22/%3E%3Cellipse%20cx%3D%2214.5%22%20cy%3D%229%22%20rx%3D%222%22%20ry%3D%22.8%22%20fill%3D%22%23F7D23E%22/%3E%3Cpath%20d%3D%22M10.5%209c0-3%203-4%206-5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3C/g%3E%3Cpath%20d%3D%22M20.5%201.2l.8%202%202-.4-1.2%201.6%201.4%201.4-2-.2-.4%202-1-1.8-1.8%201%20.6-2-1.9-.8%202-.6z%22%20fill%3D%22%23FFA21F%22%20stroke%3D%22%23D7263D%22%20stroke-width%3D%22.6%22/%3E%3C/svg%3E") 18 24, crosshair';
-  function cursorFor(t){ return t === 'dynamite' ? DYN_CURSOR : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? 'crosshair' : 'crosshair'; }
+  const FX_TOOLS = new Set(['dynamite', 'wormhole', 'blacklight', 'tornado']);
+  const fxIcon = document.createElement('div'); fxIcon.id = 'fxIcon'; fxIcon.hidden = true; document.body.appendChild(fxIcon);
+  let fxIconFollow = false;
+  function syncFxIcon(reset){
+    if (!FX_TOOLS.has(tool)){ fxIcon.hidden = true; return; }
+    if (reset){
+      const b = document.querySelector(`.tool[data-tool="${tool}"] > svg`); fxIcon.innerHTML = b ? b.outerHTML : '';
+      // the icon only appears once the mouse / Pencil is over the paper (it never jumps to the middle by itself)
+      fxIcon.classList.remove('idle'); fxIconFollow = false; fxIcon.hidden = true;
+    }
+  }
+  c.addEventListener('pointermove', e => {
+    if (!FX_TOOLS.has(tool) || e.pointerType === 'touch' || boomBusy) return;
+    fxIcon.style.left = e.clientX + 'px'; fxIcon.style.top = e.clientY + 'px'; fxIcon.classList.remove('idle'); fxIconFollow = true; fxIcon.hidden = false;
+  });
+  c.addEventListener('pointerleave', e => { if (FX_TOOLS.has(tool) && e.pointerType !== 'touch' && fxIconFollow) fxIcon.hidden = true; });
+  c.addEventListener('pointerdown', () => { if (FX_TOOLS.has(tool)) fxIcon.hidden = true; }, true);   // tapped the paper: the icon has done its job
+  function cursorFor(t){ return FX_TOOLS.has(t) ? 'none' : t === 'dynamite' ? DYN_CURSOR : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? 'crosshair' : 'crosshair'; }
   // ---------- premium lock ----------
-  const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror']);   // the paint bucket is free
+  const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror','wormhole','blacklight','tornado']);   // the paint bucket is free
   const UNLOCK_KEY = 'doodle-clubhouse-brushpack';
   let unlocked = false; try { unlocked = localStorage.getItem(UNLOCK_KEY) === '1'; } catch {}
   let pendingTool = null;
@@ -1220,10 +1288,55 @@
     tool = t; stamp = s || null;
     toolBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t && (b.dataset.stamp || null) === stamp));
     c.style.cursor = cursorFor(t);
+    try { syncFxIcon(true); } catch {}
     try { syncRing(); } catch {}
     document.getElementById('mirrorGuide').hidden = t !== 'mirror';
     syncDock();
   }
+
+
+  // ---------- shapes: press and hold the line tool to pick line, rectangle, circle or triangle ----------
+  const SHAPE_ICONS = {"line": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\"><path d=\"M5 19L19 5\"/></svg>", "rect": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"6\" width=\"16\" height=\"12\" rx=\"1\"/></svg>", "ellipse": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><circle cx=\"12\" cy=\"12\" r=\"7.5\"/></svg>", "tri": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linejoin=\"round\"><path d=\"M12 4.5L20 19H4z\"/></svg>"}, SHAPE_NAMES = { line: 'Line', rect: 'Rectangle', ellipse: 'Circle', tri: 'Triangle' };
+  let lineShape = 'line'; try { lineShape = localStorage.getItem('doodle-clubhouse-shape') || 'line'; } catch {}
+  if (!SHAPE_ICONS[lineShape]) lineShape = 'line';
+  function drawShape(g, a, b){
+    const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y), x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y);
+    g.beginPath();
+    if (lineShape === 'rect') g.rect(x0, y0, x1 - x0, y1 - y0);
+    else if (lineShape === 'ellipse') g.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.max(.5, (x1 - x0) / 2), Math.max(.5, (y1 - y0) / 2), 0, 0, Math.PI * 2);
+    else if (lineShape === 'tri'){ g.moveTo((x0 + x1) / 2, y0); g.lineTo(x1, y1); g.lineTo(x0, y1); g.closePath(); }
+    else { g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); }
+    g.stroke();
+  }
+  const lineBtn = document.querySelector('.tool[data-tool="line"]');
+  const shapePop = document.createElement('div'); shapePop.className = 'shape-pop'; shapePop.hidden = true;
+  shapePop.innerHTML = Object.keys(SHAPE_ICONS).map(k => `<button class="tool" data-shape="${k}" title="${SHAPE_NAMES[k]}" aria-label="${SHAPE_NAMES[k]}">${SHAPE_ICONS[k]}</button>`).join('');
+  document.body.appendChild(shapePop);
+  function syncShapeBtn(){
+    lineBtn.innerHTML = SHAPE_ICONS[lineShape]; lineBtn.title = SHAPE_NAMES[lineShape] + ' (L) - press and hold for more shapes';
+    shapePop.querySelectorAll('[data-shape]').forEach(b => b.setAttribute('aria-pressed', b.dataset.shape === lineShape));
+  }
+  syncShapeBtn();
+  function openShapes(){
+    const r = lineBtn.getBoundingClientRect(); shapePop.hidden = false;
+    const pw = shapePop.offsetWidth, ph = shapePop.offsetHeight;
+    let left = r.left + r.width / 2 - pw / 2, top = r.bottom + 8;
+    if (top + ph > innerHeight - 8) top = r.top - ph - 8;                 // not enough room below (phone tool tray): open upward
+    left = Math.max(8, Math.min(innerWidth - pw - 8, left));
+    shapePop.style.left = left + 'px'; shapePop.style.top = top + 'px';
+    try { SFX.paper(); } catch {}
+  }
+  let shapeHold = 0, shapeHeld = false;
+  lineBtn.addEventListener('pointerdown', () => { shapeHeld = false; clearTimeout(shapeHold); shapeHold = setTimeout(() => { shapeHeld = true; setTool('line'); openShapes(); }, 450); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => lineBtn.addEventListener(t, () => clearTimeout(shapeHold)));
+  lineBtn.addEventListener('contextmenu', e => { e.preventDefault(); clearTimeout(shapeHold); shapeHeld = true; setTool('line'); openShapes(); });
+  lineBtn.addEventListener('click', e => { if (shapeHeld){ shapeHeld = false; e.stopImmediatePropagation(); } }, true);
+  shapePop.addEventListener('click', e => {
+    const b = e.target.closest('[data-shape]'); if (!b) return;
+    lineShape = b.dataset.shape; try { localStorage.setItem('doodle-clubhouse-shape', lineShape); } catch {}
+    syncShapeBtn(); setTool('line'); shapePop.hidden = true;
+  });
+  document.addEventListener('pointerdown', e => { if (!shapePop.hidden && !shapePop.contains(e.target) && e.target !== lineBtn && !lineBtn.contains(e.target)) shapePop.hidden = true; }, true);
 
   const sizeIn = document.getElementById('size'), dot = document.getElementById('sizeDot'), sizeNum = document.getElementById('sizeNum');
   // the slider is curved: small sizes get lots of room so every size (like 10 px) is easy to land on
@@ -1804,6 +1917,187 @@
     };
     requestAnimationFrame(frame);
   }
+  // ================= big one-tap effects: black light, flood, tornado, earthquake (all undoable) =================
+  const artCopy = () => { const a = mk(W, H); a.getContext('2d').drawImage(c, 0, 0); return a; };
+  const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  function fxBegin(){ const K = fxSize(); fx.hidden = false; return K; }
+  function fxClear(K){ fxc.setTransform(1, 0, 0, 1, 0, 0); fxc.clearRect(0, 0, FXW, FXH); fxc.setTransform(K, 0, 0, K, 0, 0); fxc.globalAlpha = 1; fxc.globalCompositeOperation = 'source-over'; }
+  function fxEnd(){ fxc.setTransform(1, 0, 0, 1, 0, 0); fxc.clearRect(0, 0, FXW, FXH); fx.hidden = true; boomBusy = false; onCanvasChanged(); }
+  function commitArt(img){ ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, H); ctx.drawImage(img, 0, 0); ctx.restore(); }
+  const paperEl = () => document.getElementById('paperBg');
+
+  // ---------- BLACK LIGHT: the lights go out and every colour glows neon ----------
+  // soft, even glow: a real (gaussian-like) blur done by hand so it looks the same on every device
+  function blurCanvas(srcCv, scale, radius){
+    const w = Math.max(1, Math.round(srcCv.width * scale)), h = Math.max(1, Math.round(srcCv.height * scale));
+    const cv = mk(w, h), g = cv.getContext('2d', { willReadFrequently: true }); g.imageSmoothingEnabled = true; g.drawImage(srcCv, 0, 0, w, h);
+    const img = g.getImageData(0, 0, w, h), d = img.data, n = w * h;
+    const ch = [new Float32Array(n), new Float32Array(n), new Float32Array(n), new Float32Array(n)];
+    for (let i = 0; i < n; i++){ const a = d[i * 4 + 3] / 255; ch[0][i] = d[i * 4] * a; ch[1][i] = d[i * 4 + 1] * a; ch[2][i] = d[i * 4 + 2] * a; ch[3][i] = d[i * 4 + 3]; }
+    const r = Math.max(1, Math.round(radius * scale)), tmp = new Float32Array(Math.max(w, h));
+    const pass = (A, len, count, stride, step) => {   // one running-sum box blur along rows or columns
+      for (let k = 0; k < count; k++){
+        const base = k * stride; let sum = 0;
+        for (let j = -r; j <= r; j++) sum += A[base + Math.min(len - 1, Math.max(0, j)) * step];
+        for (let j = 0; j < len; j++){ tmp[j] = sum / (2 * r + 1); sum += A[base + Math.min(len - 1, j + r + 1) * step] - A[base + Math.max(0, j - r) * step]; }
+        for (let j = 0; j < len; j++) A[base + j * step] = tmp[j];
+      }
+    };
+    for (const A of ch) for (let it = 0; it < 3; it++){ pass(A, w, h, w, 1); pass(A, h, w, 1, w); }
+    for (let i = 0; i < n; i++){ const a = ch[3][i]; d[i * 4 + 3] = a; if (a > .5){ const k = 255 / a; d[i * 4] = ch[0][i] * k; d[i * 4 + 1] = ch[1][i] * k; d[i * 4 + 2] = ch[2][i] * k; } }
+    g.putImageData(img, 0, 0); return cv;
+  }
+  function neonArt(){
+    const src = ctx.getImageData(0, 0, W, H), d = src.data;
+    for (let i = 0; i < d.length; i += 4){
+      if (!d[i + 3]) continue;
+      const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+      let h = 0;
+      if (mx !== mn){ const dd = mx - mn; h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; h /= 6; }
+      let H2 = h, S = 1, L = .62;
+      // dark or greyish colours (black lines, pencil grain) all become the SAME ultraviolet, so lines stay clean
+      if (mx < .32 || mx - mn < .22){ if (l < .6){ H2 = .78; S = 1; L = .7; } else { H2 = .53; S = .9; L = .82; } }
+      const q = L < .5 ? L * (1 + S) : L + S - L * S, p = 2 * L - q;
+      const hue = t => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+      d[i] = hue(H2 + 1 / 3) * 255; d[i + 1] = hue(H2) * 255; d[i + 2] = hue(H2 - 1 / 3) * 255;
+    }
+    const neon = mk(W, H); neon.getContext('2d').putImageData(src, 0, 0);
+    const s = Math.max(W, H) / 1000;
+    const F = mk(W, H), g = F.getContext('2d');
+    const bg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.hypot(W, H) / 2);
+    bg.addColorStop(0, '#26104F'); bg.addColorStop(1, '#0A0320');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter'; g.imageSmoothingEnabled = true;
+    g.globalAlpha = .75; g.drawImage(blurCanvas(neon, .25, 22 * s), 0, 0, W, H);   // wide soft halo
+    g.globalAlpha = .95; g.drawImage(blurCanvas(neon, .5, 6 * s), 0, 0, W, H);     // tight glow hugging the lines
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    g.drawImage(neon, 0, 0);
+    // bright 'tube' core: a whiter centre along the lines, like real neon
+    const core = blurCanvas(neon, .5, 1.2 * s), cg = mk(W, H), cgx = cg.getContext('2d');
+    cgx.drawImage(neon, 0, 0); cgx.globalCompositeOperation = 'source-atop'; cgx.fillStyle = 'rgba(255,255,255,.35)'; cgx.fillRect(0, 0, W, H);
+    g.globalAlpha = .7; g.drawImage(cg, 0, 0); g.globalAlpha = 1;
+    return F;
+  }
+  function blacklightSound(){
+    try {
+      noiseBurst(.025, 3000, 3, .08); tone(2200, 1800, .02, .03, 'square');                 // switch 'click'
+      tone(120, 120, .7, .03, 'sawtooth', .05); tone(240, 240, .5, .012, 'square', .08);       // 'bzzzzt' of the UV tube
+      noiseBurst(.04, 3000, 3, .05, .18); tone(120, 120, .25, .02, 'sawtooth', .2);           // flicker
+      [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => tone(f, f, .6, .018, 'sine', .45 + i * .07));   // glowy sparkle chord
+    } catch {}
+  }
+  // black light is a switch: tap once for neon, tap again to put the picture back to normal
+  // (anything you drew while it was neon is kept when switching back)
+  let neonState = null;
+  function neonBackToNormal(){
+    const st = neonState; if (!st || st.frame !== frames[cur] || st.w !== W || st.h !== H) return null;
+    const now = ctx.getImageData(0, 0, W, H), a = now.data, r = st.result.data, o = st.orig.data;
+    const out = ctx.createImageData(W, H), d = out.data; let same = 0;
+    for (let i = 0; i < a.length; i += 4){
+      const keep = Math.abs(a[i] - r[i]) < 3 && Math.abs(a[i + 1] - r[i + 1]) < 3 && Math.abs(a[i + 2] - r[i + 2]) < 3 && Math.abs(a[i + 3] - r[i + 3]) < 3;
+      if (keep){ same++; d[i] = o[i]; d[i + 1] = o[i + 1]; d[i + 2] = o[i + 2]; d[i + 3] = o[i + 3]; }
+      else { d[i] = a[i]; d[i + 1] = a[i + 1]; d[i + 2] = a[i + 2]; d[i + 3] = a[i + 3]; }
+    }
+    if (same < a.length / 4 * .5) return null;   // the page isn't neon any more (undo, delete all…): just do neon again
+    return out;
+  }
+  function lightsOnSound(){ try { noiseBurst(.025, 3000, 3, .08); tone(2200, 1800, .02, .03, 'square'); [1318.5, 1046.5, 783.99, 659.25].forEach((f, i) => tone(f, f, .4, .016, 'sine', .08 + i * .06)); } catch {} }
+  function blackLight(px, py){
+    if (boomBusy) return;
+    const normal = neonBackToNormal();
+    boomBusy = true; pushUndo();
+    let F;
+    if (normal){ neonState = null; lightsOnSound(); ctx.putImageData(normal, 0, 0); boomBusy = false; onCanvasChanged(); return; }
+    else { const orig = ctx.getImageData(0, 0, W, H); F = neonArt(); blacklightSound();
+      neonState = { frame: frames[cur], w: W, h: H, orig, result: F.getContext('2d').getImageData(0, 0, W, H) }; }
+    const K = fxBegin(), t0 = performance.now(), DUR = 1000, s = Math.max(W, H) / 1000;
+    const R = Math.max(Math.hypot(px, py), Math.hypot(W - px, py), Math.hypot(px, H - py), Math.hypot(W - px, H - py)) + 20;
+    const frame = now => {
+      const t = now - t0; fxClear(K);
+      const flick = t < 120 ? 1 : t < 190 ? .15 : t < 250 ? 1 : t < 300 ? .3 : 1;   // the black light flickers on
+      const u = Math.min(1, Math.max(0, (t - 60) / (DUR - 60))), r = R * easeIO(u);
+      fxc.globalAlpha = flick;
+      fxc.save(); fxc.beginPath(); fxc.arc(px, py, Math.max(1, r), 0, Math.PI * 2); fxc.clip(); fxc.drawImage(F, 0, 0, W, H); fxc.restore();
+      if (u < 1){ const gr = fxc.createRadialGradient(px, py, Math.max(0, r - 30 * s), px, py, r + 10 * s);
+        gr.addColorStop(0, 'rgba(180,90,255,0)'); gr.addColorStop(.75, 'rgba(200,120,255,.8)'); gr.addColorStop(1, 'rgba(120,40,255,0)');
+        fxc.fillStyle = gr; fxc.beginPath(); fxc.arc(px, py, r + 10 * s, 0, Math.PI * 2); fxc.fill(); }
+      fxc.globalAlpha = 1;
+      if (u >= 1){ commitArt(F); fxEnd(); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- TORNADO: a twister sucks the art up in pieces, spins it around, and drops it back down mixed up ----------
+  function tornadoSound(){
+    try {
+      noiseBurst(2.6, 250, .7, .16, 0, 'bandpass', 1300); noiseBurst(2.4, 600, 1.5, .07, .2, 'bandpass', 2400);   // howling wind
+      tone(180, 420, 1.6, .025, 'sine'); tone(420, 160, 1, .02, 'sine', 1.6);
+      for (let i = 0; i < 8; i++) tone(140 - i * 6, 60, .12, .07, 'sine', 1.9 + i * .08 + Math.random() * .05);   // pieces land: thud thud
+    } catch {}
+  }
+  // tornado warp: the art near the twister is dragged sideways in wavy bands (horizontal only, not a round swirl)
+  function warpTwister(src, dst, w, h, cx, cy, R, amt, phase){
+    const sd = src.data, dd = dst.data;
+    const x0 = Math.max(0, Math.floor(cx - R)), x1 = Math.min(w - 1, Math.ceil(cx + R)), y0 = Math.max(0, Math.floor(cy - R)), y1 = Math.min(h - 1, Math.ceil(cy + R));
+    for (let y = y0; y <= y1; y++){
+      const dy = (y - cy) / R;
+      const band = Math.sin(dy * Math.PI * 2.2 + phase) + .45 * Math.sin(dy * Math.PI * 5.3 - phase * 1.4);   // wavy horizontal bands
+      for (let x = x0; x <= x1; x++){
+        const dx = (x - cx) / R, rr = dx * dx + dy * dy; if (rr >= 1) continue;
+        const k = (y * w + x) * 4, f = (1 - rr) * (1 - rr);
+        let sx = x - band * f * amt * R * .32, sy = y;
+        let r = 0, g = 0, b = 0, a = 0;
+        if (sx >= 0 && sx < w - 1){
+          const ix = sx | 0, fx = sx - ix, i0 = (sy * w + ix) * 4, i1 = i0 + 4, a0 = sd[i0 + 3] * (1 - fx), a1 = sd[i1 + 3] * fx;
+          a = a0 + a1; if (a > 0){ r = (sd[i0] * a0 + sd[i1] * a1) / a; g = (sd[i0 + 1] * a0 + sd[i1 + 1] * a1) / a; b = (sd[i0 + 2] * a0 + sd[i1 + 2] * a1) / a; }
+        }
+        dd[k] = r; dd[k + 1] = g; dd[k + 2] = b; dd[k + 3] = a;
+      }
+    }
+  }
+  function tornado(px, py){
+    if (boomBusy) return;
+    boomBusy = true; pushUndo(); tornadoSound();
+    const L = Math.max(W, H), s = L / 1000;
+    const TW = L * .094 * .95, TH = TW * 1.7;                       // the twister: about 10% of the page
+    const R = (L * .10 * .5 + L * .15) * .94 * .95;                             // the swirl reaches ~15% of the page around it; the rest is untouched
+    const K = fxBegin(), HW = Math.round(W / 2), HH = Math.round(H / 2);
+    const half = mk(HW, HH), hg = half.getContext('2d', { willReadFrequently: true }); hg.drawImage(c, 0, 0, HW, HH);
+    const hsrc = hg.getImageData(0, 0, HW, HH), hdst = hg.createImageData(HW, HH);
+    const orig = ctx.getImageData(0, 0, W, H);
+    const STR = .85, IN = 750, SPIN = 1100, OUT = 650, t0 = performance.now();
+    const fromLeft = px > W / 2, sx0 = fromLeft ? -TW : W + TW, sx1 = fromLeft ? W + TW * 1.5 : -TW * 1.5;
+    let cleared = false, done = false;
+    const debris = Array.from({ length: 14 }, () => ({ a: Math.random() * 6.28, h: Math.random(), c: ['#FF5A5F', '#FFD84D', '#8CC63F', '#2E9CDB', '#8B5A2B'][Math.random() * 5 | 0], r: (2 + Math.random() * 3) * s }));
+    const drawTwister = (x, t, alpha) => {
+      fxc.save(); fxc.globalAlpha = alpha;
+      const top = py - TH * .75;
+      for (let k = 0; k <= 18; k++){ const f = k / 18, y = top + TH * f, w = TW * (.5 - .42 * f), sway = Math.sin(f * 4 + t / 160) * TW * .08, a = t / 90 + k;
+        fxc.strokeStyle = `rgba(70,80,100,${.65 + .3 * Math.sin(a)})`; fxc.lineWidth = Math.max(2.5, 6 * s * (1 - f * .4));
+        fxc.beginPath(); fxc.ellipse(x + sway, y, w, w * .22, 0, a % 6.28, a % 6.28 + 4.2); fxc.stroke(); }
+      for (const d of debris){ const y = top + TH * d.h, w = TW * (.5 - .42 * d.h) * 1.1, an = t / 150 + d.a; fxc.fillStyle = d.c; fxc.fillRect(x + Math.cos(an) * w - d.r, y + Math.sin(an) * w * .22 - d.r, d.r * 2, d.r * 2); }
+      fxc.restore();
+    };
+    const frame = now => {
+      const t = now - t0; fxClear(K);
+      let x, warp = 0;
+      if (t < IN){ const u = easeIO(t / IN); x = sx0 + (px - sx0) * u; }                       // flies in
+      else if (t < IN + SPIN){ x = px + Math.sin((t - IN) / 120) * TW * .06; warp = STR * easeIO((t - IN) / SPIN); }   // spins and twists the art around it
+      else { const u = easeIO(Math.min(1, (t - IN - SPIN) / OUT)); x = px + (sx1 - px) * u; warp = STR; }   // and off it goes
+      if (warp > 0 && !done){
+        if (!cleared){ cleared = true; ctx.save(); ctx.beginPath(); ctx.arc(px, py, R - 6, 0, Math.PI * 2); ctx.clip(); ctx.clearRect(0, 0, W, H); ctx.restore(); }
+        warpTwister(hsrc, hdst, HW, HH, px / W * HW, py / H * HH, R / W * HW, warp, (t - IN) / 140); hg.putImageData(hdst, 0, 0);
+        fxc.save(); fxc.beginPath(); fxc.arc(px, py, R, 0, Math.PI * 2); fxc.clip(); fxc.imageSmoothingEnabled = true; fxc.drawImage(half, 0, 0, W, H); fxc.restore();
+      }
+      if (t >= IN + SPIN && !done){ done = true; const out = ctx.createImageData(W, H); out.data.set(orig.data); warpTwister(orig, out, W, H, px, py, R, STR, SPIN / 140); ctx.putImageData(out, 0, 0); }
+      drawTwister(x, t, 1);
+      if (t >= IN + SPIN + OUT){ fxEnd(); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+
   function plantDynamite(px, py){
     if (boomBusy) return;
     boomBusy = true; fx.hidden = false;
@@ -2069,7 +2363,7 @@
   // Apple Pencil: press harder for a slightly wider line (about 75% to 125% of the brush size).
   // Fingers and mice don't report pressure, so they always get the normal width.
   let penP = .5;
-  const pw = q => !widthLocked && q && q.pen ? .75 + Math.min(1, Math.max(0, q.p)) * .5 : 1;
+  const pw = q => !widthLocked && q && q.pen ? .25 + Math.min(1, Math.max(0, q.p)) * 1.6 : 1;   // Pencil: light = thin (25%), normal ≈ 100%, hard = up to 185%
   function smoothPressure(q){ if (q.pen){ penP = penP * .6 + q.p * .4; q.p = penP; } return q; }
   function strokeStyle(){
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -2098,7 +2392,7 @@
   function paintSeg(g, a, b, col, f0 = 1, f1 = f0){
     g.lineCap = 'round'; g.strokeStyle = col; g.globalCompositeOperation = 'source-over';
     for (const br of bristles){
-      g.globalAlpha = Math.min(1, br.a * (0.45 + 0.55 * f1)); g.lineWidth = br.w * (0.5 + 0.5 * f1);
+      g.globalAlpha = Math.min(1, br.a * (0.45 + 0.55 * f1)); g.lineWidth = br.w * (0.25 + 0.75 * f1);
       g.beginPath(); g.moveTo(a.x+br.dx*f0, a.y+br.dy*f0); g.lineTo(b.x+br.dx*f1, b.y+br.dy*f1); g.stroke();
     }
     g.globalAlpha = 1;
@@ -2136,7 +2430,7 @@
     let a = pts;
     for (let pass = 0; pass < 2 && a.length > 2; pass++){
       const b = [a[0]];
-      for (let i = 1; i < a.length - 1; i++) b.push({ x: (a[i - 1].x + 2 * a[i].x + a[i + 1].x) / 4, y: (a[i - 1].y + 2 * a[i].y + a[i + 1].y) / 4 });
+      for (let i = 1; i < a.length - 1; i++) b.push({ x: (a[i - 1].x + 2 * a[i].x + a[i + 1].x) / 4, y: (a[i - 1].y + 2 * a[i].y + a[i + 1].y) / 4, k: ((a[i - 1].k || 1) + 2 * (a[i].k || 1) + (a[i + 1].k || 1)) / 4 });
       b.push(a[a.length - 1]); a = b;
     }
     return a;
@@ -2151,6 +2445,24 @@
     }
     const l = pts[pts.length - 1]; g.lineTo(l.x, l.y);
   }
+  // draw a pencil curve; with Apple Pencil pressure the line swells and thins smoothly along the way
+  function pencilDraw(g, pts, w){
+    if (!pts.some(q => q.k !== undefined && Math.abs(q.k - 1) > .01)){ g.lineWidth = w; pencilPath(g, pts); g.stroke(); return; }
+    pts = pencilSoften(pts);
+    const K = q => q.k || 1;
+    const seg = (a, b) => { g.lineWidth = Math.max(.6, w * (K(a) + K(b)) / 2); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); };
+    if (pts.length === 1){ seg(pts[0], { x: pts[0].x + .01, y: pts[0].y, k: K(pts[0]) }); return; }
+    let P0 = pts[0], prev = pts[0];
+    for (let i = 1; i < pts.length - 1; i++){
+      const c = pts[i], n = pts[i + 1], M = { x: (c.x + n.x) / 2, y: (c.y + n.y) / 2, k: (K(c) + K(n)) / 2 };
+      const steps = Math.max(2, Math.ceil((Math.hypot(c.x - P0.x, c.y - P0.y) + Math.hypot(M.x - c.x, M.y - c.y)) / 3));
+      for (let j = 1; j <= steps; j++){ const t = j / steps, u = 1 - t;
+        const q = { x: u * u * P0.x + 2 * u * t * c.x + t * t * M.x, y: u * u * P0.y + 2 * u * t * c.y + t * t * M.y, k: u * u * K(P0) + 2 * u * t * K(c) + t * t * K(M) };
+        seg(prev, q); prev = q; }
+      P0 = M;
+    }
+    seg(prev, pts[pts.length - 1]);
+  }
   function pencilInk(g){
     g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = size; g.strokeStyle = color;
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
@@ -2158,11 +2470,11 @@
   function pencilRender(){
     pencilRaf = 0; const st = pencilS; if (!st) return;
     if (live.width !== W || live.height !== H){ live.width = W; live.height = H; }
-    lctx.clearRect(0, 0, W, H); pencilInk(lctx); pencilPath(lctx, st.pts); lctx.stroke();
+    lctx.clearRect(0, 0, W, H); pencilInk(lctx); pencilDraw(lctx, st.pts, size);
   }
   let pencilSnd = null, pencilT = 0, pencilDir = null;
   function pencilStart(p){
-    pencilS = { pts: [{ x: p.x, y: p.y }], s: { x: p.x, y: p.y }, raw: p };
+    pencilS = { pts: [{ x: p.x, y: p.y, k: pw(p) }], s: { x: p.x, y: p.y, k: pw(p) }, raw: p };
     try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
     pencilRender();
   }
@@ -2180,7 +2492,7 @@
       }
     }
     // light steadying, then only keep points that moved a little, so the curve has no tiny wiggles
-    const sp = { x: st.s.x + (p.x - st.s.x) * k, y: st.s.y + (p.y - st.s.y) * k };
+    const sp = { x: st.s.x + (p.x - st.s.x) * k, y: st.s.y + (p.y - st.s.y) * k, k: pw(p) };
     st.s = sp; st.raw = p;
     const q = st.pts[st.pts.length - 1];
     if (Math.hypot(sp.x - q.x, sp.y - q.y) >= Math.max(2.5, size * 0.22)) st.pts.push(sp);
@@ -2193,11 +2505,12 @@
     lctx.clearRect(0, 0, live.width, live.height);
     if (!st) return;
     // ease into the point where the pen lifted
-    let s2 = st.s; for (let i = 0; i < 5; i++){ s2 = { x: s2.x + (st.raw.x - s2.x) * .45, y: s2.y + (st.raw.y - s2.y) * .45 }; st.pts.push(s2); }
-    st.pts.push({ x: st.raw.x, y: st.raw.y });
-    pencilInk(ctx); pencilPath(ctx, st.pts); ctx.stroke();
+    const kEnd = st.s.k || 1;
+    let s2 = st.s; for (let i = 0; i < 5; i++){ s2 = { x: s2.x + (st.raw.x - s2.x) * .45, y: s2.y + (st.raw.y - s2.y) * .45, k: kEnd }; st.pts.push(s2); }
+    st.pts.push({ x: st.raw.x, y: st.raw.y, k: kEnd });
+    pencilInk(ctx); pencilDraw(ctx, st.pts, size);
     // speed art redraws this exact curve (no masking), so crossings never show bits of the line early
-    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H]), col: color, w: size / L }; }
+    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: size / L }; }
   }
   // Highlighter: redraw whole stroke from base so overlaps don't darken within one stroke
   let markerPts = [], markerBase = null;
@@ -2223,13 +2536,22 @@
   // spray can: shake-shake (the ball rattling inside), then a soft airy "psssss"
   function sprayRattle(){ try { for (let i = 0; i < 3; i++){ noiseBurst(.028, 3000 + Math.random() * 900, 6, .06, i * .08, 'bandpass'); tone(1800 + Math.random() * 300, 1400, .025, .014, 'triangle', i * .08); } } catch {} }
   // ---------- brush sounds: the special brushes each have their own little voice ----------
+  // fur: super cute critter noises (soft, round sine squeaks with a little wobble, like a tiny happy pet)
+  const FUR_NOTES = [784, 880, 1046.5, 1174.7, 1318.5];
+  function furChirp(i){
+    const f = FUR_NOTES[(i * 3 + (Math.random() * 2 | 0)) % FUR_NOTES.length] * (.98 + Math.random() * .04);
+    tone(f, f * 1.45, .07, .022, 'sine');            // 'pi-'
+    tone(f * 1.45, f * 1.1, .09, .018, 'sine', .06);  // '-yu!'
+    tone(f * 2.9, f * 2.2, .06, .003, 'sine', .06);   // a little sparkle on top
+  }
+  function furTrill(){ for (let k = 0; k < 3; k++){ const f = 700 + k * 90; tone(f, f * 1.12, .035, .014, 'sine', k * .04); } }
   const BRUSH_SND = new Set(['rainbow', 'pixel', 'fur', 'mirror']);
   const RAINBOW_NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
   let brushSnd = null, brushSndT = 0;
   function makeBrushSound(kind){
     if (kind === 'mirror'){ const ps = pencilSound(); if (!ps) return null; ps.touch(); return { pencil: ps }; }   // mirror sounds just like the pencil
     const st = { kind, dist: 0, last: 0, i: 0, dir: 1 };
-    if (kind === 'fur') st.loop = loopSound('fur');
+    if (kind === 'fur') furTrill();                                                            // 'prrrp!' hello
     if (kind === 'pixel') tone(784, 784, .045, .018, 'square');                                // 'bip' as it lands
     if (kind === 'rainbow') tone(1046.5, 1318.5, .12, .016, 'sine');                           // little 'ting'
     return st;
@@ -2249,9 +2571,8 @@
         const ARP = [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25], f = ARP[st.i++ % ARP.length];
         tone(f, f, .05, .02, 'square'); tone(f * 2, f * 2, .035, .007, 'square', .04); }
     } else if (st.kind === 'fur'){
-      // soft fluffy brushing, with a tiny happy 'purr-ip' now and then
-      if (st.loop) st.loop.level(Math.min(.08, .012 + sp * .045), 900 + Math.min(1200, sp * 600), .05);
-      if (st.dist > 60 && now - st.last > 230){ st.dist = 0; st.last = now; const f = 420 + Math.random() * 120; tone(f, f * 1.5, .09, .016, 'triangle'); tone(f * 1.5, f * 1.9, .06, .009, 'sine', .06); }
+      // a fluffy little critter: tiny squeaky 'pi-yu!' chirps as you stroke the fur
+      if (st.dist > 34 && now - st.last > 150){ st.dist = 0; st.last = now; furChirp(st.i++); }
     }
   }
   function brushSoundStop(){
@@ -2261,6 +2582,7 @@
       if (st.loop) st.loop.stop(.2);
       if (st.kind === 'rainbow'){ tone(1567.98, 2093, .25, .016, 'sine'); tone(2093, 2637, .3, .011, 'sine', .07); }   // sparkly 'ting!' when you lift
       if (st.kind === 'pixel'){ tone(1046.5, 1046.5, .05, .018, 'square'); tone(1568, 1568, .08, .016, 'square', .06); }   // 'bling!'
+      if (st.kind === 'fur'){ tone(880, 1320, .12, .02, 'sine'); tone(1320, 1760, .16, .016, 'sine', .1); tone(2640, 3520, .1, .004, 'sine', .1); }   // happy 'nya~!' when you lift
     } catch {}
   }
   const splatDot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
@@ -2328,6 +2650,8 @@
     if (picking){ pickColour(pt(e)); return; }
     if (tool === 'dynamite'){ const q = pt(e); plantDynamite(q.x, q.y); return; }
     if (tool === 'wormhole'){ const q = pt(e); openWormhole(q.x, q.y); return; }
+    if (tool === 'blacklight'){ const q = pt(e); blackLight(q.x, q.y); return; }
+    if (tool === 'tornado'){ const q = pt(e); tornado(q.x, q.y); return; }
     try { c.setPointerCapture(e.pointerId); } catch {}
     activePointer = e.pointerId; activeType = e.pointerType; penP = e.pressure || .5;
     const p = smoothPressure(pt(e));
@@ -2388,8 +2712,8 @@
         last = p; continue;
       }
       if (tool === 'line'){
-        ctx.putImageData(lineBase,0,0); strokeStyle(); ctx.lineWidth = size;
-        ctx.beginPath(); ctx.moveTo(start.x,start.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+        ctx.putImageData(lineBase,0,0); strokeStyle(); ctx.lineWidth = size; ctx.lineJoin = 'round';
+        drawShape(ctx, start, p);
       } else if (tool === 'marker'){ markerPts.push(p); }
       else if (tool === 'spray'){ sprayPt = p; }
       else if (TEX.has(tool)){ const q = tx.pts[tx.pts.length-1]; if (Math.hypot(p.x-q.x, p.y-q.y) > 2) tx.pts.push(p); }
@@ -2749,7 +3073,7 @@
     const brushes = product === 'brushes';
     $('payTitle').textContent = 'Unlock the Brush Pack';
     $('payDesc').innerHTML = (brushes ? '' : `<span class="pay-note">You've used all ${FREE_FRAMES} free pages.</span>`) +
-      `<ul class="pay-list"><li>6 special brushes</li><li>Unlimited pages</li><li>No watermark on exports</li></ul>` +
+      `<ul class="pay-list"><li>6 special brushes</li><li>3 magic effects: wormhole, neon &amp; tornado</li><li>Unlimited pages</li><li>No watermark on exports</li></ul>` +
       `<span class="pay-small"><b>${PRICE} one-time purchase</b>: no subscription, yours to keep. Covers your whole family.</span>`;
     $('perksBrushes').hidden = false; $('perksFrames').hidden = false;
     newGate();
@@ -2857,7 +3181,7 @@
     $('shareDoodle').onclick = () => askGrownUp(async () => { if (!viewing) return; try { const blob = await (await fetch(viewing.full)).blob(); await nativeShare(`doodle-${viewing.id}.jpg`, blob); } catch {} });
   }
 
-  const keyTools = { b:'pencil', s:'spray', k:'fill', l:'line', e:'eraser', p:'brush', r:'rainbow', x:'pixel', o:'soft', u:'fur', c:'chalk', y:'dynamite', w:'wormhole', m:'mirror' };
+  const keyTools = { b:'pencil', s:'spray', k:'fill', l:'line', e:'eraser', p:'brush', r:'rainbow', x:'pixel', o:'soft', u:'fur', c:'chalk', y:'dynamite', w:'wormhole', v:'blacklight', m:'mirror' };
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     if (e.key === 'Escape'){ document.querySelectorAll('.overlay').forEach(o => o.hidden = true); if (panel) setPanel(panel); return; }
@@ -2977,7 +3301,7 @@
   const SPEED_W = { pencil: s => s + 4, eraser: s => s * 2 + 6, marker: s => s * 1.8 + 4, spray: s => s * 6.4 + 8, soft: s => s * 4.6 + 8, brush: s => s * 2.6 + 8,
     rainbow: s => s + 8, pixel: s => s * 2 + 14, fur: s => s * 5 + 8, glitter: s => s * 3 + 8, mirror: s => s + 6, line: s => s + 6 };
   function speedStrokeStart(p){
-    if (tool === 'fill' || tool === 'dynamite' || tool === 'wormhole') { speedStroke = null; return; }
+    if (tool === 'fill' || tool === 'dynamite' || tool === 'wormhole' || tool === 'blacklight' || tool === 'tornado') { speedStroke = null; return; }
     const L = Math.max(W, H);
     const px = tool === 'stamp' ? Math.max(40, size * 4) * 1.25 : (SPEED_W[tool] || (s => s * 2.4 + 10))(size);
     speedStroke = { pts: [[p.x / W, p.y / H]], w: px / L, mir: tool === 'mirror', line: tool === 'line', t0: performance.now() };
@@ -3526,8 +3850,8 @@
           if (left <= 0) break;
           const n = Math.min(stk.pts.length, left); left -= n;
           const v = stk.vec, m = Math.max(1, Math.min(v.pts.length, Math.round(n / stk.pts.length * v.pts.length)));
-          out.strokeStyle = v.col; out.lineWidth = Math.max(1, v.w * L2);
-          pencilPath(out, v.pts.slice(0, m).map(q => ({ x: q[0] * iw, y: q[1] * ih }))); out.stroke();
+          out.strokeStyle = v.col;
+          pencilDraw(out, v.pts.slice(0, m).map(q => ({ x: q[0] * iw, y: q[1] * ih, k: q[2] || 1 })), Math.max(1, v.w * L2));
         }
         return scratch;
       }
