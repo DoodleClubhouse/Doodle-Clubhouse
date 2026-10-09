@@ -872,6 +872,44 @@
     html body[data-panel="colors"] .size-row .size-dot{display:none!important}
     html body[data-panel="colors"] .size-num{font-size:11px; white-space:nowrap}
   }
+  /* phones: Tools shows only the everyday tools; the Brush Pack has its own tab */
+  @media (max-width:760px), (max-height:500px){
+    html body[data-tset="basic"] #premium{display:none!important}
+    html body[data-tset="pack"] .tools > section.sec-tools:not(#premium){display:none!important}
+    html body[data-tset="pack"] #premium{flex:1 1 100%!important}
+    .dock button{min-width:0; white-space:nowrap}
+  }
+  @media (max-width:420px) and (orientation:portrait){ .dock button{font-size:10px} }
+  /* phone upright: the Brush Pack fits on one row (the price tag stands in for the title) */
+  @media (max-width:760px) and (orientation:portrait){
+    html body[data-tset="pack"] #premium{display:flex!important; flex-wrap:nowrap!important; align-items:center; gap:5px}
+    html body[data-tset="pack"] #premium .group-label{font-size:0!important; width:auto!important; flex:none!important; margin:0!important}
+    html body[data-tset="pack"] #premium .group-label .tag{font-size:10px}
+    html body[data-tset="pack"] #premium .premium-grid{display:flex!important; flex:1 1 0!important; min-width:0; flex-wrap:nowrap!important; gap:4px}
+    html body[data-tset="pack"] #premium .premium-grid .tool{flex:1 1 0!important; width:auto!important; min-width:0!important; max-width:36px!important; height:auto!important; aspect-ratio:1!important}
+  }
+  /* phone sideways: one slim column of buttons that all fit, no scrolling (tap the tab again to tuck it away) */
+  @media (max-height:500px) and (orientation:landscape){
+    html body{--tb:min(34px, calc((100vh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 9 - 3px))}
+    html body[data-tset="pack"]{--tb:min(34px, calc((100vh - 106px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 9 - 3px))}
+    html body[data-tset="pack"]:has(#premium.unlocked){--tb:min(34px, calc((100vh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 9 - 3px))}
+    html body[data-panel="tools"] .tools{width:calc(var(--tb) + 14px)!important; padding:6px 5px!important; gap:0!important; overflow:hidden!important}
+    html body[data-panel="tools"] main{margin-left:calc(var(--tb) + 22px)}
+    html body[data-panel="tools"] .tools .tray-min{display:none!important}
+    html body[data-panel="tools"] .tools .tool-grid, html body[data-panel="tools"] .tools .premium-grid{grid-template-columns:var(--tb)!important; gap:3px!important}
+    html body[data-panel="tools"] .tools .tool-grid .tool, html body[data-panel="tools"] .tools .premium-grid .tool, html body[data-panel="tools"] .tools .tool.dyn,
+    html body[data-panel="tools"] .tools .tool-grid > .gridbtn{width:var(--tb)!important; height:var(--tb)!important; border-radius:8px}
+    html body[data-panel="tools"] .tools .tool svg{width:calc(var(--tb) * .55)!important; height:calc(var(--tb) * .55)!important}
+    html body[data-panel="tools"] .tools .lock{width:15px; height:15px; top:-4px; right:-4px; border-width:1.5px}
+    html body[data-panel="tools"] .tools .lock svg{width:8px; height:8px}
+    html body[data-panel="tools"] .tools .premium{padding:3px 2px!important; margin:0!important}
+    html body[data-panel="tools"] .tools .premium:not(.unlocked) .group-label{font-size:0!important; margin:0 0 4px!important; justify-content:center!important}
+    html body[data-panel="tools"] .tools .premium:not(.unlocked) .group-label .tag{font-size:8px; padding:2px 3px; letter-spacing:0}
+    html body[data-tset="pack"]:not(:has(#premium.unlocked)) .tools{width:calc(var(--tb) + 22px)!important}
+    html body[data-tset="pack"]:not(:has(#premium.unlocked)) main{margin-left:calc(var(--tb) + 30px)}
+    html body[data-panel="tools"] .tools .premium:not(.unlocked){padding:4px!important}
+    .dock button{font-size:9px}
+  }
 </style>
 
 <header>
@@ -997,6 +1035,7 @@
 
 <nav class="dock" id="dock" aria-label="Drawing controls">
   <button data-panel="tools" aria-expanded="false"><span id="dockTool"></span>Tools</button>
+  <button data-panel="brushes" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M3 18a9 9 0 0 1 18 0" stroke="#FF5A5F"/><path d="M6.5 18a5.5 5.5 0 0 1 11 0" stroke="#F5B400"/><path d="M10 18a2 2 0 0 1 4 0" stroke="#2E9CDB"/></svg>Brush Pack</button>
   <button data-panel="colors" aria-expanded="false"><span class="cdot" id="dockColor"></span>Color</button>
   <button data-panel="extras" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg>Extra</button>
   <button data-panel="frames" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages <span class="tnum" id="dockFrames">1</span></span></button>
@@ -4471,7 +4510,9 @@
   document.querySelectorAll('.tray-min').forEach(b => b.addEventListener('click', () => { if (panel) setPanel(panel); }));
   function setPanel(name){
     panel = panel === name ? '' : name;
-    document.body.dataset.panel = panel;
+    // the Brush Pack tab uses the same tray as Tools, showing only the pack's brushes
+    document.body.dataset.panel = panel === 'brushes' ? 'tools' : panel;
+    document.body.dataset.tset = panel === 'brushes' ? 'pack' : 'basic';
     panelBtns.forEach(b => b.setAttribute('aria-expanded', b.dataset.panel === panel));
     requestAnimationFrame(() => { fitTools(); fit(); });   // opening Pages just shrinks the whole paper to fit above it
     placeExtras();
