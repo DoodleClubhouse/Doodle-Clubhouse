@@ -2734,7 +2734,7 @@
   }
 
   // ---------- lock width ----------
-  let widthLocked = false; try { widthLocked = localStorage.getItem('doodle-clubhouse-lock-width') === '1'; } catch {}
+  let widthLocked = false;   // every time the app opens, line width follows pressure and speed (the taper is on)
   const lockBtn = document.getElementById('lockWidth');
   // tapered stroke = width follows the pen; straight even stroke = width locked
   const ICON_TAPER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 14.5C6.5 7.5 15.5 6.2 22.5 9.2 16.5 14.8 7.5 17.8 1.5 14.5z" fill="currentColor"/></svg>';
