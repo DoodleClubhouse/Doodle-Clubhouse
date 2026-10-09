@@ -1077,6 +1077,12 @@
   .toast{width:max-content; max-width:calc(100vw - 24px); text-align:center; line-height:1.25}
   @media (max-width:760px), (max-height:500px){ .toast{font-size:13px; padding:8px 14px} }
   #dockFrames, .pages-n{display:none!important}   /* the Pages buttons just say 'Pages' */
+  /* iPad / computer sideways: smaller logo and a slimmer top bar, so the tool bar and paper get more height */
+  @media (orientation:landscape) and (min-width:761px) and (min-height:501px){
+    html body header{padding-block:4px 3px!important}
+    html body .logo img{height:44px!important}
+    html body .top-actions .btn{padding-block:6px}
+  }
 </style>
 
 <header>
