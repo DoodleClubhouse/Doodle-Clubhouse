@@ -1,9 +1,11 @@
 # Codemagic builds the iPhone/iPad app on a Mac in the cloud and sends it to TestFlight.
+# This file must sit at the TOP of the GitHub repo (not inside a folder).
 # Before the first build: follow LAUNCH-STEPS.md (connect your Apple account and GitHub to Codemagic).
 workflows:
   ios-release:
     name: Doodle Clubhouse (iOS)
     max_build_duration: 60
+    working_directory: doodle-clubhouse-app   # the app lives in this folder
     instance_type: mac_mini_m2
     integrations:
       app_store_connect: Doodle Clubhouse        # the name you give your App Store Connect API key in Codemagic
@@ -46,6 +48,7 @@ workflows:
         script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
     artifacts:
       - build/ios/ipa/*.ipa
+      - doodle-clubhouse-app/build/ios/ipa/*.ipa
     publishing:
       app_store_connect:
         auth: integration
