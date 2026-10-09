@@ -2255,7 +2255,8 @@
   document.addEventListener('contextmenu', e => { if (!typing(e.target)) e.preventDefault(); });
   document.addEventListener('selectionchange', () => { const sel = getSelection && getSelection(); if (sel && sel.rangeCount && !typing(document.activeElement)) sel.removeAllRanges(); });
   // stop iOS's long-press magnifier / text loupe on the paper
-  c.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+  // (never for the Apple Pencil: on iPad, blocking its touches can stop it drawing at all)
+  c.addEventListener('touchstart', e => { const t = e.touches && e.touches[0]; if (t && t.touchType === 'stylus') return; if ([...(e.changedTouches || [])].some(x => x.touchType === 'stylus')) return; if (e.cancelable) e.preventDefault(); }, { passive: false });
   function cancelStroke(){
     if (!drawing && performance.now() - firstDownAt > 350) return;
     drawing = false; clearInterval(sprayTimer); sprayTimer = null; lineBase = null; try { brushSoundStop(); if (spraySnd){ spraySnd.stop(.1); spraySnd = null; } } catch {}
@@ -2936,9 +2937,12 @@
     try { if (spraySnd){ spraySnd.stop(.1); spraySnd = null; } } catch {}
     clearTimeout(sprayPlipT); sprayPlipT = 0; eraserSnd = null;
   }
-  let nothingDownSince = 0;
+  // if something ever breaks, show a short note on screen so it can be reported
+  let errShown = 0; window.addEventListener('error', ev => { if (errShown++ < 2) try { toast('Oops: ' + String(ev.message || '').slice(0, 80) + ' (line ' + ev.lineno + ')'); } catch {} });
+  let nothingDownSince = 0, lastCanvasMove = 0;
+  c.addEventListener('pointermove', e => { if (e.buttons || e.pressure > 0) lastCanvasMove = performance.now(); }, true);
   setInterval(() => {
-    if (pressed.size){ nothingDownSince = 0; return; }
+    if (pressed.size || performance.now() - lastCanvasMove < 400){ nothingDownSince = 0; return; }
     if (!nothingDownSince){ nothingDownSince = performance.now(); return; }
     if (performance.now() - nothingDownSince < 250) return;
     if (drawing) try { end(); } catch {}
