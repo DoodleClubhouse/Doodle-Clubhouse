@@ -2568,10 +2568,11 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTools);
 
   // ---------- zoom & pan ----------
-  const ZMIN = 1, ZMAX = 5;
+  const ZMIN = .3, ZMAX = 5;   // pinch in to see the page smaller (down to 30%), out to zoom right in
   function clampPan(){
-    if (zoom <= 1.001){ zoom = 1; panX = panY = 0; return; }
+    if (Math.abs(zoom - 1) < .03){ zoom = 1; panX = panY = 0; return; }   // close to normal size: snap back exactly
     const pw = paper.offsetWidth * zoom, ph = paper.offsetHeight * zoom, bw = board.clientWidth, bh = board.clientHeight;
+    if (zoom < 1){ const ax = Math.max(0, (bw - pw) / 2), ay = Math.max(0, (bh - ph) / 2); panX = Math.max(-ax, Math.min(ax, panX)); panY = Math.max(-ay, Math.min(ay, panY)); return; }
     const mx = Math.max(0, (pw - bw) / 2) + bw * .3, my = Math.max(0, (ph - bh) / 2) + bh * .3;
     panX = Math.max(-mx, Math.min(mx, panX)); panY = Math.max(-my, Math.min(my, panY));
   }
@@ -2611,7 +2612,7 @@
     activePointer = null; speedStroke = null;
     if (undoStack.length){ ctx.putImageData(undoStack.pop(), 0, 0); if (pushUndo.keptRedo) redoStack.splice(0, redoStack.length, ...pushUndo.keptRedo); syncHist(); }
   }
-  c.addEventListener('pointerdown', e => {
+  board.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
     if (e.pointerType === 'pen'){ touches.clear(); gesture = null; return; }   // the Pencil never starts a pinch
     if (drawing && activeType === 'pen'){ e.stopImmediatePropagation(); return; }   // a palm resting while the Pencil draws: ignore it
@@ -2626,7 +2627,7 @@
       gesture = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: zoom, ux: (mx - panX) / zoom, uy: (my - panY) / zoom };
     }
   }, true);
-  c.addEventListener('pointermove', e => {
+  board.addEventListener('pointermove', e => {
     if (!touches.has(e.pointerId)) return;
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (!gesture) return;
@@ -2642,9 +2643,9 @@
     if (gesture){ e.stopImmediatePropagation(); if (touches.size < 2) gesture = touches.size ? { done: true } : null; }
     if (!touches.size) gesture = null;
   };
-  c.addEventListener('pointerup', liftTouch, true); c.addEventListener('pointercancel', liftTouch, true);
-  window.addEventListener('pointerup', e => { if (e.target !== c) liftTouch(e); }, true);
-  window.addEventListener('pointercancel', e => { if (e.target !== c) liftTouch(e); }, true);
+  board.addEventListener('pointerup', liftTouch, true); board.addEventListener('pointercancel', liftTouch, true);
+  window.addEventListener('pointerup', e => { if (!board.contains(e.target)) liftTouch(e); }, true);
+  window.addEventListener('pointercancel', e => { if (!board.contains(e.target)) liftTouch(e); }, true);
 
   // ---------- eyedropper: tap the page to grab a colour (drawing on top of the paper) ----------
   let picking = false;
