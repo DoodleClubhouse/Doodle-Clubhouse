@@ -3229,7 +3229,8 @@
   let downloads = null;
   (async () => {
     if (NATIVE){ downloads = { native: true }; }
-    else { try { downloads = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch { downloads = null; } }
+    else if (window.claude && window.claude.use){ try { downloads = await window.claude.use('downloads'); } catch { downloads = null; } }
+    else downloads = { browser: true };   // plain website (e.g. GitHub Pages): a normal browser download
     if (downloads){ $('exportBtn').hidden = false; $('exportAnimBtn').hidden = false; $('moreExport').hidden = false; }
   })();
   const fileStamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0');
@@ -3271,12 +3272,19 @@
     try { await navigator.share({ files: [file], title: 'My Doodle Clubhouse art' }); return true; }
     catch (e){ if (e && e.name === 'AbortError'){ const err = new Error('declined'); err.code = 'declined'; throw err; } return false; }
   }
+  function browserDownload(filename, data){
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = filename; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
   async function offer(filename, data, share = exShare){
     exStatus(share ? 'Opening the share menu…' : 'Choose where to save it…');
     try {
       let shared = false;
       if (downloads.native) { await nativeShare(filename, data instanceof Blob ? data : new Blob([data])); shared = share; }
       else if (share && await webShare(filename, data)) shared = true;
+      else if (downloads.browser) browserDownload(filename, data);
       else await downloads.save({ filename, data });
       exStatus(''); $('exportOverlay').hidden = true; SFX.chime();
       toast(shared ? 'Shared!' : share ? 'Saved! Open the YouTube app to post it.' : 'Saved!');
