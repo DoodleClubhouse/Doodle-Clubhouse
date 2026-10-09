@@ -924,6 +924,48 @@
     html body[data-panel="tools"] .tools, html body[data-panel="colors"] .tools, html body[data-panel="extras"] .extras{top:var(--trayTop, 54px)!important; bottom:var(--trayBot, 8px)!important}
     html body[data-panel="tools"] .tools .tool-grid > .gridbtn{border-radius:8px!important; aspect-ratio:auto!important}
   }
+  .side-only{display:none!important}
+  #moreBtn{transition:opacity .15s}
+  /* phone sideways: the paper runs right up to the top. The top buttons live in the ... menu, and ... floats over the paper
+     (it fades away while you draw). Extra and Pages are slim columns too. */
+  @media (max-height:500px) and (orientation:landscape){
+    html body header{grid-column:1!important; grid-row:1!important; justify-content:center!important; padding:4px 0 3px!important}
+    html body .top-actions > *:not(#moreBtn){display:none!important}
+    html body #moreBtn{position:fixed; z-index:7; top:calc(env(safe-area-inset-top, 0px) + 8px); right:calc(max(8px, env(safe-area-inset-right, 0px)) + 8px); display:inline-flex!important; padding:6px 9px!important}
+    html body.inking #moreBtn{opacity:0; pointer-events:none}
+    html body main{grid-row:1 / 3!important; padding-top:6px}
+    html body .more-sheet{top:calc(env(safe-area-inset-top, 0px) + 50px)!important; right:calc(max(8px, env(safe-area-inset-right, 0px)) + 8px)!important; left:auto!important; bottom:auto!important; max-height:calc(100vh - 60px)!important; overflow-y:auto!important; display:none; width:330px; padding:34px 8px 8px!important}
+    html body[data-panel="more"] .more-sheet{display:grid!important; grid-template-columns:1fr 1fr; gap:6px!important; align-content:start}
+    html body .more-sheet .side-only{display:inline-flex!important}
+    html body .more-sheet .btn{padding:6px 8px; font-size:12px; min-width:0; white-space:nowrap; overflow:hidden}
+    html body .more-sheet .btn svg{flex:none; width:16px; height:16px}
+    /* Extra: one column, wall colour right after the chalkboard */
+    html body[data-panel="extras"] .extras{width:calc(var(--tb, 34px) + 14px)!important; padding:6px 5px!important; gap:3px!important}
+    html body[data-panel="extras"] main{margin-left:calc(var(--tb, 34px) + 22px)}
+    html body[data-panel="extras"] .extras .tray-min{display:none!important}
+    html body[data-panel="extras"] .extras section{gap:3px!important}
+    html body[data-panel="extras"] .extras .sec-paper{padding-top:4px!important; border-top-width:2px}
+    html body[data-panel="extras"] .extras .size-opts, html body[data-panel="extras"] .extras .paper-opts{grid-template-columns:var(--tb, 34px)!important; gap:3px!important}
+    html body[data-panel="extras"] .extras .size-opt, html body[data-panel="extras"] .extras .paper-opt, html body[data-panel="extras"] .extras .wall-pick input[type=color]{width:var(--tb, 34px)!important; height:var(--tb, 34px)!important; min-width:0!important; border-radius:8px!important}
+    html body[data-panel="extras"] .extras .size-opt i{transform:scale(.7)}
+    html body[data-panel="extras"] .extras .pv{width:calc(var(--tb, 34px) * .62); height:calc(var(--tb, 34px) * .45)}
+    /* Pages: a column too - play, the pages going down, then the buttons */
+    html body[data-panel="frames"] main{margin-bottom:0!important; margin-left:112px}
+    html body[data-panel="frames"] .film{
+      left:calc(max(8px, env(safe-area-inset-left, 0px)) + 72px)!important; right:auto!important; top:var(--trayTop, 54px)!important; bottom:var(--trayBot, 8px)!important;
+      width:104px!important; max-height:none!important; display:flex!important; flex-direction:column!important; flex-wrap:nowrap!important; align-items:stretch!important; gap:5px!important; padding:6px!important; overflow:hidden!important
+    }
+    html body[data-panel="frames"] .film .tray-min{display:none!important}
+    html body[data-panel="frames"] .film .play{order:0!important; flex:none; width:100%; justify-content:center; padding:5px!important}
+    html body[data-panel="frames"] .film .strip{order:1!important; flex:1 1 0!important; min-height:0!important; flex-direction:column!important; overflow-y:auto!important; overflow-x:hidden!important; align-items:center!important; padding:2px!important; gap:5px!important}
+    html body[data-panel="frames"] .film .strip .frame{flex:none!important; width:84px!important; min-width:0!important; height:auto!important; aspect-ratio:var(--ar, 3/2)!important; max-height:84px}
+    html body[data-panel="frames"] .film .free-note{max-width:none; font-size:10px}
+    html body[data-panel="frames"] .film .film-side{order:2!important; flex:none!important; flex-direction:column!important; align-items:stretch!important; gap:5px!important}
+    html body[data-panel="frames"] .film .film-row{justify-content:center; flex-wrap:wrap!important; gap:4px!important}
+    html body[data-panel="frames"] .film .film-row .btn.sm.ico{padding:4px 6px!important}
+    html body[data-panel="frames"] .film .seg{display:grid!important; grid-template-columns:1fr 1fr; flex:1 1 100%}
+    html body[data-panel="frames"] .film .seg button{min-width:0!important; padding:4px!important}
+  }
 </style>
 
 <header>
@@ -982,7 +1024,7 @@
           <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="13" width="4.5" height="4.5"/><rect x="7.5" y="8.5" width="4.5" height="4.5"/><rect x="12" y="13" width="4.5" height="4.5"/><rect x="16.5" y="8.5" width="4.5" height="4.5"/></svg>
         </button>
         <button class="tool pro" data-tool="chalk" title="Chalk (C)" aria-label="Chalk" aria-pressed="false">
-          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="4" width="6" height="15" rx="1.6" transform="rotate(40 10 11.5)"/><circle cx="16.5" cy="17" r="1.1"/><circle cx="19.5" cy="19.5" r=".8"/><circle cx="15" cy="20.5" r=".9"/><circle cx="20" cy="15.5" r=".7"/></svg>
+          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.1 16.6 15.9 4.8a2.2 2.2 0 0 1 3.3 3.3L7.4 19.9"/><ellipse cx="5.75" cy="18.25" rx="1.8" ry="2.6" transform="rotate(45 5.75 18.25)" fill="#fff"/></svg>
         </button>
         <button class="tool pro" data-tool="fur" title="Fur (U)" aria-label="Fur" aria-pressed="false">
           <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 17c1-3 2-5 3-6M5 18c1-4 3-7 5-8M8 18c1-4 3-6 5-7M11 18c2-4 4-6 6-7M14 18c2-3 4-5 7-6M17 18c1-2 3-3 5-4M4 14c2-2 3-4 3-6M9 13c1-3 3-5 4-6M14 12c2-2 3-4 4-5"/></svg>
@@ -1049,7 +1091,7 @@
 
 <nav class="dock" id="dock" aria-label="Drawing controls">
   <button data-panel="tools" aria-expanded="false"><span id="dockTool"></span>Tools</button>
-  <button data-panel="brushes" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M3 18a9 9 0 0 1 18 0" stroke="#FF5A5F"/><path d="M6.5 18a5.5 5.5 0 0 1 11 0" stroke="#F5B400"/><path d="M10 18a2 2 0 0 1 4 0" stroke="#2E9CDB"/></svg>Brush Pack</button>
+  <button data-panel="brushes" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3l3 3-9 9-3-3z"/><path d="M9 12c-3 0-5 2-5 5 0 1-1 2-2 3 4 1 9 0 9-5z"/></svg>Brush Pack</button>
   <button data-panel="colors" aria-expanded="false"><span class="cdot" id="dockColor"></span>Color</button>
   <button data-panel="extras" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg>Extra</button>
   <button data-panel="frames" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages <span class="tnum" id="dockFrames">1</span></span></button>
@@ -1078,6 +1120,12 @@
 </div>
 <div class="more-sheet" id="moreSheet" aria-label="More">
   <button class="tray-min" title="Hide menu" aria-label="Hide menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
+  <button class="btn side-only" data-proxy="undo" data-keep="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Undo</button>
+  <button class="btn side-only" data-proxy="redo" data-keep="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg>Redo</button>
+  <button class="btn side-only" data-proxy="zoomIn" data-keep="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12M12 6v12"/></svg>Zoom in</button>
+  <button class="btn side-only" data-proxy="zoomOut" data-keep="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>Zoom out</button>
+  <button class="btn side-only" data-proxy="soundBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><g class="waves"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute" style="display:none"><path d="M16 9.5l5 5M21 9.5l-5 5"/></g></svg>Sounds</button>
+  <button class="btn side-only" data-proxy="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete all art</button>
   <button class="btn" data-proxy="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete all art</button>
   <button class="btn" data-proxy="openWall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Saved projects</button>
   <button class="btn" data-proxy="speedBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M9.5 8.5v7l6-3.5z" fill="currentColor"/></svg>Speed art</button>
@@ -1373,7 +1421,7 @@
     const pan = document.body.dataset.panel, trayEl = pan === 'tools' || pan === 'colors' ? document.querySelector('.tools') : pan === 'extras' ? document.getElementById('extras') : pan === 'frames' ? document.querySelector('.film') : null;
     if ((!filling || pan === 'frames') && trayEl && getComputedStyle(trayEl).position === 'fixed' && getComputedStyle(trayEl).display !== 'none'){
       const br = board.getBoundingClientRect(), tr = trayEl.getBoundingClientRect();
-      if (tr.height && tr.top < br.bottom && tr.top > br.top) availH = Math.max(140, tr.top - br.top - 4);
+      if (tr.height && tr.right > br.left + 8 && tr.top < br.bottom && tr.top > br.top) availH = Math.max(140, tr.top - br.top - 4);
     }
     const bh = Math.max(40, availH - m * 2);
     let w = bw, h = w * H / W;
@@ -2410,9 +2458,11 @@
   c.addEventListener('touchstart', e => { const t = e.touches && e.touches[0]; if (t && t.touchType === 'stylus') return; if ([...(e.changedTouches || [])].some(x => x.touchType === 'stylus')) return; if (e.cancelable) e.preventDefault(); }, { passive: false });
   function cancelStroke(){
     if (!drawing && performance.now() - firstDownAt > 350) return;
-    drawing = false; clearInterval(sprayTimer); sprayTimer = null; lineBase = null; try { brushSoundStop(); if (spraySnd){ spraySnd.stop(.1); spraySnd = null; } } catch {}
+    drawing = false; clearInterval(sprayTimer); sprayTimer = null; lineBase = null; try { brushSoundStop(); if (spraySnd){ spraySnd.stop(.1); spraySnd = null; } clearTimeout(sprayPlipT); sprayPlipT = 0; } catch {}
     if (tx){ cancelAnimationFrame(txFrame); tx = null; }
-    if (undoStack.length){ ctx.putImageData(undoStack.pop(), 0, 0); syncHist(); }
+    try { if (pencilS){ pencilS = null; cancelAnimationFrame(pencilRaf); pencilRaf = 0; lctx.clearRect(0, 0, live.width, live.height); } if (pencilSnd){ pencilSnd.stop(); pencilSnd = null; } } catch {}
+    activePointer = null; speedStroke = null;
+    if (undoStack.length){ ctx.putImageData(undoStack.pop(), 0, 0); if (pushUndo.keptRedo) redoStack.splice(0, redoStack.length, ...pushUndo.keptRedo); syncHist(); }
   }
   c.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
@@ -2561,6 +2611,7 @@
     undoStack.push(snapshot());
     const maxSteps = Math.max(8, Math.min(40, Math.floor(90e6 / (W * H * 4))));   // about 90 MB of history at most
     while (undoStack.length > maxSteps) undoStack.shift();
+    pushUndo.keptRedo = redoStack.slice();   // kept for a moment, so a 2-finger / 3-finger tap can still undo / redo
     redoStack.length = 0; syncHist();
   }
   // put a saved picture back; if the paper changed size since, it's centred like the paper window (same as resizing)
@@ -3551,6 +3602,32 @@
   };
   syncLock();
 
+
+  // ---------- finger taps on the paper: 2 fingers = undo, 3 fingers = redo ----------
+  {
+    let tapStart = 0, tapMax = 0, tapMoved = false, tapPen = false; const tapPts = new Map();
+    window.addEventListener('pointerdown', e => {
+      if (e.target !== c) return;
+      if (e.pointerType === 'pen') tapPen = true;
+      if (e.pointerType !== 'touch') return;
+      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = activeType === 'pen' && drawing; }
+      tapPts.set(e.pointerId, { x: e.clientX, y: e.clientY }); tapMax = Math.max(tapMax, tapPts.size);
+    }, true);
+    window.addEventListener('pointermove', e => { const q = tapPts.get(e.pointerId); if (q && Math.hypot(e.clientX - q.x, e.clientY - q.y) > 18) tapMoved = true; }, true);
+    const lift = e => {
+      if (!tapPts.delete(e.pointerId) || tapPts.size) return;
+      const quick = performance.now() - tapStart < 400;
+      if (tapMax >= 2 && quick && !tapMoved && !tapPen){
+        setTimeout(() => { try { if (tapMax === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 0);
+      }
+      tapPen = false;
+    };
+    window.addEventListener('pointerup', lift, true); window.addEventListener('pointercancel', lift, true);
+    // the ... button fades while you draw on a sideways phone
+    c.addEventListener('pointerdown', () => document.body.classList.add('inking'), true);
+    const unink = () => setTimeout(() => { if (!drawing) document.body.classList.remove('inking'); }, 60);
+    window.addEventListener('pointerup', unink, true); window.addEventListener('pointercancel', unink, true);
+  }
   // ---------- instant taps ----------
   // Buttons react the moment the finger or Apple Pencil lifts, instead of waiting for the browser's own (sometimes
   // slow, sometimes missing with the Pencil) click. The browser's late click that follows is ignored.
@@ -4563,7 +4640,7 @@
   const closeExtras = () => { if (panel === 'extras') setTimeout(() => { if (panel === 'extras') setPanel('extras'); }, 150); };
   // stickers tuck the panel away once picked; the background (paper + wall colour) choices stay open until Hide is tapped
   document.querySelectorAll('#extras .tool').forEach(b => b.addEventListener('click', closeExtras));
-  document.querySelectorAll('[data-proxy]').forEach(b => b.addEventListener('click', () => { setPanel('more'); $(b.dataset.proxy).click(); }));
+  document.querySelectorAll('[data-proxy]').forEach(b => b.addEventListener('click', () => { if (!b.dataset.keep) setPanel('more'); $(b.dataset.proxy).click(); }));   // undo / redo / zoom keep the menu open
   document.addEventListener('pointerdown', e => { if (panel === 'more' && !e.target.closest('#moreSheet, #moreBtn')){ setPanel('more'); if (e.target === c){ e.stopPropagation(); e.preventDefault(); } } }, true);
   function syncDock(){
     const dt = document.getElementById('dockTool'), dc = document.getElementById('dockColor'), df = document.getElementById('dockFrames');
