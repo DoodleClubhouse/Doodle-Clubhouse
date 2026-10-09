@@ -1014,6 +1014,29 @@
     html body[data-tset="pack"]:not(:has(#premium.unlocked)) .tools{width:calc(var(--tb, 34px) + 12px)!important}
     html body[data-tset="pack"]:not(:has(#premium.unlocked)) main{margin-left:calc(var(--tb, 34px) + 16px)!important}
   }
+  @media (max-height:500px) and (orientation:landscape){
+    /* Extra: bigger buttons */
+    html body[data-panel="extras"] .extras{width:calc(var(--te, 40px) + 8px)!important}
+    html body[data-panel="extras"] main{margin-left:calc(var(--te, 40px) + 12px)!important}
+    html body[data-panel="extras"] .extras .size-opts, html body[data-panel="extras"] .extras .paper-opts{grid-template-columns:var(--te, 40px)!important}
+    html body[data-panel="extras"] .extras .size-opt, html body[data-panel="extras"] .extras .paper-opt, html body[data-panel="extras"] .extras .wall-pick input[type=color]{width:var(--te, 40px)!important; height:var(--te, 40px)!important}
+    html body[data-panel="extras"] .extras .size-opt i{transform:scale(.85)}
+    html body[data-panel="extras"] .extras .pv{width:calc(var(--te, 40px) * .62); height:calc(var(--te, 40px) * .45)}
+    /* Color: one column - crayons, Mix, then the upright size slider */
+    html body[data-panel="colors"] .tools{width:calc(var(--sw, 22px) + 22px)!important; padding:6px 4px!important; gap:4px!important; overflow:hidden!important}
+    html body[data-panel="colors"] main{margin-left:calc(var(--sw, 22px) + 26px)!important}
+    html body[data-panel="colors"] #size::-webkit-slider-thumb{width:22px; height:22px; margin-top:-5px; border-width:2px}
+    html body[data-panel="colors"] #size::-webkit-slider-runnable-track{height:10px}
+    html body[data-panel="colors"] .tools .tray-min{display:none!important}
+    html body[data-panel="colors"] .tools > section.sec-colors{gap:4px!important; align-items:center}
+    html body[data-panel="colors"] .swatches{grid-template-columns:var(--sw, 22px)!important; gap:3px!important}
+    html body[data-panel="colors"] .swatches > *{width:var(--sw, 22px)!important; height:var(--sw, 22px)!important}
+    html body[data-panel="colors"] .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--plank), 0 0 0 4px var(--ink)}
+    html body[data-panel="colors"] .custom input[type=color]{width:calc(var(--sw, 22px) + 6px)!important; height:22px!important; border-radius:6px}
+    html body[data-panel="colors"] .size-row{gap:2px!important}
+    html body[data-panel="colors"] .size-row input{width:72px!important; height:24px; margin:24px -24px!important}
+    html body[data-panel="colors"] .size-num{font-size:8.5px!important; display:block; width:100%; text-align:center; margin:0!important; padding:0!important; letter-spacing:-.2px}
+  }
 </style>
 
 <header>
@@ -4661,6 +4684,10 @@
     const label = document.body.dataset.tset === 'pack' && !unlocked ? 6 : 0;   // the pack column has no title row (the locks say it all), so its brushes are as big as the tools
     const tb = Math.max(18, Math.min(48, Math.floor((h - 8 - label - 8 * 3) / 9)));
     bs.setProperty('--tb', tb + 'px');
+    // Extra: 8 buttons, as big as fit (up to about 20% bigger than the tools)
+    bs.setProperty('--te', Math.max(18, Math.min(Math.round(tb * 1.2), Math.floor((h - 8 - 10 - 7 * 3) / 8))) + 'px');
+    // Color: the 10 crayons, Mix and the size slider all in one column
+    bs.setProperty('--sw', Math.max(16, Math.min(26, Math.floor((h - 8 - 132 - 9 * 3) / 10))) + 'px');
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
   addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
