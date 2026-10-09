@@ -4773,12 +4773,29 @@
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
   addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
+
+  // the logo always sits centred over the main tool bar (side panel on iPad / computer, menu bar on a sideways phone)
+  function alignLogo(){
+    const img = document.querySelector('.logo img'); if (!img) return;
+    img.style.transform = '';
+    const dock = document.getElementById('dock'), onDock = getComputedStyle(dock).display !== 'none';
+    if (onDock && !matchMedia('(orientation:landscape)').matches) return;   // phone upright: the bar is along the bottom
+    const bar = (onDock ? dock : document.querySelector('.tools')).getBoundingClientRect(), l = img.getBoundingClientRect();
+    if (!bar.width || !l.width) return;
+    const dx = Math.round((bar.left + bar.width / 2) - (l.left + l.width / 2));
+    if (dx) img.style.transform = `translateX(${dx}px)`;
+  }
+  addEventListener('resize', () => requestAnimationFrame(alignLogo));
+  addEventListener('load', alignLogo);
+  setTimeout(alignLogo, 300);
+  try { new ResizeObserver(() => requestAnimationFrame(alignLogo)).observe(document.querySelector('.tools')); } catch {}
   function setPanel(name){
     panel = panel === name ? '' : name;
     // the Brush Pack tab uses the same tray as Tools, showing only the pack's brushes
     document.body.dataset.panel = panel === 'brushes' ? 'tools' : panel;
     document.body.dataset.tset = panel === 'brushes' ? 'pack' : 'basic';
     try { layoutSide(); } catch {}
+    requestAnimationFrame(() => { try { alignLogo(); } catch {} });
     panelBtns.forEach(b => b.setAttribute('aria-expanded', b.dataset.panel === panel));
     requestAnimationFrame(() => { fitTools(); fit(); });   // opening Pages just shrinks the whole paper to fit above it
     placeExtras();
