@@ -1074,6 +1074,13 @@
     html body[data-panel="colors"] .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--plank), 0 0 0 4px var(--ink)}
     html body[data-panel="colors"] .tools > section.sec-colors > .group-label{display:none!important}
   }
+  #szPop{position:fixed; z-index:9; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; opacity:0; transition:opacity .25s}
+  #szPop.on{opacity:1; transition:opacity .08s}
+  #szPop i{display:block; border-radius:50%; box-shadow:0 0 0 2px #fff, 0 0 0 4px rgba(26,31,58,.55), 0 4px 12px rgba(0,0,0,.25)}
+  #szPop b{font:800 12px/1 var(--body); color:#fff; background:rgba(26,31,58,.8); padding:4px 8px; border-radius:999px}
+  @media (max-height:500px) and (orientation:landscape){
+    html body[data-panel="colors"] .sz-prev{display:none!important}
+  }
 </style>
 
 <header>
@@ -1690,7 +1697,20 @@
     if (next === undefined) return;
     size = next; sizeIn.value = sliderFromSize(size); updateDot();
     try { SFX.tick(); } catch {}
+    showSizePop();
   }));
+  // tapping + / -: the brush size pops up over the paper as a dot (its real size on the page), then fades away
+  const szPop = document.createElement('div'); szPop.id = 'szPop'; szPop.innerHTML = '<i></i><b></b>'; document.body.appendChild(szPop);
+  let szPopT = 0;
+  function showSizePop(){
+    const pr = document.querySelector('.paper').getBoundingClientRect(), k = pr.width / W;
+    const d = Math.max(4, size * k), dot = szPop.querySelector('i');
+    dot.style.width = dot.style.height = d + 'px';
+    dot.style.background = color.toLowerCase() === '#ffffff' ? '#fff' : color;
+    szPop.querySelector('b').textContent = size + ' px';
+    szPop.style.left = (pr.left + pr.width / 2) + 'px'; szPop.style.top = (pr.top + pr.height / 2) + 'px';
+    szPop.classList.add('on'); clearTimeout(szPopT); szPopT = setTimeout(() => szPop.classList.remove('on'), 800);
+  }
   // ---------- Brush Pack engines: pixel, soft, chalk, glitter ----------
   const mk = (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k; };
   // Pixel: snaps to a chunky grid like pixel art
@@ -4740,7 +4760,7 @@
     // Extra: 8 buttons, as big as fit (up to about 20% bigger than the tools)
     bs.setProperty('--te', Math.max(18, Math.min(Math.round(tb * 1.2), Math.floor((h - 8 - 10 - 7 * 3) / 8))) + 'px');
     // Color: the 10 crayons, Mix and the size slider all in one column
-    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 6 - 8 * 3 - 4 * 4) / 12.25))) + 'px');   // 9 crayons + Mix + (+, dot, -)
+    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 10 * 4) / 11))) + 'px');   // 9 crayons + Mix + (+, -), filling the column
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
   addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
