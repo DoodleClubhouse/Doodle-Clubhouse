@@ -1051,6 +1051,22 @@
     html body .more-sheet{padding:8px!important}
     html body[data-panel="frames"] .film{padding:5px!important}
   }
+  .sz-step{display:none}
+  .sz-btn{width:100%; aspect-ratio:1; display:grid; place-items:center; padding:0; border:2px solid var(--ink); border-radius:8px; background:var(--paper); color:var(--ink); box-shadow:0 2px 0 var(--ink); cursor:pointer}
+  .sz-btn svg{width:60%; height:60%}
+  .sz-prev{display:grid; place-items:center; width:100%; aspect-ratio:1; border-radius:8px; background:rgba(255,253,247,.6)}
+  .sz-prev i{display:block; border-radius:50%; background:var(--ink)}
+  @media (max-height:500px) and (orientation:landscape){
+    /* Color column: square crayons (brown left out so it all fits), Mix, then + / a growing dot / - for the brush size */
+    html body[data-panel="colors"] .size-row{display:none!important}
+    html body[data-panel="colors"] .sz-step{display:flex!important; flex-direction:column; align-items:center; gap:4px; width:var(--sw, 24px)}
+    html body[data-panel="colors"] .sz-btn{width:var(--sw, 24px); height:var(--sw, 24px)}
+    html body[data-panel="colors"] .sz-prev{width:calc(var(--sw, 24px) + 6px)}
+    html body[data-panel="colors"] .sw[data-color="#8B5A2B"]{display:none!important}
+    html body[data-panel="colors"] .swatches > *{border-radius:6px!important}
+    html body[data-panel="colors"] .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--plank), 0 0 0 4px var(--ink)}
+    html body[data-panel="colors"] .tools > section.sec-colors > .group-label{display:none!important}
+  }
 </style>
 
 <header>
@@ -1134,6 +1150,11 @@
         <input type="range" id="size" min="0" max="200" value="64" aria-label="Brush size">
         <div class="size-dot"><i id="sizeDot"></i></div>
         <output class="size-num" id="sizeNum" for="size" aria-live="off">10 px</output>
+      </div>
+      <div class="sz-step" aria-label="Brush size">
+        <button class="sz-btn" data-step="1" aria-label="Bigger brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg></button>
+        <span class="sz-prev" id="szPrev"><i></i></span>
+        <button class="sz-btn" data-step="-1" aria-label="Smaller brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
       </div>
     </section>
     <button class="extra-btn" id="extrasBtn" data-panel="extras" aria-expanded="false" title="Page size, paper and wall color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg><span>Extra</span></button>
@@ -1650,8 +1671,19 @@
     dot.style.width = dot.style.height = d + 'px';
     dot.style.background = color.toLowerCase() === '#ffffff' ? '#ddd' : color;
     sizeNum.textContent = size + ' px';
+    // the +/- size picker: a dot that grows with the brush
+    const pv = document.querySelector('#szPrev i');
+    if (pv){ const k = Math.max(3, Math.min(30, 3 + size * 0.42)); pv.style.width = pv.style.height = k + 'px'; pv.style.background = color.toLowerCase() === '#ffffff' ? '#ddd' : color; }
   }
   updateDot();
+  const SZ_STEPS = [2, 3, 4, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80];
+  document.querySelectorAll('.sz-btn').forEach(b => b.addEventListener('click', () => {
+    const up = b.dataset.step === '1';
+    const next = up ? SZ_STEPS.find(v => v > size) : [...SZ_STEPS].reverse().find(v => v < size);
+    if (next === undefined) return;
+    size = next; sizeIn.value = sliderFromSize(size); updateDot();
+    try { SFX.tick(); } catch {}
+  }));
   // ---------- Brush Pack engines: pixel, soft, chalk, glitter ----------
   const mk = (w, h) => { const k = document.createElement('canvas'); k.width = w; k.height = h; return k; };
   // Pixel: snaps to a chunky grid like pixel art
@@ -4701,7 +4733,7 @@
     // Extra: 8 buttons, as big as fit (up to about 20% bigger than the tools)
     bs.setProperty('--te', Math.max(18, Math.min(Math.round(tb * 1.2), Math.floor((h - 8 - 10 - 7 * 3) / 8))) + 'px');
     // Color: the 10 crayons, Mix and the size slider all in one column
-    bs.setProperty('--sw', Math.max(16, Math.min(26, Math.floor((h - 8 - 132 - 9 * 3) / 10))) + 'px');
+    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 6 - 8 * 3 - 4 * 4) / 12.25))) + 'px');   // 9 crayons + Mix + (+, dot, -)
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
   addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
