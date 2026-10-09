@@ -917,6 +917,20 @@
     html body[data-panel="tools"] .tools .premium:not(.unlocked){padding:4px!important}
     .dock button{font-size:9px}
   }
+  /* phone sideways, fitted: slim top bar (more paper), menu buttons always inside the yellow bar, tool column sized to the screen */
+  @media (max-height:500px) and (orientation:landscape){
+    html body header{padding-block:3px 2px!important}
+    html body .logo img{height:32px!important}
+    html body .top-actions{gap:5px}
+    html body .top-actions .btn{padding:4px 7px!important}
+    html body .top-actions .btn svg{width:17px; height:17px}
+    html body .zoom-ctl button{padding:4px 6px!important; min-width:26px}
+    html body .dock{overflow:hidden; padding:3px!important; gap:2px!important}
+    html body .dock button{flex:1 1 0!important; min-height:0!important; padding:2px!important; gap:2px!important; font-size:9px!important; overflow:hidden}
+    html body .dock button svg, html body .dock .cdot, html body .dock #dockTool svg{width:clamp(14px, 6vh, 22px)!important; height:clamp(14px, 6vh, 22px)!important}
+    html body[data-panel="tools"] .tools, html body[data-panel="colors"] .tools, html body[data-panel="extras"] .extras{top:var(--trayTop, 54px)!important; bottom:var(--trayBot, 8px)!important}
+    html body[data-panel="tools"] .tools .tool-grid > .gridbtn{border-radius:8px!important; aspect-ratio:auto!important}
+  }
 </style>
 
 <header>
@@ -3485,7 +3499,7 @@
     const was = unlocked;
     unlocked = framesUnlocked = true;
     try { localStorage.setItem(UNLOCK_KEY, '1'); localStorage.setItem(FRAMES_KEY, '1'); } catch {}
-    syncLock();
+    syncLock(); try { layoutSide(); } catch {}
     const payOpen = !$('payOverlay').hidden;
     $('payOverlay').hidden = true;   // bought: the buy window always closes by itself
     try { document.activeElement && document.activeElement.blur(); } catch {}
@@ -4515,11 +4529,25 @@
   let panel = '';
   const panelBtns = document.querySelectorAll('[data-panel]');
   document.querySelectorAll('.tray-min').forEach(b => b.addEventListener('click', () => { if (panel) setPanel(panel); }));
+
+  // phone sideways: line the trays up with the menu bar and size the tool buttons so a whole column always fits
+  function layoutSide(){
+    const bs = document.body.style;
+    if (!matchMedia('(max-height:500px) and (orientation:landscape)').matches){ ['--tb', '--trayTop', '--trayBot'].forEach(v => bs.removeProperty(v)); return; }
+    const d = document.getElementById('dock').getBoundingClientRect(); if (!d.height) return;
+    bs.setProperty('--trayTop', Math.round(d.top) + 'px'); bs.setProperty('--trayBot', Math.round(innerHeight - d.bottom) + 'px');
+    const label = document.body.dataset.tset === 'pack' && !unlocked ? 34 : 0;
+    const tb = Math.max(18, Math.min(42, Math.floor((d.height - 12 - label - 8 * 3) / 9)));
+    bs.setProperty('--tb', tb + 'px');
+  }
+  addEventListener('resize', () => requestAnimationFrame(layoutSide));
+  addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
   function setPanel(name){
     panel = panel === name ? '' : name;
     // the Brush Pack tab uses the same tray as Tools, showing only the pack's brushes
     document.body.dataset.panel = panel === 'brushes' ? 'tools' : panel;
     document.body.dataset.tset = panel === 'brushes' ? 'pack' : 'basic';
+    try { layoutSide(); } catch {}
     panelBtns.forEach(b => b.setAttribute('aria-expanded', b.dataset.panel === panel));
     requestAnimationFrame(() => { fitTools(); fit(); });   // opening Pages just shrinks the whole paper to fit above it
     placeExtras();
