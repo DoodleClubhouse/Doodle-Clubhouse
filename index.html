@@ -242,6 +242,12 @@
   .speed-ctl{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px}
   .speed-ctl .seg button{padding:8px 10px; font:800 13px/1 var(--body)}
   .speed-ctl #speedSave{margin-left:auto}
+  .speed-ctl .lbl-short{display:none}
+  @media (max-width:520px){ .speed-ctl .lbl-long{display:none} .speed-ctl .lbl-short{display:inline} }
+  .share-btn{background:#FF4E45 !important; color:#fff !important}
+  .ex-mode{display:flex; gap:6px; margin:0 0 10px}
+  .ex-mode button{flex:1; justify-content:center}
+  .ex-mode button[aria-pressed="true"]{background:var(--ink); color:#fff}
   .mk-row{display:flex; align-items:center; gap:10px; margin-top:10px; font:800 13px/1 var(--body); color:var(--ink); flex:none}
   .mk-row[hidden]{display:none}
   .mk-bar{flex:1; max-width:220px; height:8px; border-radius:4px; background:#E4DED0; overflow:hidden; border:1.5px solid var(--ink)}
@@ -411,6 +417,10 @@
     body[data-panel="tools"] .tools .tray-min{position:absolute; top:6px; right:6px; width:30px; height:30px; padding:0; display:grid; place-items:center}
     body[data-panel="tools"] .tools .tray-min span{display:none}
     body[data-panel="tools"] .tools .tray-min svg{transform:rotate(-90deg)}
+    /* tools row shrinks to fit so nothing ever slides under the minimize button */
+    body[data-panel="tools"] .sec-tools:not(.premium){flex:1 1 100%; min-width:0}
+    body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid{flex:1 1 0; min-width:0}
+    body[data-panel="tools"] .sec-tools:not(.premium) .tool-grid .tool{flex:1 1 0; width:auto; min-width:0; max-width:36px; height:auto; aspect-ratio:1}
   }
 
   /* phone turned sideways: the tool strip sits right above the slimmer bottom bar */
@@ -628,6 +638,10 @@
   #brushRing[hidden]{display:none}
   /* dynamite + wormhole share one row */
   .dyn-row{grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px}
+  .dyn-row .tool.dyn span{font-size:9.5px; letter-spacing:-.1px}
+  .tool.dyn span{display:none !important}
+  .dyn-row .tool.dyn{justify-content:center; align-items:center}
+  .dyn-row .tool.dyn svg{width:28px !important; height:28px !important}
   .dyn-row .tool.dyn{grid-column:auto; flex-direction:column; font-size:11px; gap:3px; padding:6px 2px; min-width:0}
   .dyn-row .tool.dyn svg{width:22px; height:22px; flex:none}
   .tool.dyn[data-tool="wormhole"]{background:#E8DEFF}
@@ -884,7 +898,8 @@
       </div>
       <span class="speed-dur" id="speedDur"></span>
       <button class="btn" id="speedPlay"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Replay</button>
-      <button class="btn primary" id="speedSave" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download video</button>
+      <button class="btn primary" id="speedSave" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl-long">Download video</span><span class="lbl-short">Save</span></button>
+      <button class="btn primary share-btn" id="speedShare" hidden title="Share to YouTube, Messages and more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg>Share</button>
     </div>
     <div class="mk-row" id="mkRow" hidden><span>Making your video</span><div class="mk-bar"><i id="mkFill"></i></div></div>
     <p class="export-status" id="speedStatus"></p>
@@ -953,9 +968,13 @@
     <div class="sheet-head">
       <div>
         <h2 id="exportTitle">Export</h2>
-        <p>Save your work to this device.</p>
+        <p id="exportSub">Save your work to this device.</p>
       </div>
       <button class="btn" id="closeExport">Close</button>
+    </div>
+    <div class="ex-mode" role="group" aria-label="Save or share">
+      <button class="btn" id="exModeSave" aria-pressed="true">Save</button>
+      <button class="btn" id="exModeShare" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg>Share (YouTube &amp; more)</button>
     </div>
     <div class="export-list">
       <button class="export-opt" id="exJpg"><b>Drawing (JPG)</b><span id="exJpgNote">A picture of the frame you're on</span></button>
@@ -988,7 +1007,7 @@
   // true inside the iPhone/iPad app (Capacitor); false on the web preview
   const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   const PAPER = '#FFFDF7';
-  const COLORS = ['#111111','#FF5A5F','#FF9F1C','#FFD84D','#4CC38A','#2E9CDB','#6C4DF6','#F279B8','#8B5A2B','#FFFFFF'];
+  const COLORS = ['#111111','#FF5A5F','#FF9F1C','#FFD84D','#8CC63F','#2E9CDB','#6C4DF6','#F279B8','#8B5A2B','#FFFFFF'];
   const c = document.getElementById('c');
   const ctx = c.getContext('2d', { willReadFrequently: true });
   // Paper size: 1280 x 720 (wide) unless the family picked another size (Tall, Square, Fill my screen or their own)
@@ -1414,6 +1433,14 @@
   const fx = document.getElementById('fx'), fxc = fx.getContext('2d');
   let FXW = Math.round(W / 2), FXH = Math.round(H / 2);
   fx.width = FXW; fx.height = FXH;
+  // effects are drawn at the screen's real sharpness (retina too), so dynamite & co. are crisp, never blurry
+  function fxSize(){
+    const r = c.getBoundingClientRect(), K = Math.max(.5, Math.min(2.5, (r.width || W) * (window.devicePixelRatio || 1) / W));
+    FXW = Math.round(W * K); FXH = Math.round(H * K);
+    if (fx.width !== FXW || fx.height !== FXH){ fx.width = FXW; fx.height = FXH; }
+    else { fxc.setTransform(1, 0, 0, 1, 0, 0); fxc.globalAlpha = 1; fxc.globalCompositeOperation = 'source-over'; fxc.shadowBlur = 0; fxc.filter = 'none'; fxc.clearRect(0, 0, FXW, FXH); }   // fresh state for each effect
+    return K;
+  }
   let boomBusy = false, audioCtx = null;
   // ---------- sounds: small, soft, toy-like effects made on the fly (no files) ----------
   let soundOn = true; try { soundOn = localStorage.getItem('doodle-clubhouse-sound') !== 'off'; } catch {}
@@ -1699,19 +1726,23 @@
     boomBusy = true; fx.hidden = false; pushUndo(); wormSound();
     const R = Math.min(W, H) * 0.42, orig = ctx.getImageData(0, 0, W, H);
     // half-size copy for the live animation
-    const half = mk(FXW, FXH), hg = half.getContext('2d', { willReadFrequently: true }); hg.drawImage(c, 0, 0, FXW, FXH);
-    const hsrc = hg.getImageData(0, 0, FXW, FXH), hdst = hg.createImageData(FXW, FXH);
-    const hx = px / W * FXW, hy = py / H * FXH, hR = R / W * FXW;
+    const K = fxSize(), HW = Math.round(W / 2), HH = Math.round(H / 2);
+    const half = mk(HW, HH), hg = half.getContext('2d', { willReadFrequently: true }); hg.drawImage(c, 0, 0, HW, HH);
+    const hsrc = hg.getImageData(0, 0, HW, HH), hdst = hg.createImageData(HW, HH);
+    const wx = px / W * HW, wy = py / H * HH, wR = R / W * HW;          // warp preview space (half size)
+    const hx = px * K, hy = py * K, hR = R * K;                          // sharp graphics space
     // the circle on the page is hidden while the animation plays above it
-    ctx.save(); ctx.beginPath(); ctx.arc(px, py, R - 1, 0, Math.PI * 2); ctx.clip(); ctx.clearRect(0, 0, W, H); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.arc(px, py, R - 6, 0, Math.PI * 2); ctx.clip(); ctx.clearRect(0, 0, W, H); ctx.restore();   /* a little smaller than the animated circle, so the two overlap and no seam ever shows */
     const DUR = 1700, t0 = performance.now();
     const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     const frame = now => {
       // the twist only ever goes one way: it builds smoothly up to the final gentle warp (never unwinds)
       const t = Math.min(1, (now - t0) / DUR), s = WORM_KEEP * ease(t);
       fxc.clearRect(0, 0, FXW, FXH);
-      warpInto(hsrc, hdst, FXW, FXH, hx, hy, hR, s, false);
-      fxc.putImageData(hdst, 0, 0, Math.max(0, hx - hR - 1) | 0, Math.max(0, hy - hR - 1) | 0, (hR * 2 + 3) | 0, (hR * 2 + 3) | 0);
+      warpInto(hsrc, hdst, HW, HH, wx, wy, wR, s, true);   // smooth sampling so the live preview is not jaggy
+      hg.putImageData(hdst, 0, 0);
+      fxc.save(); fxc.beginPath(); fxc.arc(hx, hy, hR, 0, Math.PI * 2); fxc.clip();
+      fxc.imageSmoothingEnabled = true; fxc.drawImage(half, 0, 0, FXW, FXH); fxc.restore();
       // the wormhole itself: a black eye inside many glowing, spinning rings of blue, cyan, purple and pink light
       const open = Math.sin(Math.PI * Math.min(1, t * 1.05)), eye = hR * (0.07 + 0.13 * open);
       if (open > 0.01){
@@ -1755,7 +1786,7 @@
     if (boomBusy) return;
     boomBusy = true; fx.hidden = false;
     fuseSound(1.3);
-    const x = px / 2, y = py / 2, s = Math.min(FXW, FXH) / 28, FUSE = 1300, PAUSE = 350, BOOM_AT = 600;
+    const K = fxSize(), x = px * K, y = py * K, s = Math.min(FXW, FXH) / 28, FUSE = 1300, PAUSE = 350, BOOM_AT = 600;
     const parts = []; let t0 = performance.now(), boomed = false, erased = false;
     const rnd = (a, b) => a + Math.random() * (b - a);
     const frame = now => {
@@ -2148,7 +2179,15 @@
   }
   // Splatter spray: paint flicked everywhere - lots of round drops from tiny specks to big blobs, splats with
   // droplets thrown out around them, and drips that run down when you hold still. Messy on purpose!
-  let sprayDrips = [], sprayLast = null, sprayStill = 0, spraySnd = null;
+  let sprayDrips = [], sprayLast = null, sprayStill = 0, spraySnd = null, sprayPlipT = 0;
+  // spray splatter sound: cute little paint-drop 'plips' (happy notes) pitter-pattering over a soft hiss
+  function sprayPlip(){
+    try { const notes = [880, 988, 1175, 1319, 1568, 1760, 2093], f = notes[Math.random() * notes.length | 0] * (.97 + Math.random() * .06);
+      tone(f * 1.25, f * .7, .06, .022 + Math.random() * .012, 'sine');   // tiny droplet 'plip'
+      if (Math.random() < .5) noiseBurst(.035, 2400 + Math.random() * 1500, 3, .014);   // wet tick as it lands
+    } catch {}
+  }
+  function sprayPlop(start){ try { tone(start ? 520 : 700, start ? 900 : 380, .09, .05, 'sine'); noiseBurst(.07, 1800, 1.4, .03); } catch {} }   // 'pshh-bloop' when you press / let go
   const splatDot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
   function spray(){
     if (!sprayPt) return;
@@ -2229,7 +2268,7 @@
     if (tool === 'brush'){ makeBristles(); brushV = 0; brushF = prevF = widthLocked ? 1 : 1.1; }
     if (tool === 'line'){ lineBase = snapshot(); }
     else if (tool === 'marker'){ markerBase = undoStack[undoStack.length-1]; markerPts = [p]; drawMarker(); }
-    else if (tool === 'spray'){ sprayPt = p; sprayLast = null; sprayStill = 0; sprayDrips = []; try { spraySnd && spraySnd.stop(); spraySnd = loopSound('spray'); if (spraySnd) spraySnd.level(.07, 0, .07); /* a calm, smooth 'shhh' that fades in */ } catch {} spray(); sprayTimer = setInterval(spray, 30); }
+    else if (tool === 'spray'){ sprayPt = p; sprayLast = null; sprayStill = 0; sprayDrips = []; try { spraySnd && spraySnd.stop(); spraySnd = loopSound('spray'); if (spraySnd) spraySnd.level(.035, 0, .07); /* soft 'shhh' underneath */ sprayPlop(true); clearTimeout(sprayPlipT); const plip = () => { sprayPlip(); sprayPlipT = setTimeout(plip, 55 + Math.random() * 90); }; sprayPlipT = setTimeout(plip, 60); } catch {} spray(); sprayTimer = setInterval(spray, 30); }
     else if (TEX.has(tool)){ txStart(p); }
     else if (tool === 'glitter'){ glitterState = { carry:0 }; seg(p, p); }
     else if (tool === 'fur'){ furState = { carry:0, dir:0 }; }
@@ -2281,7 +2320,7 @@
       if (eraserSnd.dist > 38 && now - eraserSnd.last > 70){ eraserSnd.dist = 0; eraserSnd.last = now; try { eraserBubble(); } catch {} }
     }
   });
-  const end = e => { if (e && activePointer !== null && e.pointerId !== activePointer) return; activePointer = null; txEnd(); if (pencilS) pencilEnd(); if (eraserSnd){ try { eraserBubble(1.6, .03); eraserBubble(2, .1); } catch {} eraserSnd = null; /* pop-pop: all clean! */ } if (spraySnd){ try { spraySnd.stop(.35); } catch {} spraySnd = null; } drawing = false; stampTrail = null; clearInterval(sprayTimer); sprayTimer = null; sprayPt = null; lineBase = null; };
+  const end = e => { if (e && activePointer !== null && e.pointerId !== activePointer) return; activePointer = null; txEnd(); if (pencilS) pencilEnd(); if (eraserSnd){ try { eraserBubble(1.6, .03); eraserBubble(2, .1); } catch {} eraserSnd = null; /* pop-pop: all clean! */ } if (spraySnd){ try { spraySnd.stop(.25); sprayPlop(false); } catch {} spraySnd = null; } clearTimeout(sprayPlipT); sprayPlipT = 0; drawing = false; stampTrail = null; clearInterval(sprayTimer); sprayTimer = null; sprayPt = null; lineBase = null; };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   c.addEventListener('lostpointercapture', e => { if (drawing && e.pointerId === activePointer) end(e); });
   window.addEventListener('pointerup', e => { if (drawing && e.target !== c && e.pointerId === activePointer) end(e); });
@@ -3093,10 +3132,9 @@
       if (on){ syncOpts(); inW.value = W; inH.value = H; }
     }
     // which size the family picked: square, wide, tall, fit (fills the screen, follows rotation) or custom
-    const MODE_KEY = 'doodle-clubhouse-paper-mode';
+    const MODE_KEY = 'doodle-clubhouse-paper-mode-v2';   // v2: everyone starts on Fill screen
     let sizeMode = 'custom';
-    try { sizeMode = localStorage.getItem(MODE_KEY) || ''; } catch {}
-    if (!sizeMode) sizeMode = (W === H && W === 1080) ? 'square' : (W === 1280 && H === 720) ? 'wide' : (W === 720 && H === 1280) ? 'tall' : 'custom';
+    sizeMode = 'fit';   // the app always opens on Fill screen paper (picking another size lasts until the app is closed)
     const MODES = { square:[1080, 1080], wide:[1280, 720], tall:[720, 1280] };
     const NAMES = { square:'Square paper', wide:'Wide paper', tall:'Tall paper', fit:'Fill screen paper', custom:'New paper size' };
     paperSyncModes = () => { document.body.dataset.paperMode = sizeMode; document.querySelectorAll('.size-opt').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === sizeMode)); };
@@ -3207,7 +3245,7 @@
     const sz = m => { const k = Math.min(1, m / Math.max(W, H)); return `${Math.round(W * k)} × ${Math.round(H * k)}`; };
     $('exJpgNote').textContent = `A picture of the page you're on · ${W} × ${H}`;
     if (!one){ $('exGifNote').textContent += ` · ${sz(600)}`; $('exMp4Note').textContent += ` · ${sz(1000)}`; }
-    exStatus(''); $('exportOverlay').hidden = false; $('closeExport').focus();
+    setExMode(exShare); exStatus(''); $('exportOverlay').hidden = false; $('closeExport').focus();
   }
   $('exportBtn').onclick = () => askGrownUp(openExport);
   $('exportAnimBtn').onclick = () => askGrownUp(openExport);
@@ -3220,15 +3258,31 @@
     const { uri } = await Filesystem.writeFile({ path: filename, data: b64, directory: 'CACHE' });
     await Share.share({ title: 'My Doodle Clubhouse art', files: [uri] });
   }
-  async function offer(filename, data){
-    exStatus('Choose where to save it…');
+  // Share: the phone's share menu (YouTube, Messages, Photos…). Where that isn't possible, save the file instead.
+  let exShare = false;
+  function setExMode(sh){ exShare = sh; $('exModeSave').setAttribute('aria-pressed', !sh); $('exModeShare').setAttribute('aria-pressed', sh);
+    $('exportSub').textContent = sh ? 'Pick one, then choose YouTube (or anywhere) to post it.' : 'Save your work to this device.'; }
+  $('exModeSave').onclick = () => setExMode(false); $('exModeShare').onclick = () => setExMode(true);
+  async function webShare(filename, data){
+    if (!navigator.share || !navigator.canShare || !window.File) return false;
+    const type = /\.mp4$/.test(filename) ? 'video/mp4' : /\.gif$/.test(filename) ? 'image/gif' : 'image/jpeg';
+    const file = new File([data], filename, { type });
+    if (!navigator.canShare({ files: [file] })) return false;
+    try { await navigator.share({ files: [file], title: 'My Doodle Clubhouse art' }); return true; }
+    catch (e){ if (e && e.name === 'AbortError'){ const err = new Error('declined'); err.code = 'declined'; throw err; } return false; }
+  }
+  async function offer(filename, data, share = exShare){
+    exStatus(share ? 'Opening the share menu…' : 'Choose where to save it…');
     try {
-      if (downloads.native) await nativeShare(filename, data instanceof Blob ? data : new Blob([data]));
+      let shared = false;
+      if (downloads.native) { await nativeShare(filename, data instanceof Blob ? data : new Blob([data])); shared = share; }
+      else if (share && await webShare(filename, data)) shared = true;
       else await downloads.save({ filename, data });
-      exStatus(''); $('exportOverlay').hidden = true; SFX.chime(); toast('Saved!');
+      exStatus(''); $('exportOverlay').hidden = true; SFX.chime();
+      toast(shared ? 'Shared!' : share ? 'Saved! Open the YouTube app to post it.' : 'Saved!');
     } catch (e){
       const code = e && e.code;
-      if (code === 'declined') exStatus('Not saved.');
+      if (code === 'declined') exStatus(share ? 'Not shared.' : 'Not saved.');
       else if (code === 'rate_limited') exStatus('One moment, then try again.');
       else if (code === 'too_large') exStatus('That file is too big to save here. Try a GIF or fewer pages.');
       else exStatus('Saving isn’t available here.');
@@ -3447,7 +3501,7 @@
     }
     async function open(){
       $('speedOverlay').hidden = false; status('Getting your speed art ready…');
-      $('speedSave').hidden = !downloads;
+      $('speedSave').hidden = $('speedShare').hidden = !downloads;
       cutA = 0; cutB = 1; $('cutA').value = 0; $('cutB').value = 1000; pos = 0;
       await loadShots();
       if (!bmps.length){ draw(); status('Draw something first, then come back to watch it!'); return; }
@@ -3486,14 +3540,16 @@
       if (making) return;
       speedX = +b.dataset.x; $('speedLen').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); syncDur(); spPlay(true);
     });
-    $('speedSave').onclick = () => askGrownUp(async () => {
+    let spShareNext = false;
+    $('speedShare').onclick = () => { spShareNext = true; $('speedSave').onclick(); };
+    $('speedSave').onclick = () => { const share = spShareNext; spShareNext = false; askGrownUp(async () => {
       if (making || !bmps.length) { if (!bmps.length) status('Draw something first!'); return; }
       const types = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1.4D401F', 'video/mp4;codecs=avc1'];
       if (NATIVE) types.push('video/mp4');
       const mime = window.MediaRecorder && types.find(t => MediaRecorder.isTypeSupported(t));
       if (!mime || !HTMLCanvasElement.prototype.captureStream){ status('This browser can’t make MP4 videos. Try Safari on iPhone or Chrome.'); return; }
       making = true; spStop();
-      document.querySelectorAll('#speedLen button, #speedPlay, #speedSave, #closeSpeed, #speedPause, #speedSkip, #cutA, #cutB').forEach(b => b.disabled = true);
+      document.querySelectorAll('#speedLen button, #speedPlay, #speedSave, #speedShare, #closeSpeed, #speedPause, #speedSkip, #cutA, #cutB').forEach(b => b.disabled = true);
       try {
         // video is the paper shape, long side 1080, even numbers for H.264
         const k = 1080 / Math.max(W, H); let w = Math.round(W * k), h = Math.round(H * k); w -= w % 2; h -= h % 2;
@@ -3520,12 +3576,12 @@
         rec.stop(); await done; track.stop();
         $('mkFill').style.width = '100%'; setTimeout(() => { $('mkRow').hidden = true; }, 300);
         status('');
-        await offer(`doodle-speedart-${fileStamp()}.mp4`, new Blob(chunks, { type: 'video/mp4' }));
+        await offer(`doodle-speedart-${fileStamp()}.mp4`, new Blob(chunks, { type: 'video/mp4' }), share);
         const es = $('exportStatus').textContent; $('exportStatus').textContent = '';
-        status(es && es !== 'Choose where to save it…' ? es : 'Your speed art video is ready!');
+        status(es && es !== 'Choose where to save it…' && es !== 'Opening the share menu…' ? es : 'Your speed art video is ready!');
       } catch (e){ $('mkRow').hidden = true; status('Something went wrong making the video. Please try again.'); }
-      finally { making = false; document.querySelectorAll('#speedLen button, #speedPlay, #speedSave, #closeSpeed, #speedPause, #speedSkip, #cutA, #cutB').forEach(b => b.disabled = false); }
-    });
+      finally { making = false; document.querySelectorAll('#speedLen button, #speedPlay, #speedSave, #speedShare, #closeSpeed, #speedPause, #speedSkip, #cutA, #cutB').forEach(b => b.disabled = false); }
+    }); };
   }
 
   // Small GIF89a encoder: one shared 256-colour palette across all frames (no flicker), LZW-compressed, loops forever.
