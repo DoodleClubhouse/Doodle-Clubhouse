@@ -114,6 +114,7 @@
   .custom-row{display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:8px}
   .custom-row .custom{margin-top:0; white-space:nowrap; font-size:12px}
   #eyedrop[aria-pressed="true"], #lockWidth[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  body.picking, body.picking *{cursor:none !important}
   .custom-row .btn.sm.ico{padding:6px 7px}
   .custom-row > .btn + .btn{margin-left:-2px}
   .custom input[type=color]{width:34px;height:28px;border:2px solid var(--ink);border-radius:8px;padding:0;background:none;cursor:pointer}
@@ -708,6 +709,8 @@
   #fxIcon[hidden]{display:none}
   #fxIcon svg{width:100%; height:100%; display:block}
   #fxIcon.idle{animation:fxBob 1.3s ease-in-out infinite}
+  /* eyedropper: the dropper icon itself is the cursor, with its tip on the spot you'll pick */
+  #fxIcon.dropper{width:30px; height:30px; transform:translate(-14%,-86%); color:var(--ink); filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 3px 2px rgba(0,0,0,.3))}
   @keyframes fxBob{50%{transform:translate(-50%,-60%) rotate(-7deg)}}
   .tool.dyn[data-tool="wormhole"][aria-pressed="true"]{background:var(--ink); color:#C9B2FF}
   @media (max-width:760px), (max-height:500px){ body[data-panel="tools"] .dyn-row{display:contents} }
@@ -803,7 +806,7 @@
       <div class="tool-grid" id="toolGrid">
         <button class="tool" data-tool="pencil" title="Pencil (B)" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z" fill="#FFD84D"/><path d="M4 20l1-4 3 3z" fill="currentColor"/><path d="M14 7l3 3"/></svg></button>
         <button class="tool" data-tool="soft" title="Soft brush (O)" aria-label="Soft brush" aria-pressed="false"><svg viewBox="0 0 24 24"><defs><radialGradient id="softIco"><stop offset="0" stop-color="currentColor"/><stop offset=".5" stop-color="currentColor" stop-opacity=".45"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#softIco)"/></svg></button>
-        <button class="tool" data-tool="spray" title="Splatter spray (S): hold still for drips!" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="8" height="11" rx="2"/><path d="M8 10V7h4v3M17 5h.01M20 7h.01M17 9h.01M20 3h.01"/></svg></button>
+        <button class="tool" data-tool="spray" title="Splatter spray (S): hold still for drips!" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.3 22.2h6.4c.8 0 1.4-.6 1.4-1.4v-9.4c0-1.6-1.3-2.9-2.9-2.9H6.8c-1.6 0-2.9 1.3-2.9 2.9v9.4c0 .8.6 1.4 1.4 1.4z"/><path d="M3.9 12.2h9.2M3.9 19.6h9.2"/><path d="M6.4 8.5V6.6h4.2v1.9"/><path d="M7.3 6.6V3.9h1.6l.8.8v1.9"/><path d="M6.2 14.4v3.2"/><path d="M12.6 4.5l8.6-2.4M12.6 5.4h8.4M12.6 6.3l8.6 1.9" stroke-width="1.4"/></svg></button>
         <button class="tool" data-tool="fill" title="Paint bucket (K)" aria-pressed="false"><svg viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-38 13 12)"><ellipse cx="13" cy="5.5" rx="6.2" ry="2.3"/><path d="M6.8 5.5l1.4 11.7c.2 1.1 2.2 2 4.8 2s4.6-.9 4.8-2l1.4-11.7"/><path d="M19.2 5.5c3.2.3 3.4 5.3.3 6.6"/><path d="M9.8 7.4c1.8 1.4 4.6 1.4 6.4 0" /><path d="M9.7 11l.3 2.6M10.3 15.4l.1.8"/></g><path d="M5 14.8s-2.7 3.1-2.7 4.8a2.7 2.7 0 0 0 5.4 0c0-1.7-2.7-4.8-2.7-4.8z" fill="#6EC6FF"/></svg></button>
         <button class="tool" data-tool="eraser" title="Eraser (E)" aria-pressed="false"><svg viewBox="0 0 20 25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 16L14 3.5 18.5 8 6 20.5z" fill="#FF9EC0"/><path d="M6 20.5L18.5 8V11.5L6 24z" fill="#F0628F"/><path d="M1.5 16L6 20.5V24L1.5 19.5z" fill="#E04B7B"/><path d="M10.5 7L14 3.5 18.5 8 15 11.5z" fill="#FFFDF7"/><path d="M15 11.5L18.5 8V11.5L15 15z" fill="#D5DDEB"/></svg></button>
         <button class="tool dyn" data-tool="dynamite" title="Dynamite: tap the page to blow it all away (Y)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(14 11 15)" stroke="#111" stroke-width="1.2" stroke-linejoin="round"><rect x="4.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="8.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="12.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="4" y="12.5" width="13" height="2" fill="#5C5C66"/><rect x="4" y="17" width="13" height="2" fill="#5C5C66"/><ellipse cx="6.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="10.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="14.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><path d="M10.5 9c0-3 3-4 6-5" fill="none" stroke-linecap="round"/></g><path d="M20.5 1.2l.8 2 2-.4-1.2 1.6 1.4 1.4-2-.2-.4 2-1-1.8-1.8 1 .6-2-1.9-.8 2-.6z" fill="#FFA21F" stroke="#D7263D" stroke-width=".6"/></svg><span>Dynamite</span></button>
@@ -1261,11 +1264,11 @@
     }
   }
   c.addEventListener('pointermove', e => {
-    if (!FX_TOOLS.has(tool) || e.pointerType === 'touch' || boomBusy) return;
+    if (!FX_TOOLS.has(tool) || e.pointerType === 'touch' || boomBusy || (typeof picking !== 'undefined' && picking)) return;
     fxIcon.style.left = e.clientX + 'px'; fxIcon.style.top = e.clientY + 'px'; fxIcon.classList.remove('idle'); fxIconFollow = true; fxIcon.hidden = false;
   });
-  c.addEventListener('pointerleave', e => { if (FX_TOOLS.has(tool) && e.pointerType !== 'touch' && fxIconFollow) fxIcon.hidden = true; });
-  c.addEventListener('pointerdown', () => { if (FX_TOOLS.has(tool)) fxIcon.hidden = true; }, true);   // tapped the paper: the icon has done its job
+  c.addEventListener('pointerleave', e => { if (FX_TOOLS.has(tool) && e.pointerType !== 'touch' && fxIconFollow && !(typeof picking !== 'undefined' && picking)) fxIcon.hidden = true; });
+  c.addEventListener('pointerdown', () => { if (FX_TOOLS.has(tool) && !(typeof picking !== 'undefined' && picking)) fxIcon.hidden = true; }, true);   // tapped the paper: the icon has done its job
   function cursorFor(t){ return FX_TOOLS.has(t) ? 'none' : t === 'dynamite' ? DYN_CURSOR : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? 'crosshair' : 'crosshair'; }
   // ---------- premium lock ----------
   const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror','wormhole','blacklight','tornado']);   // the paint bucket is free
@@ -1286,6 +1289,8 @@
   function setTool(t, s){
     if (PREMIUM.has(t) && !unlocked){ openPaywall(t); return; }
     tool = t; stamp = s || null;
+    if (t === 'spray' && !setTool.sprayed){ setTool.sprayed = true; try { size = 15; sizeIn.value = sliderFromSize(size); updateDot(); } catch {} }   // splatter starts at 15px the first time you pick it
+    try { if (picking) setPicking(false); } catch {}   // choosing any tool turns the eyedropper off
     toolBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t && (b.dataset.stamp || null) === stamp));
     c.style.cursor = cursorFor(t);
     try { syncFxIcon(true); } catch {}
@@ -1327,10 +1332,14 @@
     try { SFX.paper(); } catch {}
   }
   let shapeHold = 0, shapeHeld = false;
-  lineBtn.addEventListener('pointerdown', () => { shapeHeld = false; clearTimeout(shapeHold); shapeHold = setTimeout(() => { shapeHeld = true; setTool('line'); openShapes(); }, 450); });
+  let shapeWasOpen = false;
+  lineBtn.addEventListener('pointerdown', () => { shapeHeld = false; shapeWasOpen = !shapePop.hidden; clearTimeout(shapeHold); if (shapeWasOpen) return; shapeHold = setTimeout(() => { shapeHeld = true; setTool('line'); openShapes(); }, 220); });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => lineBtn.addEventListener(t, () => clearTimeout(shapeHold)));
   lineBtn.addEventListener('contextmenu', e => { e.preventDefault(); clearTimeout(shapeHold); shapeHeld = true; setTool('line'); openShapes(); });
-  lineBtn.addEventListener('click', e => { if (shapeHeld){ shapeHeld = false; e.stopImmediatePropagation(); } }, true);
+  lineBtn.addEventListener('click', e => {
+    if (shapeHeld){ shapeHeld = false; e.stopImmediatePropagation(); return; }
+    if (shapeWasOpen){ shapeWasOpen = false; shapePop.hidden = true; e.stopImmediatePropagation(); }   // tap the button again: menu closes, same tool & shape
+  }, true);
   shapePop.addEventListener('click', e => {
     const b = e.target.closest('[data-shape]'); if (!b) return;
     lineShape = b.dataset.shape; try { localStorage.setItem('doodle-clubhouse-shape', lineShape); } catch {}
@@ -1624,11 +1633,11 @@
     else if (kind === 'eraser'){ f1.type = 'bandpass'; f1.frequency.value = 850; f1.Q.value = .35; f2.type = 'lowpass'; f2.frequency.value = 1700; f2.Q.value = .2; }
     else if (kind === 'fur'){ f1.type = 'bandpass'; f1.frequency.value = 1000; f1.Q.value = .6; f2.type = 'lowpass'; f2.frequency.value = 2600; f2.Q.value = .3; }   // soft, fluffy 'fff'
     else { f1.type = 'highpass'; f1.frequency.value = 700; f2.type = 'lowpass'; f2.frequency.value = 5200; f2.Q.value = .3; }
-    g.gain.value = 0.0001;
+    g.gain.value = 0.0001; let idle = 0, stopped = false;
     src.connect(f1).connect(f2).connect(g).connect(a.destination); src.start();
     return {
-      level(v, freq, tc = .03){ const t = a.currentTime; g.gain.setTargetAtTime(Math.max(.0001, v), t, tc); if (freq) f1.frequency.setTargetAtTime(freq, t, .05); },
-      stop(rel = .12){ const t = a.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(.0001, t, rel / 3); src.stop(t + rel + .05); }
+      level(v, freq, tc = .03){ const t = a.currentTime; clearTimeout(idle); idle = setTimeout(() => { try { g.gain.setTargetAtTime(.0001, a.currentTime, .05); } catch {} }, 90); g.gain.setTargetAtTime(Math.max(.0001, v), t, tc); if (freq) f1.frequency.setTargetAtTime(freq, t, .05); },
+      stop(rel = .12){ if (stopped) return; stopped = true; clearTimeout(idle); const t = a.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(.0001, t, rel / 3); try { src.stop(t + rel + .05); } catch {} }
     };
   }
   // Pencil sound: realistic graphite on paper, with cute bell notes on top.
@@ -1663,7 +1672,7 @@
     const g = a.createGain(); g.gain.value = .0001;
     src.connect(hp).connect(dust).connect(lp).connect(g).connect(a.destination);
     src.start(0, Math.random() * 2.5);
-    let travelled = 0, dist = 0, lastNote = 0, lastIdx = -1;
+    let travelled = 0, dist = 0, lastNote = 0, lastIdx = -1, idle = 0, stopped = false;
     const puff = (f, dur, vol, delay = 0) => noiseBurst(dur, f, .8, vol, delay, 'bandpass', f * .6);
     // the cute part: drawing plays soft little bell notes. Higher up the page = higher note, so every doodle is a tune.
     const bell = (f, vol, delay = 0) => {
@@ -1689,6 +1698,7 @@
         }
         // pencil on paper: silent when still, a fine soft scratch when slow, a busier brighter scritch when fast
         // calm and smooth: gentle swells, no sudden jumps
+        clearTimeout(idle); idle = setTimeout(() => { try { g.gain.setTargetAtTime(.0001, a.currentTime, .05); } catch {} }, 90);   // pen held still: go quiet
         const t = a.currentTime, v = speed < .02 ? 0 : Math.min(.07, .014 + Math.sqrt(speed) * .032);   // pencil-on-paper kept low, under the notes
         g.gain.setTargetAtTime(Math.max(.0001, v), t, v > g.gain.value ? .04 : .1);
         src.playbackRate.setTargetAtTime(.85 + Math.min(.25, speed * .1), t, .12);
@@ -1697,7 +1707,7 @@
       },
       flick(){},
       touch(){ noiseBurst(.014, 4500, 2, .02); tone(340, 220, .03, .01, 'sine'); bell(783.99, .014); },   // the little 'tick' of the lead touching paper
-      stop(){ const t = a.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(.0001, t, .05); src.stop(t + .35);
+      stop(){ if (stopped) return; stopped = true; clearTimeout(idle); const t = a.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(.0001, t, .05); try { src.stop(t + .35); } catch {}
         if (travelled > 2){ const i = Math.max(2, lastIdx); bell(SCALE[Math.min(SCALE.length - 1, i)] * 2, .02, .03); bell(SCALE[Math.min(SCALE.length - 1, i)] * 3, .012, .1); }   // a tiny sparkle as it lifts
       }
     };
@@ -2284,11 +2294,16 @@
   const eyeBtn = document.getElementById('eyedrop');
   function setPicking(on){
     picking = on; eyeBtn.setAttribute('aria-pressed', on);
-    c.style.cursor = on ? 'copy' : cursorFor(tool);
+    // while the eyedropper is on, no tool button shows as picked; afterwards the tool you had comes back
+    toolBtns.forEach(b => b.setAttribute('aria-pressed', !on && b.dataset.tool === tool && (b.dataset.stamp || null) === stamp));
+    try { fxIcon.hidden = true; fxIcon.classList.toggle('dropper', on); if (on) fxIcon.innerHTML = eyeBtn.querySelector('svg').outerHTML; else syncFxIcon(true); } catch {}
+    document.body.classList.toggle('picking', on);
+    try { if (on){ pickBefore = custom.value; pickedNow = false; } else { if (!pickedNow && pickBefore !== null) custom.value = pickBefore; pickBefore = null; pickedNow = false; } } catch {}
+    c.style.cursor = on ? '' : cursorFor(tool);
   }
   // ---------- brush-size ring on the mouse pointer (computers): shows exactly how big the line will be ----------
   const ring = document.createElement('div'); ring.id = 'brushRing'; ring.hidden = true; document.body.appendChild(ring);
-  const RING_X = { eraser: 2, spray: 6.4, soft: 4.4, marker: 1.8, fur: 2.2, glitter: 3 };
+  const RING_X = { brush: 1.7, eraser: 2, spray: 6.4, soft: 4.4, marker: 1.8, fur: 2.2, glitter: 3 };
   const RING_TOOLS = new Set(['pencil','eraser','marker','spray','soft','brush','rainbow','chalk','fur','mirror','line','pixel','glitter']);
   let ringAt = null;
   function syncRing(){
@@ -2296,7 +2311,7 @@
     ring.hidden = !on;
     c.style.cursor = on ? 'none' : picking ? 'copy' : cursorFor(tool);
     if (!on) return;
-    const k = c.getBoundingClientRect().width / W, d = Math.max(4, size * (RING_X[tool] || 1) * k);
+    const k = c.getBoundingClientRect().width / W, d = Math.max(4, (tool === 'spray' ? 2.6 * (12 + size * 3) : size * (RING_X[tool] || 1)) * k);   // spray ring = where most of the paint lands
     ring.style.width = ring.style.height = d + 'px';
     ring.style.left = ringAt.x + 'px'; ring.style.top = ringAt.y + 'px';
   }
@@ -2305,14 +2320,59 @@
   c.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse'){ ringAt = { x: e.clientX, y: e.clientY }; syncRing(); } });
   sizeIn.addEventListener('input', syncRing);
   addEventListener('keyup', syncRing);
-  eyeBtn.addEventListener('click', () => { setPicking(!picking); if (picking) toast('Tap the page to pick a color'); });
-  function pickColour(q){
+  eyeBtn.addEventListener('click', () => { setPicking(!picking); if (picking) toast('Tap anything to pick its color'); });
+  // the colour of whatever is drawn at that spot on screen (buttons, icons, panels, the background…)
+  function colourAtElement(el, x, y){
+    const parse = v => { const m = v && v.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return (p.length > 3 && p[3] === 0) ? null : p; };
+    for (let n = el; n && n !== document.documentElement; n = n.parentElement){
+      if (n instanceof SVGElement){
+        const cs = getComputedStyle(n), f = parse(cs.fill), st = parse(cs.stroke);
+        if (n.tagName !== 'svg' && n.tagName !== 'g'){ if (f && cs.fill !== 'none') return f; if (st) return st; }
+        continue;
+      }
+      if (n.tagName === 'CANVAS' && n !== c){ try { const r = n.getBoundingClientRect(), d = n.getContext('2d').getImageData((x - r.left) * n.width / r.width | 0, (y - r.top) * n.height / r.height | 0, 1, 1).data; if (d[3] > 20) return [d[0], d[1], d[2]]; } catch {} }
+      const cs = getComputedStyle(n), bg = parse(cs.backgroundColor);
+      if (bg) return bg;
+      if (n.childNodes.length && [...n.childNodes].some(k => k.nodeType === 3 && k.textContent.trim())){ const tc = parse(cs.color); if (tc) return tc; }
+    }
+    return parse(getComputedStyle(document.body).backgroundColor) || [71, 194, 255];
+  }
+  let pickSwallowClick = false, pickedNow = false;
+  // while picking, the dropper icon follows the mouse / Pencil everywhere on screen
+  let pickPreviewRaf = 0, pickBefore = null;
+  const toHex = rgb => '#' + rgb.slice(0, 3).map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  function colourUnder(x, y){
+    const el = document.elementFromPoint(x, y);
+    if (el === c){ const r = c.getBoundingClientRect(); return paperColourAt({ x: (x - r.left) * W / r.width, y: (y - r.top) * H / r.height }); }
+    return toHex(colourAtElement(el || document.body, x, y));
+  }
+  document.addEventListener('pointermove', e => {
+    if (!picking) return;
+    if (e.pointerType !== 'touch'){ fxIcon.style.left = e.clientX + 'px'; fxIcon.style.top = e.clientY + 'px'; fxIcon.hidden = false; }
+    // the Mix colour box shows the colour under the dropper as you move it around
+    const x = e.clientX, y = e.clientY;
+    if (!pickPreviewRaf) pickPreviewRaf = requestAnimationFrame(() => { pickPreviewRaf = 0; if (!picking) return; try { custom.value = colourUnder(x, y); } catch {} });
+  }, true);
+  document.addEventListener('pointerleave', () => { if (picking) fxIcon.hidden = true; });
+  document.addEventListener('pointerdown', e => {
+    if (!picking || e.target === c || e.target === eyeBtn || eyeBtn.contains(e.target)) return;   // the paper is handled below (exact pixel)
+    e.preventDefault(); e.stopPropagation(); pickSwallowClick = true;
+    const el = document.elementFromPoint(e.clientX, e.clientY) || e.target;
+    const rgb = colourAtElement(el, e.clientX, e.clientY);
+    const hex = '#' + rgb.slice(0, 3).map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+    setColor(hex); custom.value = hex; pickedNow = true; setPicking(false); try { SFX.blip(); } catch {} toast('Color picked');
+  }, true);
+  document.addEventListener('click', e => { if (pickSwallowClick){ pickSwallowClick = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  function paperColourAt(q){
     const x = Math.max(0, Math.min(W - 1, Math.floor(q.x))), y = Math.max(0, Math.min(H - 1, Math.floor(q.y)));
     const d = ctx.getImageData(x, y, 1, 1).data;
     const pd = document.getElementById('paperBg').getContext('2d').getImageData(x, y, 1, 1).data;
     const a = d[3] / 255, mixc = i => Math.round(d[i] * a + pd[i] * (1 - a));
-    const hex = '#' + [0, 1, 2].map(i => mixc(i).toString(16).padStart(2, '0')).join('');
-    setColor(hex); custom.value = hex;
+    return '#' + [0, 1, 2].map(i => mixc(i).toString(16).padStart(2, '0')).join('');
+  }
+  function pickColour(q){
+    const hex = paperColourAt(q);
+    setColor(hex); custom.value = hex; pickedNow = true;
     setPicking(false); SFX.blip(); toast('Color picked');
   }
 
@@ -2470,12 +2530,37 @@
   function pencilRender(){
     pencilRaf = 0; const st = pencilS; if (!st) return;
     if (live.width !== W || live.height !== H){ live.width = W; live.height = H; }
-    lctx.clearRect(0, 0, W, H); pencilInk(lctx); pencilDraw(lctx, st.pts, size);
+    lctx.clearRect(0, 0, W, H); pencilInk(lctx); pencilDraw(lctx, st.kind === 'brush' ? brushTaper(st.pts) : st.pts, st.base);
   }
   let pencilSnd = null, pencilT = 0, pencilDir = null;
+  // pencil: a steady, even line. With the Apple Pencil (and "lock width" off) it varies only a little with pressure.
+  const pencilK = p => !widthLocked && p && p.pen ? .86 + Math.min(1, Math.max(0, p.p)) * .28 : 1;
+  // paintbrush (Brush Pack): a clean, smooth calligraphy stroke - thick and thin depending on the direction you
+  // draw (like a flat nib held at 45°), and with the Apple Pencil, pressing harder makes it even bolder.
+  const NIB = -Math.PI / 4;
+  function brushK(st, p, raw){
+    const q = st.pts[st.pts.length - 1], dx = p.x - q.x, dy = p.y - q.y;
+    if (Math.hypot(dx, dy) > .5){ const nib = Math.abs(Math.sin(Math.atan2(dy, dx) - NIB)); st.nk = st.nk * .7 + nib * .3; }
+    if (widthLocked) return 1;
+    // brush-pen feel: slow = fat and juicy, fast = a fine hairline; the Pencil's pressure swells it even more
+    const t = raw.t || performance.now(), pr = st.lp || raw, dt = Math.max(4, t - (st.lt || t - 16)); st.lt = t; st.lp = raw;
+    const v = Math.hypot(raw.x - pr.x, raw.y - pr.y) / dt * (1000 / Math.max(W, H));   // speed, page-independent
+    st.v = st.v === undefined ? v : st.v * .55 + v * .45;
+    const nibF = .6 + .4 * st.nk;
+    if (raw.pen){
+      const pf = .1 + Math.min(1, Math.max(0, raw.p)) * 1.75;                       // light = hairline, hard = bold
+      return pf * Math.max(.5, Math.min(1.25, 1.25 - st.v * .55)) * nibF;
+    }
+    return Math.max(.24, Math.min(3.5, 3.5 - st.v * 3.2)) * nibF;   // slow: up to ~3.5x, fast: thin but never a hairline
+  }
+  // the paintbrush starts from a fine point and swells into the stroke
+  const brushTaper = pts => pts.map((q, i) => i < 9 ? { x: q.x, y: q.y, k: q.k * (.08 + .92 * Math.sin(i / 9 * Math.PI / 2)) } : q);
   function pencilStart(p){
-    pencilS = { pts: [{ x: p.x, y: p.y, k: pw(p) }], s: { x: p.x, y: p.y, k: pw(p) }, raw: p };
-    try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
+    const kind = tool === 'brush' ? 'brush' : 'pencil', base = kind === 'brush' ? size * 1.5 : size;
+    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p };
+    const k0 = kind === 'brush' ? (widthLocked ? 1 : .6 * (p.pen ? .45 + p.p * 1.25 : 1)) : pencilK(p);
+    pencilS.pts.push({ x: p.x, y: p.y, k: k0 }); pencilS.s.k = k0;
+    if (kind === 'pencil') try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
     pencilRender();
   }
   function pencilMove(p){
@@ -2492,7 +2577,8 @@
       }
     }
     // light steadying, then only keep points that moved a little, so the curve has no tiny wiggles
-    const sp = { x: st.s.x + (p.x - st.s.x) * k, y: st.s.y + (p.y - st.s.y) * k, k: pw(p) };
+    const sp = { x: st.s.x + (p.x - st.s.x) * k, y: st.s.y + (p.y - st.s.y) * k };
+    sp.k = st.kind === 'brush' ? brushK(st, sp, p) : pencilK(p);
     st.s = sp; st.raw = p;
     const q = st.pts[st.pts.length - 1];
     if (Math.hypot(sp.x - q.x, sp.y - q.y) >= Math.max(2.5, size * 0.22)) st.pts.push(sp);
@@ -2508,9 +2594,12 @@
     const kEnd = st.s.k || 1;
     let s2 = st.s; for (let i = 0; i < 5; i++){ s2 = { x: s2.x + (st.raw.x - s2.x) * .45, y: s2.y + (st.raw.y - s2.y) * .45, k: kEnd }; st.pts.push(s2); }
     st.pts.push({ x: st.raw.x, y: st.raw.y, k: kEnd });
-    pencilInk(ctx); pencilDraw(ctx, st.pts, size);
+    // the brush tapers off as you lift, like a real calligraphy stroke
+    if (st.kind === 'brush'){ const n = st.pts.length; for (let i = Math.max(1, n - 9); i < n; i++) st.pts[i].k *= .05 + .95 * Math.sin((n - 1 - i) / 9 * Math.PI / 2); }
+    if (st.kind === 'brush') st.pts = brushTaper(st.pts);
+    pencilInk(ctx); pencilDraw(ctx, st.pts, st.base);
     // speed art redraws this exact curve (no masking), so crossings never show bits of the line early
-    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: size / L }; }
+    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L }; }
   }
   // Highlighter: redraw whole stroke from base so overlaps don't darken within one stroke
   let markerPts = [], markerBase = null;
@@ -2534,6 +2623,40 @@
   }
   function sprayPlop(start){ try { tone(start ? 520 : 700, start ? 900 : 380, .09, .05, 'sine'); noiseBurst(.07, 1800, 1.4, .03); } catch {} }   // 'pshh-bloop' when you press / let go
   // spray can: shake-shake (the ball rattling inside), then a soft airy "psssss"
+  // spray can: a cute splatter of water drops - little 'plink!'s pattering down, with a juicy 'plop' now and then
+  // spray can: a realistic, weighty wet splat (paint / blood hitting a surface)
+  // grainy 'wet' noise, a sharp slap, a resonant filter that falls fast (the 'splatch'), then droplets spattering out
+  function wetSplat(size = 1, delay = 0){
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + delay, dur = .12 + size * .16, n = Math.round(a.sampleRate * dur);
+    const buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++){ const x = Math.random() * 2 - 1; d[i] = Math.random() < .06 ? x : x * .35; }   // crackly, liquid grain
+    const src = a.createBufferSource(); src.buffer = buf;
+    const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 3 + Math.random() * 3;
+    lp.frequency.setValueAtTime(2600 + Math.random() * 1500, t); lp.frequency.exponentialRampToValueAtTime(180 + Math.random() * 120, t + dur * .7);
+    const body = a.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 220 + Math.random() * 80; body.Q.value = 1.2; body.gain.value = 9;
+    const g = a.createGain(), v = .07 * Math.min(1.6, .6 + size * .6);
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .003); g.gain.exponentialRampToValueAtTime(v * .35, t + .04); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(lp).connect(body).connect(g).connect(a.destination); src.start(t); src.stop(t + dur + .02);
+    // the slap of it landing
+    noiseBurst(.012, 1800 + Math.random() * 1200, .9, .03 * size + .01, delay, 'bandpass');
+    // droplets flying off and hitting around it
+    const drops = Math.round(size * 4 + Math.random() * 3);
+    for (let i = 0; i < drops; i++) noiseBurst(.012 + Math.random() * .02, 900 + Math.random() * 1600, 1.4, .008 + Math.random() * .012, delay + .04 + Math.random() * (dur + .08), 'bandpass', 350);
+  }
+  // spray can: rain drops - lots of tiny random 'tap's on the paper, with the odd little water 'plink'
+  function rainTap(delay = 0){
+    const near = Math.random();   // some drops close and crisp, some far and soft
+    noiseBurst(.006 + Math.random() * .01, 2000 + Math.random() * 4500, 1 + Math.random(), .006 + near * near * .022, delay, 'bandpass');
+  }
+  function waterDrop(){
+    try {
+      const n = 1 + (Math.random() * 3 | 0);
+      for (let i = 0; i < n; i++) rainTap(Math.random() * .04);
+    } catch {}
+  }
+  function waterPlop(){ try { rainTap(); noiseBurst(.03, 900 + Math.random() * 500, 1.2, .016, 0, 'bandpass', 500); } catch {} }   // a fatter drop
+  function waterSplash(){ try { for (let i = 0; i < 6; i++) rainTap(Math.random() * .08); } catch {} }   // the rain starting
   function sprayRattle(){ try { for (let i = 0; i < 3; i++){ noiseBurst(.028, 3000 + Math.random() * 900, 6, .06, i * .08, 'bandpass'); tone(1800 + Math.random() * 300, 1400, .025, .014, 'triangle', i * .08); } } catch {} }
   // ---------- brush sounds: the special brushes each have their own little voice ----------
   // fur: super cute critter noises (soft, round sine squeaks with a little wobble, like a tiny happy pet)
@@ -2545,13 +2668,54 @@
     tone(f * 2.9, f * 2.2, .06, .003, 'sine', .06);   // a little sparkle on top
   }
   function furTrill(){ for (let k = 0; k < 3; k++){ const f = 700 + k * 90; tone(f, f * 1.12, .035, .014, 'sine', k * .04); } }
-  const BRUSH_SND = new Set(['rainbow', 'pixel', 'fur', 'mirror']);
+  const BRUSH_SND = new Set(['rainbow', 'pixel', 'fur', 'mirror', 'brush', 'soft', 'chalk']);
+  // chalk on a chalkboard: a dry, gritty rasp (the stick grinding powder off on the slate), with the chalk 'chattering'
+  // - tiny rapid taps as it skips - and a hard little 'tock' when it touches the board
+  let boardBuf = null;
+  function chalkSound(){
+    const a = ac(); if (!a) return null;
+    if (!boardBuf){
+      const sr = a.sampleRate, n = sr * 3, b = a.createBuffer(1, n, sr), d = b.getChannelData(0);
+      let lp = 0;
+      for (let i = 0; i < n; i++){ const w = Math.random() * 2 - 1; lp = lp * .6 + w * .4; d[i] = lp * .25; }   // dry powdery grind
+      const grit = (at, len, amp) => { for (let j = 0; j < len && at + j < n; j++){ const w = Math.random() * 2 - 1; d[at + j] += w * amp * Math.exp(-j / (len * .25)); } };
+      for (let k = 0; k < 3 * 2200; k++) grit((Math.random() * n) | 0, 30 + (Math.random() * 120 | 0), .15 + Math.pow(Math.random(), 3) * .6);   // coarse grit
+      for (let k = 0; k < 3 * 5; k++){   // chatter: the stick skipping in a quick little run of taps
+        let at = (Math.random() * n) | 0; const cnt = 6 + (Math.random() * 14 | 0), gap = Math.round(sr / (35 + Math.random() * 30));
+        for (let q = 0; q < cnt; q++){ grit(at, 90, .5 + Math.random() * .3); at += gap + (Math.random() * gap * .2 | 0); }
+      }
+      let m = 0; for (let i = 0; i < n; i++) m = Math.max(m, Math.abs(d[i])); for (let i = 0; i < n; i++) d[i] /= m;
+      boardBuf = b;
+    }
+    const src = a.createBufferSource(); src.buffer = boardBuf; src.loop = true;
+    const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 350;
+    const body = a.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 1600; body.Q.value = .8; body.gain.value = 5;
+    const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800; lp.Q.value = .5;
+    const g = a.createGain(); g.gain.value = .0001;
+    src.connect(hp).connect(body).connect(lp).connect(g).connect(a.destination); src.start(0, Math.random() * 2.5);
+    const tock = (v) => { noiseBurst(.018, 1300, 1.5, v, 0, 'bandpass', 700); noiseBurst(.008, 3200, 1, v * .5, 0, 'bandpass'); };
+    let idle = 0, stopped = false;
+    tock(.05);   // chalk hits the board
+    return {
+      move(sp){ const t = a.currentTime; clearTimeout(idle); idle = setTimeout(() => g.gain.setTargetAtTime(.0001, a.currentTime, .03), 80); g.gain.setTargetAtTime(sp < .03 ? .0001 : Math.min(.09, .015 + sp * .05), t, .03); lp.frequency.setTargetAtTime(2600 + Math.min(2400, sp * 1200), t, .05); src.playbackRate.setTargetAtTime(.85 + Math.min(.4, sp * .2), t, .05); },
+      stop(){ if (stopped) return; stopped = true; clearTimeout(idle); const t = a.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(.0001, t, .02); try { src.stop(t + .2); } catch {} tock(.025); }
+    };
+  }
+  // paintbrush notes: a soft, heavenly harp, gently climbing up and down a dreamy scale
+  const HARP = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98];
+  function harpNote(f, vol){
+    tone(f, f, 1.4, vol, 'sine'); tone(f * 2, f * 2, .9, vol * .32, 'sine'); tone(f * 3, f * 3, .5, vol * .1, 'triangle');   // the pluck and its glow
+    tone(f, f, 1.1, vol * .28, 'sine', .16); tone(f * 2, f * 2, .7, vol * .1, 'sine', .32);                                   // soft echo, like a big room
+  }
   const RAINBOW_NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
   let brushSnd = null, brushSndT = 0;
   function makeBrushSound(kind){
+    if (kind === 'chalk'){ const cs = chalkSound(); return cs ? { chalk: cs } : null; }
     if (kind === 'mirror'){ const ps = pencilSound(); if (!ps) return null; ps.touch(); return { pencil: ps }; }   // mirror sounds just like the pencil
     const st = { kind, dist: 0, last: 0, i: 0, dir: 1 };
-    if (kind === 'fur') furTrill();                                                            // 'prrrp!' hello
+    if (kind === 'fur') furTrill();
+    if (kind === 'brush'){ st.loop = loopSound('fur'); harpNote(783.99, .015); }
+    if (kind === 'soft'){ st.loop = loopSound('fur'); tone(500, 1000, .12, .03, 'sine'); tone(1000, 1500, .08, .01, 'sine', .05); }   // 'fwip!'                    // soft 'plip' as the brush touches the paper                                                            // 'prrrp!' hello
     if (kind === 'pixel') tone(784, 784, .045, .018, 'square');                                // 'bip' as it lands
     if (kind === 'rainbow') tone(1046.5, 1318.5, .12, .016, 'sine');                           // little 'ting'
     return st;
@@ -2559,6 +2723,7 @@
   function brushSoundMove(st, d, sp, yN){
     const now = performance.now();
     if (st.pencil){ st.pencil.move(sp, yN, d); return; }
+    if (st.chalk){ st.chalk.move(sp); return; }
     st.dist += d;
     if (st.kind === 'rainbow'){
       // twinkly glockenspiel notes running up and down a happy scale as you draw
@@ -2570,6 +2735,14 @@
       if (st.dist > 22 && now - st.last > 75){ st.dist = 0; st.last = now;
         const ARP = [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25], f = ARP[st.i++ % ARP.length];
         tone(f, f, .05, .02, 'square'); tone(f * 2, f * 2, .035, .007, 'square', .04); }
+    } else if (st.kind === 'soft'){
+      // soft brush: a breathy, cotton-candy 'whoosh' with tiny bubbly 'bwoop!'s, like blowing soft bubbles
+      if (st.loop) st.loop.level(Math.min(.025, .004 + sp * .014), 500 + Math.min(900, sp * 450), .08);
+      if (st.dist > 45 && now - st.last > 150){ st.dist = 0; st.last = now; const f = 600 + Math.random() * 500; tone(f, f * 1.6, .1, .022, 'sine'); tone(f * 1.6, f * 2, .06, .008, 'sine', .05); }
+    } else if (st.kind === 'brush'){
+      // a silky 'shhh' that follows your speed, with soft wooden plinks now and then (a gentle, happy marimba)
+      if (st.loop) st.loop.level(Math.min(.036, .006 + sp * .02), 700 + Math.min(1200, sp * 600), .06);   // soft paper swish
+      if (st.dist > 55 && now - st.last > 210){ st.dist = 0; st.last = now; const f = HARP[st.i]; st.i += st.dir; if (st.i >= HARP.length - 1 || st.i <= 0) st.dir *= -1; harpNote(f, .02); }   // harp notes (soft)
     } else if (st.kind === 'fur'){
       // a fluffy little critter: tiny squeaky 'pi-yu!' chirps as you stroke the fur
       if (st.dist > 34 && now - st.last > 150){ st.dist = 0; st.last = now; furChirp(st.i++); }
@@ -2579,9 +2752,12 @@
     const st = brushSnd; brushSnd = null; if (!st) return;
     try {
       if (st.pencil) st.pencil.stop();
+      if (st.chalk) st.chalk.stop();
       if (st.loop) st.loop.stop(.2);
       if (st.kind === 'rainbow'){ tone(1567.98, 2093, .25, .016, 'sine'); tone(2093, 2637, .3, .011, 'sine', .07); }   // sparkly 'ting!' when you lift
       if (st.kind === 'pixel'){ tone(1046.5, 1046.5, .05, .018, 'square'); tone(1568, 1568, .08, .016, 'square', .06); }   // 'bling!'
+      if (st.kind === 'soft'){ tone(900, 1400, .07, .025, 'sine'); tone(1400, 2000, .06, .015, 'sine', .07); }   // 'pop-pop!'
+      if (st.kind === 'brush'){ harpNote(1046.5, .015); harpNote(1567.98, .011); }   // a soft harp chord when you lift   // little 'boop!' when you lift
       if (st.kind === 'fur'){ tone(880, 1320, .12, .02, 'sine'); tone(1320, 1760, .16, .016, 'sine', .1); tone(2640, 3520, .1, .004, 'sine', .1); }   // happy 'nya~!' when you lift
     } catch {}
   }
@@ -2589,12 +2765,12 @@
   function spray(){
     if (!sprayPt) return;
     ctx.fillStyle = color; ctx.strokeStyle = color; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    const r = size * 2 * pw(sprayPt), sc = Math.max(.6, Math.sqrt(size / 10));
+    const r = (12 + size * 3) * pw(sprayPt), sc = Math.max(.7, Math.pow(size / 10, .75));   // wide spray; bigger brush = bigger drops AND a wider spread
     // a light mist in the middle
-    const mist = Math.round(4 + size * .25);
+    const mist = Math.round(7 + size * .45);
     for (let i = 0; i < mist; i++){ const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * r * .8; splatDot(sprayPt.x + Math.cos(a) * d, sprayPt.y + Math.sin(a) * d, (.4 + Math.random() * .6) * sc); }
     // drops of every size, flung wider than the nozzle (mostly small, some big)
-    const drops = Math.round(3 + size * .14);
+    const drops = Math.round(5 + size * .24);
     for (let i = 0; i < drops; i++){
       const a = Math.random() * Math.PI * 2, d = r * 1.6 * Math.pow(Math.random(), .75);
       const rad = .7 * sc + size * .42 * Math.pow(Math.random(), 3.2);
@@ -2675,16 +2851,16 @@
       return;
     }
     drawing = true; last = p; start = p;
-    if (tool === 'brush'){ makeBristles(); brushV = 0; brushF = prevF = widthLocked ? 1 : 1.1; }
+    if (tool === 'brush'){ brushV = 0; brushF = prevF = 1; }
     if (tool === 'line'){ lineBase = snapshot(); }
     else if (tool === 'marker'){ markerBase = undoStack[undoStack.length-1]; markerPts = [p]; drawMarker(); }
-    else if (tool === 'spray'){ sprayPt = p; sprayLast = null; sprayStill = 0; sprayDrips = []; try { spraySnd && spraySnd.stop(); sprayRattle(); spraySnd = loopSound('spray'); if (spraySnd) spraySnd.level(.055, 1500, .06); /* airy 'psssss' */ } catch {} spray(); sprayTimer = setInterval(spray, 30); }
+    else if (tool === 'spray'){ sprayPt = p; sprayLast = null; sprayStill = 0; sprayDrips = []; try { spraySnd && spraySnd.stop(); spraySnd = null; /* no air hiss: just cute splatters */ waterSplash(); clearTimeout(sprayPlipT); let n = 0; const drip = () => { waterDrop(); if (++n % 9 === 0) waterPlop(); sprayPlipT = setTimeout(drip, 20 + Math.random() * 40); }; sprayPlipT = setTimeout(drip, 30); } catch {} spray(); sprayTimer = setInterval(spray, 30); }
     else if (TEX.has(tool)){ txStart(p); }
     else if (tool === 'glitter'){ glitterState = { carry:0 }; seg(p, p); }
     else if (tool === 'fur'){ furState = { carry:0, dir:0 }; }
     else if (tool === 'soft'){ softR = Math.max(8, size * 2.2); softDab = makeSoftDab(color, softR); softState = { carry:0 }; seg(p, p); }
-    else if (tool !== 'pencil') seg(p, {x:p.x+.1, y:p.y, p:p.p, pen:p.pen});
-    if (tool === 'pencil') pencilStart(p);
+    else if (tool !== 'pencil' && tool !== 'brush') seg(p, {x:p.x+.1, y:p.y, p:p.p, pen:p.pen});
+    if (tool === 'pencil' || tool === 'brush') pencilStart(p);
     if (BRUSH_SND.has(tool)){ try { brushSoundStop(); brushSnd = makeBrushSound(tool); brushSndT = performance.now(); } catch {} }
   });
   let filling = false, activeType = '', activePointer = null, stampTrail = null, eraserSnd = null, eraserT = 0;
@@ -2717,7 +2893,7 @@
       } else if (tool === 'marker'){ markerPts.push(p); }
       else if (tool === 'spray'){ sprayPt = p; }
       else if (TEX.has(tool)){ const q = tx.pts[tx.pts.length-1]; if (Math.hypot(p.x-q.x, p.y-q.y) > 2) tx.pts.push(p); }
-      else if (tool === 'pencil' && pencilS){ pencilMove(p); }
+      else if ((tool === 'pencil' || tool === 'brush') && pencilS){ pencilMove(p); }
       else { if (tool === 'brush') updateBrushSpeed(last, p); seg(last, p); }
       last = p;
     }
@@ -2741,6 +2917,25 @@
   c.addEventListener('lostpointercapture', e => { if (drawing && e.pointerId === activePointer) end(e); });
   window.addEventListener('pointerup', e => { if (drawing && e.target !== c && e.pointerId === activePointer) end(e); });
   window.addEventListener('blur', () => { if (drawing) end(); });
+  // safety net: whatever happens, drawing sounds never keep going once nothing is touching the screen
+  const pressed = new Set();
+  window.addEventListener('pointerdown', e => pressed.add(e.pointerId), true);
+  ['pointerup', 'pointercancel'].forEach(t => window.addEventListener(t, e => pressed.delete(e.pointerId), true));
+  document.addEventListener('visibilitychange', () => { if (document.hidden){ pressed.clear(); if (drawing) end(); } });
+  function hushDrawSounds(){
+    try { if (pencilSnd){ pencilSnd.stop(); pencilSnd = null; } } catch {}
+    try { brushSoundStop(); } catch {}
+    try { if (spraySnd){ spraySnd.stop(.1); spraySnd = null; } } catch {}
+    clearTimeout(sprayPlipT); sprayPlipT = 0; eraserSnd = null;
+  }
+  let nothingDownSince = 0;
+  setInterval(() => {
+    if (pressed.size){ nothingDownSince = 0; return; }
+    if (!nothingDownSince){ nothingDownSince = performance.now(); return; }
+    if (performance.now() - nothingDownSince < 250) return;
+    if (drawing) try { end(); } catch {}
+    if (pencilSnd || brushSnd || spraySnd || sprayPlipT) hushDrawSounds();
+  }, 120);
 
   // ---------- flood fill ----------
   function hexToRgb(h){ h = h.replace('#',''); if(h.length===3) h = h.split('').map(x=>x+x).join('');
@@ -3044,11 +3239,14 @@
     const dab = makeSoftDab('#F279B8', 20), st = { carry:0 };
     for (let x = 24; x <= 280; x += 4){
       const p = wave(x);
-      paintSeg(gb, prev, p, '#2E9CDB'); rainbowSeg(gr, prev, p, 10);
+      rainbowSeg(gr, prev, p, 10);
       pixelSeg(gp, prev, p, '#6C4DF6', 10);
       prev = p;
     }
     const pts = []; for (let x = 24; x <= 280; x += 6) pts.push(wave(x));
+    // paintbrush demo: a smooth calligraphy wave, thick and thin like a flat nib
+    { let nk = .6; const cp = pts.map((q, i) => { if (i){ const a = pts[i - 1]; nk = nk * .6 + (.28 + .72 * Math.abs(Math.sin(Math.atan2(q.y - a.y, q.x - a.x) + Math.PI / 4))) * .4; } return { x: q.x, y: q.y, k: nk }; });
+      gb.save(); gb.lineCap = 'round'; gb.lineJoin = 'round'; gb.strokeStyle = '#2E9CDB'; pencilDraw(gb, cp, 22); gb.restore(); }
     const layer = mk(300, 80);
     { const fs = { carry:0, dir:0 }; let q = wave(20); for (let x = 24; x <= 280; x += 3){ const p2 = wave(x); furSeg(gs, q, p2, '#8B5A2B', 14, fs); q = p2; } }
     gpa.fillStyle = '#2E3A34'; gpa.fillRect(0, 0, 300, 80);
