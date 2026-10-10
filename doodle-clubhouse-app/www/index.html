@@ -4648,7 +4648,9 @@
     { n: 'Spooky', f: '"Creepster", "Chalkduster", fantasy', w: '400' }
   ];
   let typeFont = 0, typeSize = 0, typeAt = null, typeLoop = 0, typeRotA = 0, typeCol = '#000000';
-  let typeEditing = null, canvasVer = 0;   // words picked back up off the page to move / turn / change (put back exactly if cancelled)
+  let typeEditing = null, canvasVer = 0;
+  let typeQuiet = false;   // words picked up just to move / turn: no keyboard until you tap the words to type
+  const typeFocus = () => { if (!typeQuiet) typeEd.focus(); };   // words picked back up off the page to move / turn / change (put back exactly if cancelled)
   const typeEd = document.createElement('div'); typeEd.id = 'typeEd'; typeEd.hidden = true;
   typeEd.setAttribute('contenteditable', 'true'); try { typeEd.contentEditable = 'plaintext-only'; } catch {}
   typeEd.setAttribute('autocapitalize', 'sentences'); typeEd.setAttribute('spellcheck', 'false'); typeEd.dataset.ph = 'Type here';
@@ -4661,6 +4663,7 @@
     + '<button type="button" class="tsz" data-tsz="-1" aria-label="Smaller words">A−</button><button type="button" class="tsz" data-tsz="1" aria-label="Bigger words">A+</button>'
     + '<span class="tsep"></span><button type="button" class="tx" id="typeCancel" aria-label="Cancel">✕</button><button type="button" class="tdone" id="typeDone">✓ Done</button></div>';
   document.body.append(typeEd, typeMove, typeRot, typeBar);
+  typeEd.addEventListener('focus', () => { typeQuiet = false; });
   // tapping the bar never takes the keyboard away from the words
   ['pointerdown', 'mousedown'].forEach(ev => typeBar.addEventListener(ev, e => { if (e.target.closest('button')) e.preventDefault(); }));
   const typeFontCss = () => { const t = TYPE_FONTS[typeFont]; return `${t.w} ${typeSize}px ${t.f}`; };
@@ -4688,14 +4691,15 @@
     const bw = typeBar.offsetWidth, mid = (Math.max(pr.left, 0) + Math.min(pr.right, innerWidth)) / 2;
     typeBar.style.left = Math.max(8 + bw / 2, Math.min(innerWidth - 8 - bw / 2, mid)) + 'px';
   }
-  function typeOpen(q, rec){
+  function typeOpen(q, rec, quiet){
+    typeQuiet = !!quiet;
     if (!typeSize) typeSize = Math.round(Math.max(28, Math.min(W, H) * .07));
     if (rec){ typeFont = rec.font; typeSize = rec.size; typeCol = rec.col; typeAt = { x: rec.at.x, y: rec.at.y }; typeRotA = rec.rot; }
     else { typeCol = color; typeAt = { x: q.x, y: q.y - typeSize * .6 }; typeRotA = 0; }
     typeEd.textContent = rec ? rec.text : ''; typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = false;
     try { clearTimeout(toast.t); document.getElementById('toast').hidden = true; } catch {}
-    typeSync(); typeEd.focus();
-    try { const sel = getSelection(), rg = document.createRange(); rg.selectNodeContents(typeEd); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); } catch {}
+    typeSync(); typeFocus();
+    if (!typeQuiet) try { const sel = getSelection(), rg = document.createRange(); rg.selectNodeContents(typeEd); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); } catch {}
     cancelAnimationFrame(typeLoop);
     // slide the page so the words sit in the middle of what you can see (not under the keyboard or the font bar)
     typeView = typeCentre ? { zoom, panX, panY } : null;
@@ -4705,7 +4709,7 @@
   const typeCentre = true;   // on every screen (phone, iPad, computer): the words never hide under the font bar or keyboard
   let typeView = null;   // how the page was zoomed and placed before typing (put back afterwards)
   function typeSteer(){
-    if (!typeView || !typePlace.center || typeDrag || typeTurn) return;
+    if (!typeView || !typePlace.center || typeDrag || typeTurn || typeQuiet) return;   // just moving / turning: the page stays put
     const b = document.getElementById('board').getBoundingClientRect(), tb = typeBar.getBoundingClientRect(), vv = window.visualViewport;
     const top = Math.max(b.top, typeBar.hidden ? b.top : tb.bottom) + 10;
     const bottom = Math.min(b.bottom, vv ? vv.offsetTop + vv.height : innerHeight) - 10;   // the keyboard's top edge
@@ -4812,16 +4816,21 @@
     typeSelRaf = 0;
     const r = typePicked || typeHover;
     const gone = !r || tool !== 'text' || typeAt || !frames[cur] || !(frames[cur].texts || []).includes(r) || !typeValid(r);
-    if (gone){ typeSel.hidden = typeSelEdit.hidden = true; typePicked = typeHover = null; document.body.classList.remove('type-hover'); return; }
+    if (gone){ typeSel.hidden = typeSelEdit.hidden = true; if (!typeAt) typeMove.hidden = typeRot.hidden = true; typePicked = typeHover = null; document.body.classList.remove('type-hover'); return; }
     const cr = c.getBoundingClientRect(), k = cr.width / W, w = r.bw * k, h = r.bh * k, cx = cr.left + r.pcx * k, cy = cr.top + r.pcy * k;
     typeSel.style.width = w + 'px'; typeSel.style.height = h + 'px';
     typeSel.style.transform = `translate(${cx - w / 2}px, ${cy - h / 2}px) rotate(${r.rot}rad)`;
     typeSel.classList.toggle('on', r === typePicked); typeSel.hidden = false;
     typeSelEdit.hidden = r !== typePicked;
+    typeMove.hidden = typeRot.hidden = r !== typePicked;
     if (r === typePicked){
+      // the move (blue) and turn (orange) handles on the box's top corners: drag them straight away
+      const cs = Math.cos(r.rot), sn = Math.sin(r.rot), corner = (px, py) => [cx + px * cs - py * sn, cy + px * sn + py * cs];
+      const [mx, my] = corner(-w / 2, -h / 2), [rx2, ry2] = corner(w / 2, -h / 2);
+      typeMove.style.left = mx + 'px'; typeMove.style.top = my + 'px'; typeRot.style.left = rx2 + 'px'; typeRot.style.top = ry2 + 'px';
       // the Edit button sits just above the words (or below them when they're near the top)
       const ext = (Math.abs(w / 2 * Math.sin(r.rot)) + Math.abs(h / 2 * Math.cos(r.rot)));
-      const bt = board.getBoundingClientRect(); let y = cy - ext - 26; if (y < bt.top + 22) y = cy + ext + 26;
+      const bt = board.getBoundingClientRect(); let y = cy - ext - 40; if (y < bt.top + 22) y = cy + ext + 40;   // clear of the handles
       typeSelEdit.style.left = Math.max(bt.left + 50, Math.min(bt.right - 50, cx)) + 'px'; typeSelEdit.style.top = y + 'px';
     }
     typeSelRaf = requestAnimationFrame(typeSelShow);   // keeps up with zooming / moving the page
@@ -4837,6 +4846,13 @@
   });
   c.addEventListener('pointerleave', () => { document.body.classList.remove('type-hover'); if (typeHover){ typeHover = null; typeSelKick(); } });
   typeSelEdit.addEventListener('pointerdown', e => e.stopPropagation());
+  // grabbing a handle of picked words: pick them up quietly (no keyboard) and move / turn them right away
+  function typePickUp(){
+    const r = typePicked; if (!r || typeAt) return false;
+    typePicked = typeHover = null; typeSel.hidden = typeSelEdit.hidden = true;
+    if (!typeLift(r)) return false;
+    typeEditing = r; typeOpen(null, r, true); typePlace(); return true;
+  }
   typeSelEdit.onclick = () => {
     const r = typePicked; typeUnpick(); if (!r) return;
     if (typeLift(r)){ typeEditing = r; typeOpen(null, r); }
@@ -4850,27 +4866,27 @@
     typeOpen(q);
   }
   function typeRecolor(){ if (typeAt){ typeCol = color; typeEd.style.color = color; } }
-  typeBar.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { typeFont = +b.dataset.tf; typeSync(); typeEd.focus(); });
-  typeBar.querySelectorAll('[data-tsz]').forEach(b => b.onclick = () => { typeSize = Math.round(Math.max(12, Math.min(Math.max(W, H) * .5, typeSize * (b.dataset.tsz > 0 ? 1.25 : 0.8)))); typeSync(); typeEd.focus(); });
+  typeBar.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { typeFont = +b.dataset.tf; typeSync(); typeFocus(); });
+  typeBar.querySelectorAll('[data-tsz]').forEach(b => b.onclick = () => { typeSize = Math.round(Math.max(12, Math.min(Math.max(W, H) * .5, typeSize * (b.dataset.tsz > 0 ? 1.25 : 0.8)))); typeSync(); typeFocus(); });
   document.getElementById('typeDone').onclick = () => typeFinish();
   document.getElementById('typeCancel').onclick = () => typeClose();
   // drag the blue handle to move the words
   let typeDrag = null;
-  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt } }; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
+  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt && !typePickUp()) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt } }; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
   typeMove.addEventListener('pointermove', e => { if (!typeDrag) return; const k = c.getBoundingClientRect().width / W; typeAt = { x: typeDrag.at.x + (e.clientX - typeDrag.x) / k, y: typeDrag.at.y + (e.clientY - typeDrag.y) / k }; typePlace(); });
-  const typeDragEnd = () => { if (typeDrag){ typeDrag = null; typeEd.focus(); } };
+  const typeDragEnd = () => { if (typeDrag){ typeDrag = null; typeFocus(); } };
   typeMove.addEventListener('pointerup', typeDragEnd); typeMove.addEventListener('pointercancel', typeDragEnd);
   // drag the orange handle around to turn the words (it clicks to straight when close)
   let typeTurn = null;
   const typeAng = e => { const [cx, cy] = typePlace.center || [0, 0]; return Math.atan2(e.clientY - cy, e.clientX - cx); };
-  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt) return; typeTurn = { a: typeAng(e), r: typeRotA }; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
+  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt && !typePickUp()) return; typeTurn = { a: typeAng(e), r: typeRotA }; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
   typeRot.addEventListener('pointermove', e => {
     if (!typeTurn) return;
     let r = typeTurn.r + typeAng(e) - typeTurn.a; const step = Math.PI / 2, near = Math.round(r / step) * step;
     if (Math.abs(r - near) < .07) r = near;
     typeRotA = r; typePlace();
   });
-  const typeTurnEnd = () => { if (typeTurn){ typeTurn = null; typeEd.focus(); } };
+  const typeTurnEnd = () => { if (typeTurn){ typeTurn = null; typeFocus(); } };
   typeRot.addEventListener('pointerup', typeTurnEnd); typeRot.addEventListener('pointercancel', typeTurnEnd);
   // ---------- instant taps ----------
   // Buttons react the moment the finger or Apple Pencil lifts, instead of waiting for the browser's own (sometimes
