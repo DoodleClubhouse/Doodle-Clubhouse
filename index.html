@@ -4629,7 +4629,8 @@
     { n: 'Fancy', f: '"Pacifico", "Snell Roundhand", cursive', w: '400' },
     { n: 'Spooky', f: '"Creepster", "Chalkduster", fantasy', w: '400' }
   ];
-  let typeFont = 0, typeSize = 0, typeAt = null, typeLoop = 0, typeRotA = 0;
+  let typeFont = 0, typeSize = 0, typeAt = null, typeLoop = 0, typeRotA = 0, typeCol = '#000000';
+  let typeEditing = null;   // words picked back up off the page to move / turn / change (put back exactly if cancelled)
   const typeEd = document.createElement('div'); typeEd.id = 'typeEd'; typeEd.hidden = true;
   typeEd.setAttribute('contenteditable', 'true'); try { typeEd.contentEditable = 'plaintext-only'; } catch {}
   typeEd.setAttribute('autocapitalize', 'sentences'); typeEd.setAttribute('spellcheck', 'false'); typeEd.dataset.ph = 'Type here';
@@ -4647,7 +4648,7 @@
   const typeFontCss = () => { const t = TYPE_FONTS[typeFont]; return `${t.w} ${typeSize}px ${t.f}`; };
   function typeSync(){
     typeBar.querySelectorAll('[data-tf]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.tf === typeFont));
-    const t = TYPE_FONTS[typeFont]; typeEd.style.fontFamily = t.f; typeEd.style.fontWeight = t.w; typeEd.style.color = color;
+    const t = TYPE_FONTS[typeFont]; typeEd.style.fontFamily = t.f; typeEd.style.fontWeight = t.w; typeEd.style.color = typeCol;
     typePlace();
   }
   // keep the words stuck to the same spot on the paper while the page is zoomed or moved
@@ -4669,10 +4670,11 @@
     const bw = typeBar.offsetWidth, mid = (Math.max(pr.left, 0) + Math.min(pr.right, innerWidth)) / 2;
     typeBar.style.left = Math.max(8 + bw / 2, Math.min(innerWidth - 8 - bw / 2, mid)) + 'px';
   }
-  function typeOpen(q){
+  function typeOpen(q, rec){
     if (!typeSize) typeSize = Math.round(Math.max(28, Math.min(W, H) * .07));
-    typeAt = { x: q.x, y: q.y - typeSize * .6 }; typeRotA = 0;
-    typeEd.textContent = ''; typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = false;
+    if (rec){ typeFont = rec.font; typeSize = rec.size; typeCol = rec.col; typeAt = { x: rec.at.x, y: rec.at.y }; typeRotA = rec.rot; }
+    else { typeCol = color; typeAt = { x: q.x, y: q.y - typeSize * .6 }; typeRotA = 0; }
+    typeEd.textContent = rec ? rec.text : ''; typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = false;
     try { clearTimeout(toast.t); document.getElementById('toast').hidden = true; } catch {}
     typeSync(); typeEd.focus();
     try { const sel = getSelection(), rg = document.createRange(); rg.selectNodeContents(typeEd); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); } catch {}
@@ -4696,6 +4698,8 @@
     panX += dx * e; panY += dy * e; applyZoom();
   }
   function typeClose(){
+    // picked-up words closed without Done (✕, another tool...): they go back exactly as they were
+    if (typeEditing){ const r = typeEditing; typeEditing = null; if (undoStack.length){ restoreImg(undoStack.pop()); syncHist(); } if (r.f && r.f.texts) r.f.texts.push(r); }
     typeAt = null; cancelAnimationFrame(typeLoop);
     typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = true; typeEd.blur(); typeEd.textContent = '';
     if (typeView){   // the page glides back to where it was before typing
@@ -4708,13 +4712,18 @@
   async function typeFinish(){
     if (!typeAt) return;
     const text = (typeEd.innerText || '').replace(/ /g, ' ').replace(/\s+$/, '');
-    const at = typeAt, font = typeFontCss(), sz = typeSize, col = color, rot = typeRotA;
+    const at = typeAt, font = typeFontCss(), sz = typeSize, col = typeCol, rot = typeRotA, fi = typeFont;
     const k = c.getBoundingClientRect().width / W, bw = typeEd.offsetWidth / k, bh = typeEd.offsetHeight / k;
     const pcx = at.x - 7 / k + bw / 2, pcy = at.y - 4 / k + bh / 2;   // the middle of the box, on the paper: the words turn around it
+    const editing = typeEditing; typeEditing = null;   // picked-up words: the page already has an undo step from picking them up
     typeClose();
-    if (!text.trim()) return;
+    if (!text.trim()){ if (editing) onCanvasChanged(); return; }
     try { await Promise.race([document.fonts.load(font, text), new Promise(r => setTimeout(r, 1200))]); } catch {}
-    pushUndo();
+    if (!editing) pushUndo();
+    // remember the pixels under the words (before and after) so they can be picked up again later
+    const hw = Math.abs(bw / 2 * Math.cos(rot)) + Math.abs(bh / 2 * Math.sin(rot)) + 8, hh = Math.abs(bw / 2 * Math.sin(rot)) + Math.abs(bh / 2 * Math.cos(rot)) + 8;
+    const rx = Math.max(0, Math.floor(pcx - hw)), ry = Math.max(0, Math.floor(pcy - hh)), rw = Math.min(W, Math.ceil(pcx + hw)) - rx, rh = Math.min(H, Math.ceil(pcy + hh)) - ry;
+    let before = null; try { if (rw > 0 && rh > 0) before = ctx.getImageData(rx, ry, rw, rh); } catch {}
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     if (rot){ ctx.translate(pcx, pcy); ctx.rotate(rot); ctx.translate(-pcx, -pcy); }
     ctx.font = font; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
@@ -4722,11 +4731,47 @@
     const top = at.y;   // the box's border and padding sit outside the words' spot
     text.split('\n').forEach((line, i) => ctx.fillText(line, at.x, top + i * lh + (lh - (asc + desc)) / 2 + asc));
     ctx.restore();
+    try { if (before){ const f = frames[cur]; (f.texts || (f.texts = [])).push({ f, text, font: fi, size: sz, col, rot, at: { x: at.x, y: at.y }, pcx, pcy, bw, bh, rx, ry, rw, rh, before, after: ctx.getImageData(rx, ry, rw, rh) }); } } catch {}
     try { SFX.plop(); } catch {}
     onCanvasChanged();
   }
-  function typeTap(q){ if (typeAt){ typeFinish(); return; } typeOpen(q); }
-  function typeRecolor(){ if (typeAt) typeEd.style.color = color; }
+  // text tool on: tapping words you wrote before picks them up again (move, turn, change them); tapping anywhere else starts new words
+  function typeHit(q){
+    const f = frames[cur], list = f && f.texts; if (!list || !list.length) return null;
+    const pad = 10 / (c.getBoundingClientRect().width / W);
+    for (let i = list.length - 1; i >= 0; i--){
+      const r = list[i], dx = q.x - r.pcx, dy = q.y - r.pcy, cs = Math.cos(-r.rot), sn = Math.sin(-r.rot);
+      const lx = dx * cs - dy * sn, ly = dx * sn + dy * cs;
+      if (Math.abs(lx) <= r.bw / 2 + pad && Math.abs(ly) <= r.bh / 2 + pad) return r;
+    }
+    return null;
+  }
+  // take the words off the page: only the pixels still showing the words go back to what was under them
+  // (anything drawn on top afterwards stays). Words that are gone (undo, delete all, new paper size) are forgotten.
+  function typeLift(r){
+    const list = r.f.texts; list.splice(list.indexOf(r), 1);
+    let cur0; try { cur0 = ctx.getImageData(r.rx, r.ry, r.rw, r.rh); } catch { return false; }
+    if (cur0.width !== r.after.width || cur0.height !== r.after.height) return false;
+    const a = r.after.data, b = r.before.data, d = cur0.data;
+    let changed = 0, same = 0;
+    for (let i = 0; i < a.length; i += 4){
+      if (a[i] === b[i] && a[i+1] === b[i+1] && a[i+2] === b[i+2] && a[i+3] === b[i+3]) continue;
+      changed++; if (d[i] === a[i] && d[i+1] === a[i+1] && d[i+2] === a[i+2] && d[i+3] === a[i+3]) same++;
+    }
+    if (!changed || same < changed * .4) return false;
+    pushUndo();
+    for (let i = 0; i < a.length; i += 4){
+      if (d[i] === a[i] && d[i+1] === a[i+1] && d[i+2] === a[i+2] && d[i+3] === a[i+3]){ d[i] = b[i]; d[i+1] = b[i+1]; d[i+2] = b[i+2]; d[i+3] = b[i+3]; }
+    }
+    ctx.putImageData(cur0, r.rx, r.ry);
+    return true;
+  }
+  function typeTap(q){
+    if (typeAt){ typeFinish(); return; }
+    let r; while ((r = typeHit(q))){ if (typeLift(r)){ typeEditing = r; typeOpen(q, r); return; } }
+    typeOpen(q);
+  }
+  function typeRecolor(){ if (typeAt){ typeCol = color; typeEd.style.color = color; } }
   typeBar.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { typeFont = +b.dataset.tf; typeSync(); typeEd.focus(); });
   typeBar.querySelectorAll('[data-tsz]').forEach(b => b.onclick = () => { typeSize = Math.round(Math.max(12, Math.min(Math.max(W, H) * .5, typeSize * (b.dataset.tsz > 0 ? 1.25 : 0.8)))); typeSync(); typeEd.focus(); });
   document.getElementById('typeDone').onclick = () => typeFinish();
