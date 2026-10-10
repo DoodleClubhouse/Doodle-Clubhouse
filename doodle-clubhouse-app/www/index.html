@@ -1501,6 +1501,17 @@
   </div>
 </div>
 
+<div class="overlay" id="newProjOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="newProjTitle" style="width:min(420px,100%)">
+    <h2 id="newProjTitle">You’re making a new project</h2>
+    <p>Do you want to delete or save the project you have now?</p>
+    <div class="confirm-row">
+      <button class="btn" id="newProjCancel">Cancel</button>
+      <button class="btn" id="newProjDelete">Delete</button>
+      <button class="btn primary" id="newProjSave">Save</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="confirmOverlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(420px,100%)">
     <h2 id="confirmTitle">Start a fresh page?</h2>
@@ -4248,11 +4259,28 @@
   }
   $('openWall').onclick = () => { renderWall(); $('wallOverlay').hidden = false; $('closeWall').focus(); };
   $('closeWall').onclick = () => $('wallOverlay').hidden = true;
-  $('newProject').onclick = async () => {
-    $('wallOverlay').hidden = true;
-    const kept = await stashIfUnsaved();
+  // New project: if what's on the paper isn't saved, ask first (Save / Delete / Cancel)
+  function beginNewProject(msg){
+    $('newProjOverlay').hidden = true;
     setCurProject(0); startOver(); try { window.zoomHome(); } catch {}
-    toast(kept ? 'New project! The last one is in Projects (unsaved)' : 'New project started');
+    toast(msg || 'New project started');
+  }
+  $('newProject').onclick = () => {
+    $('wallOverlay').hidden = true;
+    if (!projDirty) return beginNewProject();
+    $('newProjOverlay').hidden = false; $('newProjCancel').focus();
+  };
+  $('newProjCancel').onclick = () => { $('newProjOverlay').hidden = true; };
+  $('newProjSave').onclick = async () => {
+    $('newProjOverlay').hidden = true;
+    await saveProject();
+    if (projDirty) return;   // couldn't save: stay on the current project
+    beginNewProject('Saved! New project started');
+  };
+  $('newProjDelete').onclick = async () => {
+    if (openSession){ const sid = openSession; openSession = 0; try { await sessDel(sid); } catch {} }
+    projDirty = false;
+    beginNewProject();
   };
   $('closeView').onclick = () => $('viewOverlay').hidden = true;
   $('editDoodle').onclick = () => { $('viewOverlay').hidden = true; };
