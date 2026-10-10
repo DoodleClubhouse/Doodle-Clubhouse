@@ -215,6 +215,12 @@
   #typeMove{position:fixed; z-index:31; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:#2E9CDB; border:2.5px solid #1A1F3A; color:#fff; display:grid; place-items:center; touch-action:none; cursor:move; box-shadow:0 2px 0 #1A1F3A}
   #typeMove svg, #typeRot svg{width:20px; height:20px}
   #typeRot{position:fixed; z-index:31; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:#FF9F1C; border:2.5px solid #1A1F3A; color:#fff; display:grid; place-items:center; touch-action:none; cursor:grab; box-shadow:0 2px 0 #1A1F3A}
+  /* words already on the page: a box shows when you hover or tap them with the text tool, plus an Edit button */
+  body.type-hover canvas{cursor:pointer!important}
+  #typeSel{position:fixed; left:0; top:0; z-index:29; border:2px dashed #2E9CDB; border-radius:6px; pointer-events:none; transform-origin:50% 50%; box-sizing:border-box}
+  #typeSel.on{border-style:solid; background:rgba(46,156,219,.08); box-shadow:0 0 0 2px rgba(255,255,255,.8)}
+  #typeSelEdit{position:fixed; z-index:31; transform:translate(-50%, -50%); display:flex; align-items:center; gap:5px; padding:7px 12px; border:2.5px solid #1A1F3A; border-radius:999px; background:#2E9CDB; color:#fff; font:800 14px/1 var(--body); box-shadow:0 3px 0 #1A1F3A; cursor:pointer; white-space:nowrap}
+  #typeSelEdit svg{width:15px; height:15px}
   #typeBar{position:fixed; z-index:32; left:50%; top:60px; transform:translateX(-50%); width:max-content; display:flex; gap:6px; align-items:center; padding:7px 8px; background:#FFFDF7; border:2.5px solid #1A1F3A; border-radius:16px; box-shadow:0 4px 0 #1A1F3A; max-width:calc(100vw - 16px); flex-wrap:wrap; justify-content:center; box-sizing:border-box}
   #typeBar .tfonts{display:flex; gap:6px; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
   #typeBar .tfonts::-webkit-scrollbar{display:none}
@@ -4642,7 +4648,7 @@
     { n: 'Spooky', f: '"Creepster", "Chalkduster", fantasy', w: '400' }
   ];
   let typeFont = 0, typeSize = 0, typeAt = null, typeLoop = 0, typeRotA = 0, typeCol = '#000000';
-  let typeEditing = null;   // words picked back up off the page to move / turn / change (put back exactly if cancelled)
+  let typeEditing = null, canvasVer = 0;   // words picked back up off the page to move / turn / change (put back exactly if cancelled)
   const typeEd = document.createElement('div'); typeEd.id = 'typeEd'; typeEd.hidden = true;
   typeEd.setAttribute('contenteditable', 'true'); try { typeEd.contentEditable = 'plaintext-only'; } catch {}
   typeEd.setAttribute('autocapitalize', 'sentences'); typeEd.setAttribute('spellcheck', 'false'); typeEd.dataset.ph = 'Type here';
@@ -4778,9 +4784,69 @@
     ctx.putImageData(cur0, r.rx, r.ry);
     return true;
   }
+  // are these words still on the page as written? (undo, delete all, drawing over them... can take them away)
+  function typeValid(r){
+    if (r.ver === canvasVer) return r.ok;
+    let ok = false;
+    try {
+      const cur0 = ctx.getImageData(r.rx, r.ry, r.rw, r.rh), a = r.after.data, b = r.before.data, d = cur0.data;
+      let changed = 0, same = 0;
+      for (let i = 0; i < a.length; i += 4){
+        if (a[i] === b[i] && a[i+1] === b[i+1] && a[i+2] === b[i+2] && a[i+3] === b[i+3]) continue;
+        changed++; if (d[i] === a[i] && d[i+1] === a[i+1] && d[i+2] === a[i+2] && d[i+3] === a[i+3]) same++;
+      }
+      ok = changed > 0 && same >= changed * .4;
+    } catch {}
+    r.ver = canvasVer; r.ok = ok;
+    if (!ok){ const l = r.f.texts; if (l && l.includes(r)) l.splice(l.indexOf(r), 1); }
+    return ok;
+  }
+  function typeHitValid(q){ let r; while ((r = typeHit(q))){ if (typeValid(r)) return r; } return null; }
+  // the box around words (hovered or picked) and the Edit button
+  const typeSel = document.createElement('div'); typeSel.id = 'typeSel'; typeSel.hidden = true;
+  const typeSelEdit = document.createElement('button'); typeSelEdit.id = 'typeSelEdit'; typeSelEdit.type = 'button'; typeSelEdit.hidden = true;
+  typeSelEdit.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg>Edit';
+  document.body.append(typeSel, typeSelEdit);
+  let typeHover = null, typePicked = null, typeSelRaf = 0;
+  function typeSelShow(){
+    typeSelRaf = 0;
+    const r = typePicked || typeHover;
+    const gone = !r || tool !== 'text' || typeAt || !frames[cur] || !(frames[cur].texts || []).includes(r) || !typeValid(r);
+    if (gone){ typeSel.hidden = typeSelEdit.hidden = true; typePicked = typeHover = null; document.body.classList.remove('type-hover'); return; }
+    const cr = c.getBoundingClientRect(), k = cr.width / W, w = r.bw * k, h = r.bh * k, cx = cr.left + r.pcx * k, cy = cr.top + r.pcy * k;
+    typeSel.style.width = w + 'px'; typeSel.style.height = h + 'px';
+    typeSel.style.transform = `translate(${cx - w / 2}px, ${cy - h / 2}px) rotate(${r.rot}rad)`;
+    typeSel.classList.toggle('on', r === typePicked); typeSel.hidden = false;
+    typeSelEdit.hidden = r !== typePicked;
+    if (r === typePicked){
+      // the Edit button sits just above the words (or below them when they're near the top)
+      const ext = (Math.abs(w / 2 * Math.sin(r.rot)) + Math.abs(h / 2 * Math.cos(r.rot)));
+      const bt = board.getBoundingClientRect(); let y = cy - ext - 26; if (y < bt.top + 22) y = cy + ext + 26;
+      typeSelEdit.style.left = Math.max(bt.left + 50, Math.min(bt.right - 50, cx)) + 'px'; typeSelEdit.style.top = y + 'px';
+    }
+    typeSelRaf = requestAnimationFrame(typeSelShow);   // keeps up with zooming / moving the page
+  }
+  const typeSelKick = () => { if (!typeSelRaf) typeSelRaf = requestAnimationFrame(typeSelShow); };
+  function typeUnpick(){ typePicked = null; typeHover = null; typeSelKick(); }
+  // hovering with a mouse / trackpad shows the box
+  c.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || tool !== 'text' || typeAt || drawing) return;
+    const r = typeHitValid(pt(e));
+    if (r !== typeHover){ typeHover = r; typeSelKick(); }
+    document.body.classList.toggle('type-hover', !!r);
+  });
+  c.addEventListener('pointerleave', () => { document.body.classList.remove('type-hover'); if (typeHover){ typeHover = null; typeSelKick(); } });
+  typeSelEdit.addEventListener('pointerdown', e => e.stopPropagation());
+  typeSelEdit.onclick = () => {
+    const r = typePicked; typeUnpick(); if (!r) return;
+    if (typeLift(r)){ typeEditing = r; typeOpen(null, r); }
+  };
+  // text tool taps: on words you wrote = pick them (box + Edit button); somewhere else = let go, or start new words
   function typeTap(q){
     if (typeAt){ typeFinish(); return; }
-    let r; while ((r = typeHit(q))){ if (typeLift(r)){ typeEditing = r; typeOpen(q, r); return; } }
+    const r = typeHitValid(q);
+    if (r){ typePicked = r; typeHover = null; typeSelKick(); return; }
+    if (typePicked){ typeUnpick(); return; }
     typeOpen(q);
   }
   function typeRecolor(){ if (typeAt){ typeCol = color; typeEd.style.color = color; } }
@@ -4946,7 +5012,7 @@
   const drawThumb = f => { const g = f.thumb.getContext('2d'); g.clearRect(0, 0, TW, TH); g.drawImage(c, 0, 0, TW, TH); };
   function onCanvasChanged(){
     if (!frames.length) return;
-    const f = frames[cur]; f.dirty = true; f.edited = true; drawThumb(f); projDirty = true; schedulePersist(); speedRecord();
+    const f = frames[cur]; f.dirty = true; f.edited = true; drawThumb(f); projDirty = true; canvasVer++; schedulePersist(); speedRecord();
   }
   // ---------- speed art recorder: a small picture of the page after each change ----------
   let speedLog = [], speedT = 0, speedPending = false, speedUndo = false, speedChain = Promise.resolve();
