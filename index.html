@@ -4889,21 +4889,38 @@
   document.getElementById('typeCancel').onclick = () => typeClose();
   // drag the blue handle to move the words
   let typeDrag = null;
-  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt && !typePickUp()) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt } }; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
+  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const picked = !typeAt; if (picked && !typePickUp()) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt }, picked }; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
   typeMove.addEventListener('pointermove', e => { if (!typeDrag) return; const k = c.getBoundingClientRect().width / W; typeAt = { x: typeDrag.at.x + (e.clientX - typeDrag.x) / k, y: typeDrag.at.y + (e.clientY - typeDrag.y) / k }; typePlace(); });
-  const typeDragEnd = () => { if (typeDrag){ typeDrag = null; typeFocus(); } };
+  const typeDragEnd = () => { if (typeDrag){ const picked = typeDrag.picked; typeDrag = null; if (picked) typeDropKeepPicked(); else typeFocus(); } };
+  // words grabbed by a handle while they were picked: put them down and keep them picked (box, handles, Edit)
+  async function typeDropKeepPicked(){
+    await typeFinish();
+    const l = frames[cur] && frames[cur].texts; if (l && l.length){ typePicked = l[l.length - 1]; typeSelKick(); }
+  }
   typeMove.addEventListener('pointerup', typeDragEnd); typeMove.addEventListener('pointercancel', typeDragEnd);
-  // drag the orange handle around to turn the words (it clicks to straight when close)
+  // the orange handle: tap it to turn the words a quarter turn (90°) each time, or hold and drag to turn them any amount
+  // (it clicks to straight when close)
   let typeTurn = null;
   const typeAng = e => { const [cx, cy] = typePlace.center || [0, 0]; return Math.atan2(e.clientY - cy, e.clientX - cx); };
-  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt && !typePickUp()) return; typeTurn = { a: typeAng(e), r: typeRotA }; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
+  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const picked = !typeAt; if (picked && !typePickUp()) return; typeTurn = { a: typeAng(e), r: typeRotA, x: e.clientX, y: e.clientY, moved: false, picked, acc: 0 }; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
   typeRot.addEventListener('pointermove', e => {
     if (!typeTurn) return;
-    let r = typeTurn.r + typeAng(e) - typeTurn.a; const step = Math.PI / 2, near = Math.round(r / step) * step;
+    if (!typeTurn.moved){ if (Math.hypot(e.clientX - typeTurn.x, e.clientY - typeTurn.y) < 6) return; typeTurn.moved = true; }
+    const ang = typeAng(e); let d = ang - typeTurn.a; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; typeTurn.a = ang; typeTurn.acc += d;
+    let r = typeTurn.r + typeTurn.acc; const step = Math.PI / 2, near = Math.round(r / step) * step;
     if (Math.abs(r - near) < .07) r = near;
     typeRotA = r; typePlace();
   });
-  const typeTurnEnd = () => { if (typeTurn){ typeTurn = null; typeFocus(); } };
+  const typeTurnEnd = () => {
+    if (!typeTurn) return;
+    const t = typeTurn; typeTurn = null;
+    if (!t.moved){   // a tap: next quarter turn
+      const step = Math.PI / 2; typeRotA = (Math.floor(typeRotA / step + 1e-3) + 1) * step;
+      typePlace();
+    }
+    typeRotA = ((typeRotA % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); if (typeRotA > 2 * Math.PI - 1e-3) typeRotA = 0;
+    if (t.picked) typeDropKeepPicked(); else typeFocus();
+  };
   typeRot.addEventListener('pointerup', typeTurnEnd); typeRot.addEventListener('pointercancel', typeTurnEnd);
   // ---------- instant taps ----------
   // Buttons react the moment the finger or Apple Pencil lifts, instead of waiting for the browser's own (sometimes
