@@ -204,7 +204,7 @@
   #typeMove svg, #typeRot svg{width:20px; height:20px}
   #typeRot{position:fixed; z-index:31; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:#FF9F1C; border:2.5px solid #1A1F3A; color:#fff; display:grid; place-items:center; touch-action:none; cursor:grab; box-shadow:0 2px 0 #1A1F3A}
   /* words already on the page: a box shows when you hover or tap them with the text tool, plus an Edit button */
-  body.type-hover canvas{cursor:pointer!important}
+  body.type-hover canvas{cursor:move!important}
   #typeSel{position:fixed; left:0; top:0; z-index:29; border:2px dashed #2E9CDB; border-radius:6px; pointer-events:none; transform-origin:50% 50%; box-sizing:border-box}
   #typeSel.on{border-style:solid; background:rgba(46,156,219,.08); box-shadow:0 0 0 2px rgba(255,255,255,.8)}
   #typeSelEdit{position:fixed; z-index:31; transform:translate(-50%, -50%); display:flex; align-items:center; gap:5px; padding:7px 12px; border:2.5px solid #1A1F3A; border-radius:999px; background:#2E9CDB; color:#fff; font:800 14px/1 var(--body); box-shadow:0 3px 0 #1A1F3A; cursor:pointer; white-space:nowrap}
@@ -3692,7 +3692,7 @@
       if (e.isPrimary || e.pointerType === 'mouse' || e.pointerId === activePointer) end(); else return;
     }
     if (picking){ pickColour(pt(e)); return; }
-    if (tool === 'text'){ e.preventDefault(); typeTap(pt(e)); return; }
+    if (tool === 'text'){ e.preventDefault(); typeDown(e); return; }
     if (tool === 'dynamite'){ const q = pt(e); plantDynamite(q.x, q.y); return; }
     if (tool === 'wormhole'){ const q = pt(e); openWormhole(q.x, q.y); return; }
     if (tool === 'blacklight'){ const q = pt(e); blackLight(q.x, q.y); return; }
@@ -4845,6 +4845,35 @@
     const r = typePicked; typeUnpick(); if (!r) return;
     if (typeLift(r)){ typeEditing = r; typeOpen(null, r); }
   };
+  // press on words you wrote and drag: they move straight away (mouse, finger or Pencil). Let go and they're put down,
+  // still picked (box, handles, Edit) so you can keep going. A tap without moving just picks them.
+  let typeGrab = null;
+  function typeDown(e){
+    const q = pt(e);
+    if (typeAt){ typeFinish(); return; }
+    const r = typeHitValid(q);
+    if (!r){ if (typePicked) typeUnpick(); else typeOpen(q); return; }
+    typeGrab = { r, x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+    try { c.setPointerCapture(e.pointerId); } catch {}
+  }
+  window.addEventListener('pointermove', e => {
+    const g = typeGrab; if (!g || e.pointerId !== g.id) return;
+    if (!g.moved){
+      if (Math.hypot(e.clientX - g.x, e.clientY - g.y) < 6) return;
+      g.moved = true; typePicked = g.r;
+      if (!typePickUp()){ typeGrab = null; return; }
+      g.at = { ...typeAt };
+    }
+    const k = c.getBoundingClientRect().width / W;
+    typeAt = { x: g.at.x + (e.clientX - g.x) / k, y: g.at.y + (e.clientY - g.y) / k };
+  }, true);
+  const typeGrabEnd = async e => {
+    const g = typeGrab; if (!g || (e && e.pointerId !== g.id)) return; typeGrab = null;
+    if (!g.moved){ typePicked = g.r; typeHover = null; typeSelKick(); return; }   // a tap: pick them
+    await typeFinish();                                                            // put them down where they were dragged
+    const l = frames[cur] && frames[cur].texts; if (l && l.length){ typePicked = l[l.length - 1]; typeSelKick(); }
+  };
+  window.addEventListener('pointerup', typeGrabEnd, true); window.addEventListener('pointercancel', typeGrabEnd, true);
   // text tool taps: on words you wrote = pick them (box + Edit button); somewhere else = let go, or start new words
   function typeTap(q){
     if (typeAt){ typeFinish(); return; }
