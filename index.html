@@ -1724,7 +1724,7 @@
 
   // ---------- fit paper to board ----------
   const board = document.getElementById('board'), paper = document.getElementById('paper');
-  let zoom = 1, panX = 0, panY = 0;   // see "zoom & pan" below
+  let zoom = 1, panX = 0, panY = 0, freePan = false;   // freePan: the text tool is steering the page (no limits)   // see "zoom & pan" below
   function fit(){
     // leave room all round for the tape and the chalkboard's wooden frame so the whole sheet is always visible
     const filling = document.body.dataset.paperMode === 'fit';
@@ -2821,6 +2821,7 @@
   // ---------- zoom & pan ----------
   const ZMIN = .3, ZMAX = 5;   // pinch in to see the page smaller (down to 30%), out to zoom right in
   function clampPan(){
+    if (freePan) return;
     if (Math.abs(zoom - 1) < .08){ zoom = 1; panX = panY = 0; return; }   // close to normal size: snap back exactly
     const pw = paper.offsetWidth * zoom, ph = paper.offsetHeight * zoom, bw = board.clientWidth, bh = board.clientHeight;
     if (zoom < 1){ const ax = Math.max(0, (bw - pw) / 2), ay = Math.max(0, (bh - ph) / 2); panX = Math.max(-ax, Math.min(ax, panX)); panY = Math.max(-ay, Math.min(ay, panY)); return; }
@@ -2829,7 +2830,7 @@
   }
   function applyZoom(){
     clampPan();
-    paper.style.transform = zoom === 1 ? '' : `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    paper.style.transform = zoom === 1 && !panX && !panY ? '' : `translate(${panX}px, ${panY}px) scale(${zoom})`;
     const zr = document.getElementById('zoomReset'); if (zr) zr.textContent = Math.round(zoom * 100) + '%';
   }
   // zoom to z, keeping the point (cx, cy) — measured from the board's centre — fixed on screen
@@ -4676,11 +4677,32 @@
     typeSync(); typeEd.focus();
     try { const sel = getSelection(), rg = document.createRange(); rg.selectNodeContents(typeEd); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); } catch {}
     cancelAnimationFrame(typeLoop);
-    const loop = () => { if (!typeAt) return; typePlace(); typeLoop = requestAnimationFrame(loop); }; typeLoop = requestAnimationFrame(loop);
+    // iPhone / iPad: slide the page so the words sit in the middle of what you can see (not under the keyboard or the font bar)
+    typeView = typeCentre ? { zoom, panX, panY } : null;
+    if (typeView) freePan = true;
+    const loop = () => { if (!typeAt) return; typeSteer(); typePlace(); typeLoop = requestAnimationFrame(loop); }; typeLoop = requestAnimationFrame(loop);
+  }
+  const typeCentre = (() => { try { return NATIVE || matchMedia('(pointer: coarse)').matches; } catch { return false; } })();
+  let typeView = null;   // how the page was zoomed and placed before typing (put back afterwards)
+  function typeSteer(){
+    if (!typeView || !typePlace.center || typeDrag || typeTurn) return;
+    const b = document.getElementById('board').getBoundingClientRect(), tb = typeBar.getBoundingClientRect(), vv = window.visualViewport;
+    const top = Math.max(b.top, typeBar.hidden ? b.top : tb.bottom) + 10;
+    const bottom = Math.min(b.bottom, vv ? vv.offsetTop + vv.height : innerHeight) - 10;   // the keyboard's top edge
+    const tx = (b.left + b.right) / 2, ty = bottom > top ? (top + bottom) / 2 : top + 40;
+    const [cx, cy] = typePlace.center, dx = tx - cx, dy = ty - cy;
+    if (Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
+    const e = Math.hypot(dx, dy) < 2 ? 1 : .25;   // glide there
+    panX += dx * e; panY += dy * e; applyZoom();
   }
   function typeClose(){
     typeAt = null; cancelAnimationFrame(typeLoop);
     typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = true; typeEd.blur(); typeEd.textContent = '';
+    if (typeView){   // the page glides back to where it was before typing
+      const v = typeView; typeView = null; freePan = false;
+      paper.style.transition = 'transform .3s ease'; zoom = v.zoom; panX = v.panX; panY = v.panY; applyZoom();
+      setTimeout(() => { paper.style.transition = ''; }, 320);
+    }
   }
   // paint the words onto the page, exactly where they sit on screen
   async function typeFinish(){
