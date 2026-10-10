@@ -1338,7 +1338,7 @@
     <button class="btn" id="soundBtn" aria-label="Sounds" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><g class="waves"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="mute" style="display:none"><path d="M16 9.5l5 5M21 9.5l-5 5"/></g></svg></button>
     <button class="btn" id="exportBtn" title="Save your drawing or animation" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl">Export</span></button>
     <button class="btn" id="moreBtn" aria-label="More" aria-expanded="false" data-panel="more"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
-    <button class="btn primary" id="pinIt" title="Save the whole project (every page)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg>Save</button>
+    <button class="btn primary" id="pinIt" title="Save the whole project (every frame)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg>Save</button>
   </div>
 </header>
 
@@ -1406,7 +1406,7 @@
       </div>
     </section>
     <button class="extra-btn" id="extrasBtn" data-panel="extras" aria-expanded="false" title="Page size, paper and wall color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg><span>Extra</span></button>
-    <button class="extra-btn" id="pagesBtn" data-panel="frames" aria-expanded="false" title="Animation pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages<span class="tnum pages-n">1</span></span></button>
+    <button class="extra-btn" id="pagesBtn" data-panel="frames" aria-expanded="false" title="Animation frames"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Frames<span class="tnum pages-n">1</span></span></button>
   </aside>
 
   <div class="stage">
@@ -1423,21 +1423,21 @@
         <div class="mirror-guide" id="mirrorGuide" hidden></div>
       </div>
     </div>
-    <section class="film" aria-label="Animation pages">
-      <button class="tray-min" title="Hide pages" aria-label="Hide pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
+    <section class="film" aria-label="Animation frames">
+      <button class="tray-min" title="Hide frames" aria-label="Hide frames"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
       <button class="btn primary play" id="play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><span id="playLbl">Play</span></button>
       <div class="strip" id="strip"></div>
       <div class="film-side">
         <div class="film-row">
-          <button class="btn sm ico" id="dupFrame" title="Copy page: make a copy to change a little" aria-label="Copy page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
-          <button class="btn sm ico" id="delFrame" title="Delete page" aria-label="Delete page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+          <button class="btn sm ico" id="dupFrame" title="Copy frame: make a copy to change a little" aria-label="Copy frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+          <button class="btn sm ico" id="delFrame" title="Delete frame" aria-label="Delete frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
           <button class="btn sm ico" id="exportAnimBtn" title="Export animation" aria-label="Export" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
         </div>
         <div class="film-row">
           <div class="seg" role="group" aria-label="Speed">
             <button data-speed="medium" aria-pressed="true" title="Medium" aria-label="Medium"><svg viewBox="0 0 19 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/></svg></button><button data-speed="fast" aria-pressed="false" title="Fast" aria-label="Fast"><svg viewBox="0 0 28 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/><path d="M19 2l8 6-8 6z"/></svg></button><button data-speed="turbo" aria-pressed="false" title="Super fast (15 a second)" aria-label="Super fast"><svg viewBox="0 0 26 16" height="14" fill="currentColor" aria-hidden="true"><path d="M13.5 1 6 9h5l-1.5 6L17 7h-5z"/><path d="M1 3l5 5-5 5zM20 3l5 5-5 5z" opacity=".7"/></svg></button>
           </div>
-          <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: show the last page faintly so you can line things up" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
+          <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: show the last frame faintly so you can line things up" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
         </div>
       </div>
     </section>
@@ -1449,7 +1449,7 @@
   <button data-panel="brushes" aria-expanded="false"><span id="dockBrush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3l3 3-9 9-3-3z"/><path d="M9 12c-3 0-5 2-5 5 0 1-1 2-2 3 4 1 9 0 9-5z"/></svg></span>Brushes</button>
   <button data-panel="colors" aria-expanded="false"><span class="cdot" id="dockColor"></span>Color</button>
   <button data-panel="extras" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/><path d="M19 15v6M16 18h6"/></svg>Extra</button>
-  <button data-panel="frames" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Pages<span class="tnum" id="dockFrames">1</span></span></button>
+  <button data-panel="frames" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v4M16 5v4M8 15v4M16 15v4"/></svg><span>Frames<span class="tnum" id="dockFrames">1</span></span></button>
 </nav>
 <div class="extras" id="extras" role="dialog" aria-label="Extras">
 <button class="tray-min" title="Hide extras" aria-label="Hide extras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
@@ -1493,7 +1493,7 @@
     <div class="sheet-head">
       <div>
         <h2 id="wallTitle">Projects</h2>
-        <p id="wallNote">Saved projects keep every page, the paper and the speed. They stay on this device. Tap one to open it and keep going.</p>
+        <p id="wallNote">Saved projects keep every frame, the paper and the speed. They stay on this device. Tap one to open it and keep going.</p>
       </div>
       <div class="confirm-row" style="margin:0"><button class="btn" id="newProject">+ New project</button><button class="btn" id="closeWall">Close</button></div>
     </div>
@@ -1564,7 +1564,7 @@
 <div class="overlay" id="confirmOverlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(420px,100%)">
     <h2 id="confirmTitle">Start a fresh page?</h2>
-    <p id="confirmNote">Every page will be wiped clean.</p>
+    <p id="confirmNote">Every frame will be wiped clean.</p>
     <div class="confirm-row">
       <button class="btn" id="cancelClear">Keep drawing</button>
       <button class="btn" id="newAnim" hidden>Start a new animation</button>
@@ -1595,7 +1595,7 @@
       <div class="perk perk-wide" hidden><canvas id="demoFill" width="300" height="80" aria-hidden="true"></canvas><b>Paint bucket</b>Fill a whole shape with one tap</div>
     </div>
     <div class="perks" id="perksFrames" hidden>
-      <div class="perk" style="grid-column:1/-1"><canvas class="flipdemo" id="demoFrames" width="600" height="100" aria-hidden="true"></canvas><b>Unlimited pages</b>Make cartoons as long as you like. Free animations can have up to 5 pages.</div>
+      <div class="perk" style="grid-column:1/-1"><canvas class="flipdemo" id="demoFrames" width="600" height="100" aria-hidden="true"></canvas><b>Unlimited frames</b>Make cartoons as long as you like. Free animations can have up to 5 frames.</div>
     </div>
     <div class="gate">
       <label for="gateAnswer" id="gateQ">Grown-ups only: what is 7 × 8?</label>
@@ -4291,7 +4291,7 @@
     sess.slice(0, KEEP_SESSIONS).forEach(item => {
       const el = document.createElement('div'); el.className = 'pin unsaved' + (item.id === openSession ? ' current' : '');
       const d = new Date(item.updated), n = item.pages || (item.blobs || []).length || 1;
-      el.innerHTML = `<img alt="Previous session project" src="${item.thumb || ''}"><span class="pages">${n} page${n === 1 ? '' : 's'}</span><span class="unsaved-tag">Unsaved</span>`
+      el.innerHTML = `<img alt="Previous session project" src="${item.thumb || ''}"><span class="pages">${n} frame${n === 1 ? '' : 's'}</span><span class="unsaved-tag">Unsaved</span>`
         + `<div class="unsaved-name">Previous session project</div>`
         + `<div class="unsaved-note">Not saved. It will disappear soon if you don’t save it.</div>`
         + `<div class="pin-row"><span>${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}, ${d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</span></div>`
@@ -4315,7 +4315,7 @@
     list.forEach(item => {
       const el = document.createElement('div'); el.className = 'pin' + (item.id === curProject ? ' current' : '');
       const d = new Date(item.updated), n = item.pages || (item.blobs || []).length || 1;
-      el.innerHTML = `<img alt="Saved project" src="${item.thumb}"><span class="pages">${n} page${n === 1 ? '' : 's'}</span><div class="pin-row"><span>${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}, ${d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</span><button class="link">Delete</button></div>`;
+      el.innerHTML = `<img alt="Saved project" src="${item.thumb}"><span class="pages">${n} frame${n === 1 ? '' : 's'}</span><div class="pin-row"><span>${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}, ${d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</span><button class="link">Delete</button></div>`;
       el.querySelector('img').onclick = () => openProject(item.id);
       const del = el.querySelector('.link');
       del.onclick = async () => {
@@ -4406,8 +4406,8 @@
     payProduct = product;
     const brushes = product === 'brushes';
     $('payTitle').textContent = 'Unlock the Brush Pack';
-    $('payDesc').innerHTML = (brushes ? '' : `<span class="pay-note">You've used all ${FREE_FRAMES} free pages.</span>`) +
-      `<ul class="pay-list"><li>6 special brushes</li><li>3 magic effects: wormhole, neon &amp; tornado</li><li>Unlimited pages</li><li>No watermark on exports</li></ul>` +
+    $('payDesc').innerHTML = (brushes ? '' : `<span class="pay-note">You've used all ${FREE_FRAMES} free frames.</span>`) +
+      `<ul class="pay-list"><li>6 special brushes</li><li>3 magic effects: wormhole, neon &amp; tornado</li><li>Unlimited frames</li><li>No watermark on exports</li></ul>` +
       `<span class="pay-small"><b>${PRICE} one-time purchase</b>: no subscription, yours to keep. Covers your whole family.</span>`;
     $('perksBrushes').hidden = false; $('perksFrames').hidden = false;
     newGate();
@@ -4467,7 +4467,7 @@
     resetScroll(); setTimeout(resetScroll, 350);
     try { fitTools(); fit(); } catch {}
     if (!fromPaywall && !payOpen){ if (!was) toast('Brush Pack restored!'); return; }
-    toast('Brush Pack unlocked: new brushes, unlimited pages and no watermark!');
+    toast('Brush Pack unlocked: new brushes, unlimited frames and no watermark!');
     if (payProduct === 'frames'){ addFrame(pendingCopy); return; }
     setTool(pendingTool || 'brush'); pendingTool = null;
   }
@@ -5235,7 +5235,7 @@
     strip.innerHTML = '';
     frames.forEach((f, i) => {
       const b = document.createElement('button');
-      b.className = 'frame'; b.setAttribute('aria-label', `Page ${i+1} of ${frames.length}`);
+      b.className = 'frame'; b.setAttribute('aria-label', `Frame ${i+1} of ${frames.length}`);
       b.setAttribute('aria-current', i === cur);
       b.appendChild(f.thumb);
       const n = document.createElement('span'); n.className = 'num'; n.textContent = i + 1; b.appendChild(n);
@@ -5243,23 +5243,23 @@
       strip.appendChild(b);
     });
     const add = document.createElement('button');
-    add.className = 'frame add'; add.title = 'Add a blank page'; add.setAttribute('aria-label', 'Add a blank page');
+    add.className = 'frame add'; add.title = 'Add a blank frame'; add.setAttribute('aria-label', 'Add a blank frame');
     add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
     const locked = !framesUnlocked && frames.length >= FREE_FRAMES;
     add.classList.toggle('locked', locked);
-    if (locked){ add.insertAdjacentHTML('beforeend', '<span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span>'); add.title = 'Unlock unlimited pages'; add.setAttribute('aria-label', 'Unlock unlimited pages'); }
+    if (locked){ add.insertAdjacentHTML('beforeend', '<span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span>'); add.title = 'Unlock unlimited frames'; add.setAttribute('aria-label', 'Unlock unlimited frames'); }
     add.onclick = () => addFrame(false);
     strip.appendChild(add);
     for (let k = frames.length + 1; k < FREE_FRAMES; k++){
       const e = document.createElement('button');
-      e.className = 'frame empty'; e.title = 'Add a page'; e.setAttribute('aria-label', `Empty page ${k + 1}`);
+      e.className = 'frame empty'; e.title = 'Add a frame'; e.setAttribute('aria-label', `Empty frame ${k + 1}`);
       e.innerHTML = `<span class="num">${k + 1}</span>`;
       e.onclick = () => addFrame(false);
       strip.appendChild(e);
     }
     if (!framesUnlocked){
       const note = document.createElement('span'); note.className = 'free-note';
-      note.textContent = `${Math.min(frames.length, FREE_FRAMES)} of ${FREE_FRAMES} free pages`;
+      note.textContent = `${Math.min(frames.length, FREE_FRAMES)} of ${FREE_FRAMES} free frames`;
       strip.appendChild(note);
     }
     const el = strip.children[cur]; el && el.scrollIntoView({ block:'nearest', inline:'nearest' });
@@ -5300,17 +5300,17 @@
     if (!copy) blank();
     drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
-    toast(copy ? `Copied to page ${cur+1}. Now change it a little!` : `Page ${cur+1}. The ghost shows the last one.`);
+    toast(copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the last one.`);
   }
   async function deleteFrame(){
     if (busy) return;
     if (playing) stopPlay();
-    if (frames.length === 1){ pushUndo(); blank(); onCanvasChanged(); toast('Page cleared'); return; }
+    if (frames.length === 1){ pushUndo(); blank(); onCanvasChanged(); toast('Frame cleared'); return; }
     busy = true;
     frames.splice(cur, 1); cur = Math.min(cur, frames.length - 1);
     await paintBlob(frames[cur].blob);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
-    projDirty = true; busy = false; schedulePersist(); toast('Page deleted');
+    projDirty = true; busy = false; schedulePersist(); toast('Frame deleted');
   }
   function startOver(){
     if (playing) stopPlay();
@@ -5325,7 +5325,7 @@
   async function play(){
     await refitP;
     if (busy) return;
-    if (frames.length < 2){ toast('Add a second page to make it move'); return; }
+    if (frames.length < 2){ toast('Add a second frame to make it move'); return; }
     busy = true;
     await commit();
     // long animations play back at a lower resolution so phones don't run out of memory
@@ -5530,10 +5530,10 @@
     if (playing) stopPlay();
     const one = frames.length < 2;
     $('exGif').disabled = $('exMp4').disabled = one;
-    $('exGifNote').textContent = one ? 'Add a second page to make an animation' : 'Loops forever, easy to share';
-    $('exMp4Note').textContent = one ? 'Add a second page to make an animation' : 'Plays in any video player';
+    $('exGifNote').textContent = one ? 'Add a second frame to make an animation' : 'Loops forever, easy to share';
+    $('exMp4Note').textContent = one ? 'Add a second frame to make an animation' : 'Plays in any video player';
     const sz = m => { const k = Math.min(1, m / Math.max(W, H)); return `${Math.round(W * k)} × ${Math.round(H * k)}`; };
-    $('exJpgNote').textContent = `A picture of the page you're on · ${W} × ${H}`;
+    $('exJpgNote').textContent = `A picture of the frame you're on · ${W} × ${H}`;
     if (!one){ $('exGifNote').textContent += ` · ${sz(600)}`; $('exMp4Note').textContent += ` · ${sz(1000)}`; }
     setExMode(exShare); exStatus(''); $('exportOverlay').hidden = false; $('closeExport').focus();
   }
@@ -5581,7 +5581,7 @@
       const code = e && e.code;
       if (code === 'declined') exStatus(share ? 'Not shared.' : 'Not saved.');
       else if (code === 'rate_limited') exStatus('One moment, then try again.');
-      else if (code === 'too_large') exStatus('That file is too big to save here. Try a GIF or fewer pages.');
+      else if (code === 'too_large') exStatus('That file is too big to save here. Try a GIF or fewer frames.');
       else exStatus('Saving isn’t available here.');
     }
   }
@@ -5622,7 +5622,7 @@
     const tmp = mk(w, h), g = tmp.getContext('2d', { willReadFrequently: true });
     const imgs = [];
     for (const b of bmps){ exportPaint(g, b, w, h); imgs.push(g.getImageData(0, 0, w, h).data); b.close && b.close(); }
-    const bytes = await encodeGif(imgs, w, h, Math.max(2, Math.round(100 / FPS[speed])), n => exStatus(`Making your GIF… page ${n} of ${imgs.length}`));
+    const bytes = await encodeGif(imgs, w, h, Math.max(2, Math.round(100 / FPS[speed])), n => exStatus(`Making your GIF… frame ${n} of ${imgs.length}`));
     await offer(`doodle-animation-${fileStamp()}.gif`, new Blob([bytes], { type:'image/gif' }));
   });
 
