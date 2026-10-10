@@ -4689,12 +4689,12 @@
     typeSync(); typeEd.focus();
     try { const sel = getSelection(), rg = document.createRange(); rg.selectNodeContents(typeEd); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); } catch {}
     cancelAnimationFrame(typeLoop);
-    // iPhone / iPad: slide the page so the words sit in the middle of what you can see (not under the keyboard or the font bar)
+    // slide the page so the words sit in the middle of what you can see (not under the keyboard or the font bar)
     typeView = typeCentre ? { zoom, panX, panY } : null;
     if (typeView) freePan = true;
     const loop = () => { if (!typeAt) return; typeSteer(); typePlace(); typeLoop = requestAnimationFrame(loop); }; typeLoop = requestAnimationFrame(loop);
   }
-  const typeCentre = (() => { try { return NATIVE || matchMedia('(pointer: coarse)').matches; } catch { return false; } })();
+  const typeCentre = true;   // on every screen (phone, iPad, computer): the words never hide under the font bar or keyboard
   let typeView = null;   // how the page was zoomed and placed before typing (put back afterwards)
   function typeSteer(){
     if (!typeView || !typePlace.center || typeDrag || typeTurn) return;
