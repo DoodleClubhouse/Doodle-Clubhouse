@@ -1257,6 +1257,7 @@
     html body .tools .tool-grid .tool.dyn{display:flex; align-items:center; justify-content:center; gap:0; grid-column:auto}
     html body .tools .tool-grid .tool.dyn > svg{flex:none}
     html body .tools .group-label{margin-bottom:5px}
+    html body .tools #toolsLabel{display:none}   /* the buttons speak for themselves: no "TOOLS" word on top */
     /* Brush Pack buttons the same size as the tools above (its dark box reaches out to the edges instead) */
     html body .tools .premium{margin-inline:-7px; padding:7px}
     /* bought: no dark box, the brushes carry straight on under the tools with the same spacing as every other row */
@@ -1345,7 +1346,7 @@
   <aside class="tools" aria-label="Drawing tools">
     <button class="tray-min" id="toolsMin" title="Hide the tools (tap Tools at the bottom to bring them back)" aria-label="Hide tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
     <section class="sec-tools">
-      <div class="group-label">Tools</div>
+      <div class="group-label" id="toolsLabel">Tools</div>
       <div class="tool-grid" id="toolGrid">
         <button class="tool" data-tool="pencil" title="Pencil (B)" aria-pressed="true"><svg viewBox="1.6 1.6 20.8 20.8" fill="none" stroke="#111" stroke-width="1.36" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.38 21.62 L4.79 13.56 L10.44 19.21Z" fill="#F6DDB8"/><path d="M2.38 21.62 L3.46 18.02 Q5.49 18.51 5.98 20.54Z" fill="#3B3B3B"/><path d="M12.00 6.34 L4.79 13.56 Q4.35 15.88 6.67 15.44 L13.89 8.23Z" fill="#F7D667"/><path d="M13.89 8.23 L6.67 15.44 Q6.24 17.76 8.56 17.33 L15.77 10.11Z" fill="#F7C845"/><path d="M15.77 10.11 L8.56 17.33 Q8.12 19.65 10.44 19.21 L17.66 12.00Z" fill="#EFA93A"/><path d="M12.00 6.34 L14.05 4.29 L19.71 9.95 L17.66 12.00Z" fill="#E9E9E4"/><path d="M14.05 4.29 L15.32 3.02 A2.3 2.3 0 0 1 18.58 3.02 L20.98 5.42 A2.3 2.3 0 0 1 20.98 8.68 L19.71 9.95Z" fill="#F2939A"/></svg></button>
         <button class="tool" data-tool="fill" title="Paint bucket (K)" aria-pressed="false"><svg viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-38 13 12)"><ellipse cx="13" cy="5.5" rx="6.2" ry="2.3"/><path d="M6.8 5.5l1.4 11.7c.2 1.1 2.2 2 4.8 2s4.6-.9 4.8-2l1.4-11.7"/><path d="M19.2 5.5c3.2.3 3.4 5.3.3 6.6"/><path d="M9.8 7.4c1.8 1.4 4.6 1.4 6.4 0" /><path d="M9.7 11l.3 2.6M10.3 15.4l.1.8"/></g><path d="M5 14.8s-2.7 3.1-2.7 4.8a2.7 2.7 0 0 0 5.4 0c0-1.7-2.7-4.8-2.7-4.8z" fill="#6EC6FF"/></svg></button>
