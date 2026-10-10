@@ -26,6 +26,11 @@ workflows:
           mkdir -p www/fonts
           curl -fL -o www/fonts/BagelFatOne-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/bagelfatone/BagelFatOne-Regular.ttf"
           curl -fL -o www/fonts/Nunito.ttf "https://github.com/google/fonts/raw/main/ofl/nunito/Nunito%5Bwght%5D.ttf"
+          curl -fL -o www/fonts/PermanentMarker-Regular.ttf "https://github.com/google/fonts/raw/main/apache/permanentmarker/PermanentMarker-Regular.ttf" || echo "font PermanentMarker-Regular.ttf skipped (the app uses a built-in lookalike)"
+          curl -fL -o www/fonts/PatrickHand-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/patrickhand/PatrickHand-Regular.ttf" || echo "font PatrickHand-Regular.ttf skipped (the app uses a built-in lookalike)"
+          curl -fL -o www/fonts/Bangers-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/bangers/Bangers-Regular.ttf" || echo "font Bangers-Regular.ttf skipped (the app uses a built-in lookalike)"
+          curl -fL -o www/fonts/Pacifico-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/pacifico/Pacifico-Regular.ttf" || echo "font Pacifico-Regular.ttf skipped (the app uses a built-in lookalike)"
+          curl -fL -o www/fonts/Creepster-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/creepster/Creepster-Regular.ttf" || echo "font Creepster-Regular.ttf skipped (the app uses a built-in lookalike)"
       - name: Create the iOS project, icons and splash screen
         script: |
           [ -d ios ] || npx cap add ios

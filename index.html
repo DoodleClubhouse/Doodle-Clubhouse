@@ -3,7 +3,7 @@
 <title>Doodle Clubhouse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Bangers&family=Creepster&family=Nunito:wght@600;800&family=Pacifico&family=Patrick+Hand&family=Permanent+Marker&display=swap">
 <style>
   :root{
     color-scheme: light;
@@ -128,7 +128,7 @@
   .pv-lined{background:linear-gradient(90deg, transparent 22%, #F29B9B 22% 28%, transparent 28%), repeating-linear-gradient(#FFFEFA 0 3px, #A9CBEA 3px 4px)}
   .pv-chalk{background:#2E3A34; box-shadow:inset 0 0 0 2px #A0703F}
   .wall-opts{display:grid; grid-template-columns:repeat(5,1fr); gap:6px}
-  .paper.is-chalk{box-shadow:0 0 0 9px #A0703F, 0 0 0 11px #6E4A26, 0 12px 30px rgba(0,0,0,.35)}
+  .paper.is-chalk{background:#2E3A34; box-shadow:0 0 0 9px #A0703F, 0 0 0 11px #6E4A26, 0 12px 30px rgba(0,0,0,.35)}
   .paper.is-chalk::before, .paper.is-chalk::after{display:none}
 
   /* Premium brushes */
@@ -196,7 +196,25 @@
   }
   .paper::before{left:22px; transform:rotate(-6deg)}
   .paper::after{right:22px; transform:rotate(5deg)}
-  canvas{display:block; width:100%; height:100%; border-radius:4px; touch-action:none}
+  canvas{display:block; width:100%; height:100%; border-radius:4px; touch-action:none; cursor:crosshair}
+  /* ---------- Type tool ---------- */
+  #typeEd{position:fixed; left:0; top:0; z-index:30; min-width:1.2ch; min-height:1.2em; padding:2px 5px; margin:0; border:2px dashed #2E9CDB; border-radius:6px; background:rgba(255,255,255,.18); outline:none; white-space:pre; line-height:1.2; transform-origin:0 0; -webkit-user-select:text; user-select:text; cursor:text}
+  #typeEd:empty::before{content:attr(data-ph); opacity:.35}
+  #typeMove{position:fixed; z-index:31; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:#2E9CDB; border:2.5px solid #1A1F3A; color:#fff; display:grid; place-items:center; touch-action:none; cursor:move; box-shadow:0 2px 0 #1A1F3A}
+  #typeMove svg, #typeRot svg{width:20px; height:20px}
+  #typeRot{position:fixed; z-index:31; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:#FF9F1C; border:2.5px solid #1A1F3A; color:#fff; display:grid; place-items:center; touch-action:none; cursor:grab; box-shadow:0 2px 0 #1A1F3A}
+  #typeBar{position:fixed; z-index:32; left:50%; top:60px; transform:translateX(-50%); width:max-content; display:flex; gap:6px; align-items:center; padding:7px 8px; background:#FFFDF7; border:2.5px solid #1A1F3A; border-radius:16px; box-shadow:0 4px 0 #1A1F3A; max-width:calc(100vw - 16px); flex-wrap:wrap; justify-content:center; box-sizing:border-box}
+  #typeBar .tfonts{display:flex; gap:6px; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+  #typeBar .tfonts::-webkit-scrollbar{display:none}
+  #typeBar .tctl{display:flex; gap:6px; align-items:center}
+  @media (max-width:600px){ #typeBar button{height:36px; min-width:40px; font-size:19px; padding:0 7px} #typeBar .tsz, #typeBar .tdone, #typeBar .tx{font-size:15px} }
+  #typeBar button{flex:0 0 auto; height:40px; min-width:44px; padding:0 9px; border:2px solid #1A1F3A; border-radius:11px; background:#fff; color:#1A1F3A; font-size:21px; line-height:1; cursor:pointer}
+  #typeBar button[aria-pressed="true"]{background:#1A1F3A; color:#FFD84D}
+  #typeBar .tsep{flex:0 0 2px; align-self:stretch; background:#1A1F3A; opacity:.15; border-radius:2px}
+  #typeBar .tsz{font-family:var(--body); font-weight:800; font-size:17px}
+  #typeBar .tdone{background:#FF5A5F; color:#fff; font-family:var(--body); font-weight:800; font-size:17px}
+  #typeBar .tx{font-family:var(--body); font-weight:800; font-size:17px}
+
 
   /* Wall of fame */
   .overlay{position:fixed; inset:0; background:rgba(8,12,36,.75); display:grid; place-items:center; padding:16px; z-index:10}
@@ -667,6 +685,8 @@
   .dyn-row .tool.dyn{grid-column:auto; flex-direction:column; font-size:11px; gap:3px; padding:6px 2px; min-width:0}
   .dyn-row .tool.dyn svg{width:22px; height:22px; flex:none}
   .tool.dyn[data-tool="wormhole"]{background:#E8DEFF}
+  /* the two "rubbing out" tools wear a light pink button so they stand out */
+  html body .tool[data-tool="eraser"]:not([aria-pressed="true"]), html body .tool.dyn[data-tool="dynamite"]:not([aria-pressed="true"]){background:#FFD1F9!important}
   /* magic effects in the Brush Pack: same tile look as the other pack brushes, icons a bit bigger */
   .tool.pro.fx > svg{width:28px; height:28px}
   .tool.pro.fx > span:not(.lock){display:none}
@@ -690,6 +710,21 @@
   .tool[data-tool="line"]::after{content:""; position:absolute; right:4px; bottom:4px; border:4px solid transparent; border-right-color:currentColor; border-bottom-color:currentColor; opacity:.55; border-radius:1px}
   .shape-pop{position:fixed; z-index:45; display:flex; gap:6px; padding:8px; background:var(--plank); border:3px solid var(--ink); border-radius:14px; box-shadow:0 5px 0 var(--ink), 0 12px 24px rgba(0,0,0,.25)}
   .shape-pop[hidden]{display:none}
+
+  /* ---------- Stamps: the sticker tray along the bottom of the page ---------- */
+  .stamp-pop{position:fixed; z-index:45; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; padding:8px; width:max-content; max-width:calc(100vw - 16px); box-sizing:border-box; background:var(--plank); border:3px solid var(--ink); border-radius:16px; box-shadow:0 5px 0 var(--ink), 0 12px 24px rgba(0,0,0,.25); transform:translateX(-50%)}
+  .stamp-pop[hidden]{display:none}
+  .stamp-pop button{width:48px; height:48px; padding:5px; display:grid; place-items:center; border:2.5px solid var(--ink); border-radius:12px; background:var(--paper); box-shadow:0 2px 0 var(--ink); cursor:pointer}
+  .stamp-pop button svg{width:34px; height:34px}
+  .stamp-pop button[aria-pressed="true"]{background:var(--ink)}
+  @media (max-width:600px){ .stamp-pop button{width:40px; height:40px; padding:4px} .stamp-pop button svg{width:28px; height:28px} }
+  .tool[data-tool="stamp"] > svg{transform:scale(1.1)}
+  .custom-row #eyedrop{flex:none}
+  @media (max-height:500px) and (orientation:landscape){
+    html body[data-panel="colors"] .custom-row{flex-direction:column!important; gap:4px!important}
+    html body[data-panel="colors"] .custom-row #eyedrop{width:var(--sw, 30px)!important; height:var(--sw, 30px)!important; padding:0!important; display:grid; place-items:center}
+    html body[data-panel="colors"] .custom-row #eyedrop svg{width:62%; height:62%}
+  }
   .shape-pop .tool{width:44px; height:44px; padding:8px; display:grid; place-items:center}
   .shape-pop .tool svg{width:24px; height:24px}
   /* dynamite now sits with the drawing tools (right after the eraser); the other effects flow in after it */
@@ -1075,11 +1110,13 @@
   #sndPop.on{opacity:1; transform:translate(-50%,-50%) scale(1); transition:opacity .1s, transform .15s}
   #sndPop svg{width:44px; height:44px; color:#FFD84D}
   #sndPop b{font:800 16px/1 var(--body)}
-  #xhair{position:fixed; left:0; top:0; width:32px; height:32px; z-index:9999; pointer-events:none}
-  #xhair svg{display:block}
   html body .tool[data-tool="dynamite"] > svg{transform:scale(1.3)}
   html body .tool[data-tool="rainbow"] > svg{transform:scale(1.15)}
-  html body .tool[data-tool="pencil"][aria-pressed="true"] svg{stroke:#fff!important}   /* pencil picked: black outline flips to white on the dark button */
+  html body .tool[aria-pressed="true"] svg .ol{fill:#fff}
+  html body .tool[data-tool="train"] > svg{transform:scale(1.14)}
+  html body .tool[data-tool="train"] > svg .ol{stroke:#111; stroke-width:4px; paint-order:stroke}
+  html body .tool[data-tool="train"][aria-pressed="true"] > svg .ol{stroke:#fff}   /* traced icons: the black outline turns white when picked */
+  html body .tool[data-tool="pencil"][aria-pressed="true"] svg, html body .tool[data-tool="chalk"][aria-pressed="true"] svg:not(.lock svg){stroke:#fff!important}   /* pencil picked: black outline flips to white on the dark button */
   #szPop{position:fixed; z-index:9; transform:translate(-50%,0); display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; opacity:0; transition:opacity .25s}
   #szPop.on{opacity:1; transition:opacity .08s}
   #szPop i{display:block; border-radius:50%; box-shadow:0 0 0 2px #fff, 0 0 0 4px rgba(26,31,58,.55), 0 4px 12px rgba(0,0,0,.25)}
@@ -1191,7 +1228,7 @@
 
 <nav class="menubar" id="menubar" aria-label="Menu">
   <div class="mb-menu mb-logo-menu"><button class="mb-item mb-logo-btn" aria-haspopup="true" aria-expanded="false" aria-label="Colors"><img class="mb-logo" alt="Doodle Clubhouse" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADsAAAA8CAYAAADYIMILAAAODUlEQVR42tVbbWyU1Z7/nfM8M0NnprQMLTY4e1m5NUErICq5UdtAIalZoy5RiBVDlhv94EsuV+HGxKi32V1N3NX4kl1N2Q9XvwgaE/txiY2ooHLBtkqLGwOF8qK20lKYGWbo9Hme898PPP+zZ5556Rvc1ZOczMzT85zzf389Ba7eEABs4/dGAH8F4AAgfzoAegD8HsA8f52FX9kwAU4CeMdAsNw8BOAO/x3bJ9YvHkkGMgxgG4CzPjIKgGdZFtm2racQwgPg+msmANxjSMYvkssyANhGAP0G11wpJQkhSnJVSkkGwh6Af/aJFSTgnPVqrsP2AQWANQD+DGCd/9sTQkjLsoTrXl6yefNm3HbbbSAiHDt2DO+99x4ymQwsy4LneWTA9DWAPwHYZ5zj+QT5f+EmA/b3AP5icMsTQni2bWvuLVu2jLq6uig4vvvuO7r++usJAIu1MrisAOwE8HeBc/9mw9QlAeAPAEYN4FzLsjSSiUSCOjo6KJVKERGR53nkOI6eRESnT5+mtrY2/Y7/vmcQ72cAfzSsu3W1DVjQYPzOFzHtRqSUrH8UDofp0UcfpePHj2suuq5bxFnz2auvvkrxeFzrcUCXCcABAHcGVEhcTVeyAMC/Gf7SFUIoU2Tvvfde6unp0Ug4jkNKKSo3PM/Tfx8YGKC7775b71VCtB0A/wogVga+K8LNMIDHAZwyrawpsjfeeCN99NFHBVzzPI+mO1isiYg++OADuuGGG4KibXL5OICXASy6EqJtUuteAIdNJIUQihGdN28ePf/885TJZDSnZoJkkMv8biaToY6ODorFYhrhAJcJwAkA/zBbLpsUqgLwnwEkC6xsa2sr9fb2VtTL2Qxzn/7+flq/fn1QtL1A6NkJYOF0uSwCZn2d7+vYMnqmyCaTSdq5c6fWtan0cjZDKVUg2m+88QY1NDSUstrK4PI/TsVlkwr3+wG7yU1tZROJBD377LP0888/a4BmK7IzEW0eIyMj9Oabb9I111xjijYFuPw2gFrDYhdxVPqL+AUVFNn29nY6ceLEFRfZ2Yj2qVOn6IEHHijFZfbP/+O7xwIO85eXDdNeYGVjsRi99dZb03YlV3MERfvdd9+txOUJAFuDCDdx9GPIP4VCIdq0aRP19/fP2cpeDdFmWM6cOUObNm2q5Kb+xRTlPzNXOTN58MEHNZImN6/EZECDcyZ7lPLN77zzDtXW1poIK0OsH2Vk/wuAklI6AGjVqlWzDgz+luLMRHIch/L5vHZTy5cvN1NH1uMTbIX/A8CTvu+ya2pq8Pbbb2PDhg2oqqqaUwiWz+cBABMTEwCAXC6HbDYLKSWI/i9bsywLCxYsuGwxhUAkEtHfw+HwjM+9//770dXVBSkllFIFLqcdwG6f7drXNjY2oq6uDkQEIYQ+HEABoCV9mRBwHAepVApEhAsXLsDzPLiuC9d1IYTQewURZMSVUrAsC7W1tQV7ExGqqqoQj8fheR7C4TBqamou539Sorq6GocOHcLBgwchhGBYXc4PowD2G7lo2arCr3Cyzh7mFCkHoA9AMwBFRNIUs1gshmg0qilu2zbGx8fhOA7y+bxex1SMRCKwrMuWPhqNIhaLaVFi6l977bVIJpOw7cs+P5PJYGJiApZl4dKlS8hkMnBdF6lUChMTE8hkMvp9x3Fw8eJFrSKmKti2Dc/zoJTiM1l8/l0Yrudb9kVCCEFEuOeee/DII4/gpptuQl1dHcLhMMLhMIQQmJyc1MAERay6ulrrmW3bsG1bqwJ/Sjm9goNSCp7nwXEc/ezSpUsYGRnB2NgYMpkMBgYG8PHHH2Pfvn0FRPW5avk2aRs/fMNMwAFQR0fHVfeTZsWCrT5/ziZo+eabb2jLli0EgNWQfe1fzGz/CABlWZYHgJqbm7XbcRynog+crb+ciYspd67runqa7pEDDMuyOEAaAhCRAJb4hWzB8v3QQw+BiEBEsG0bUkptPYNTSlk0y60157SrByXe4XMty9JTSol8Pg+lFNra2oLbRAEslADqAFT7+iYAoKmpqSRQRKSVv9IgIm0gpnJR5r6V1iqlNEye55Wu6fqMKREbRABEbQBx3/1oHzt//vyyVGYra/reIOBBQpVbW2rfsnVbPzjI5/NTBjrslw3ihViM43ygUgq2bevNggGEUgp79+5FT0+P6ayLAFdK4ejRo/j2228L9ilFGADIZrPo7u7G6OhoUcDCUvTJJ5/g1ltvxYoVK7Bjx46KkmAQjg+exwW6rb718jidGxoaKkia2aC0t7drS9fZ2VmQY7LhOHfuHN1+++0UDodJSknNzc30448/Fhkm/u04Dq1du5YAUEtLS0HCYe6/Zs2agmDh/fffL0oEeO3XX39txsZslVdLADUmVaqqqoo4y58HDhzQHH3llVfgOI72lyyqo6OjOHDgACYnJyGEwBdffIGurq4iXeP1g4OD+OyzzyClxP79+9HX16elw+TykiVLtD5aloXDhw9XtAGmuvu+tlaycWKETGSLTFo0qoEcHx/H6OhoAWCsL/X19QWWOh6PF4kzAzQ0NAQhBGzbhhACBw8eLBl7z5s3Txs8z/PQ2NhYUoUYB8uygoZUSAAJPh8AIpFIWWSZM0IIpFIpjI2NFR0Uj8c1UdgqJ5PJstS/cOECiEhnQadOnSopVcPDwwXvVTJS4XBY661B4Jj0faweNTU1CIVCJS1odXW1NgBKKZw8eVIDwEBkMhmk02lNHCklEolEWUNlWVYRx02XJaXE5OQkTp8+DQDgbiATsNSeHKIGjbQEcC3HwwBw3XXXlbWIy5YtK7B2X375ZYE/VUrh+PHjOH/+vOZUJBLReWopkautrdWiCQC9vb06MGG9z+fzGBoa0rDU1NSgqalJE6OcdAWPlEbJUfDCcsi2tLQU/O7u7oaUEqFQSHNxz549mrpCCKxYsQKLFy+GUqoAMP5+8803o76+Ho7jIBQKYf/+/di5cycsy9LJRGdnJ9LpNCKRCIgIa9asQSKR0IHGFAaKRwP8uJhs21YAaMeOHUUmnV3Q0NCQ7q5xifWll16iixcvEhHRiRMnaPHixSSEoEgkQgBo165dZcuu7F76+vpo/vz5usgHgO666y568skn6Y477ih4Xl9fT/39/SXr1bzf8PAwLVy4kEyXylnPURPZZ555pghZE+Gnn366oA0BgBobG6m1tZUWLVpU8HzVqlWUy+UqZjFMhA8//LCg2l9qrly5ko4cOVJUOA/CeOTIEW6RmMhusv0WZJHIlgvXXnvtNTQ1NeGFF17QFnJwcBCDg4N6reu6aGtrQ2dnJ6qqqgrELShiUkq4rouNGzfizjvvxO7du/HVV19hcnKSrx4gGo2ipaUFW7du1YWAUvkw753L5eC6LsMsfGR/En5Xe5Ft2+S6rnjuuefw4osvwnXdUhZNW+mRkRHs2rULe/fuRTabRTabhW3baGpqwsMPP4y1a9dq4pmVjHJJ+1Txs8mMcnt4ngfLstDT04PVq1ebxTYPwO9s7oXwQewmKgXtnuehoaEB27dvx/bt22cEWDab1VbWRDQajeqCm+d5RX8nIp3KTSeLMn/6CU7cNoIKMZ2qIbsedhdmXsvuh8VTSol0Oo09e/bg0KFD6Ovrw8mTJzWyJjfj8TiamprQ0dGB5cuXV+RgJUZwzcy2ba5iEhFJAFV2uRems7Ep5gw4EwIAzp07h9bWVgwMDExrz++//x5nzpzRIeOsu+iBQMUsyUwaF6x0hDLj+wgBsZNSYnh4GAMDA1r8KiXzlmXBdV20t7djuhJWTnxTqZROUnxJu1xfAzDuLyTmxpwvYviIJ5NJNDQ0QCkF13ULSpzmZD1dsmQJnnjiiaLIaKYjEGzwFyWDl6hmQ9FyCXxtba0O6ypVIkKhEJRS2LJlCyKRiO4YzJbIiURC7+lXGQWAxfJq3Rhjom3btg1EpF2ZWSQzC2W33HKLXjtViWaWIyX9bsAV5ayZGd133314/fXXUVNTo0XZnEopPP744/j0009RV1c3IyNZbuRyOTiOEywdTdoAxgD8hh/+8MMPV+RA1jsiwlNPPYWNGzdi3759+OmnnxAOh5FIJHD27FmsXLkS69evnzJgmIk05XI5M0fmYmLG9gvItxCRAmD19vbCcRztQuaKNOtvMpnE5s2bKxqUuSBqIjw+Pl70mK3xF/6BQkqJY8eO4fPPP4eUsqC/MlcOc8+GW5b8nVPDKyFJTLQy/VwLAH4L4KLf/lAAaPXq1TQ2NqYzCW4vzGReidbHdFsi3DciIsrn87RhwwauLnL74zyA3zDWu4N3KpYuXapz0at1RcBsZnFfKTjNXs5UDa+jR49Sc3Nz8Ha6AvAJjP7ODbh8zV34Cy129uvWrcNjjz2GpUuXIhqNIhwOl7XYbP0sy0I8Hi/4zvoUiUTmLLKTk5PIZrPa4qbTaXR3d6OjowNnz541b6V7fpR4N4D/5lunHoAnALzFUaOU0gIggk3kSsgyQrZtV0Q2Ho8jmUwiFothdHQUiUQC0WgUiUQCQgjd8B4eHsb58+eRy+WQTqeRTqeRyWT0vQzOeblhbdgHZTDyZQDPmveg2Aw+BODHwBVbJaVUv/RrB/6FL/PyZg7AdgO/AnliDi8G8IJ/b8jMirjBO5ckgYzfIrBGlBcWKvVdmBLm+1MexwH8E4AvjaZdxTvGq/yO9Rk/M/o1XBY55t8yT5S7pFnuKi43ZhYAWOp/2v6mIQD1/nfhrz3rl2WjPiWVf2jMuCIY958t9N+3/L+F/P25Q8H6NoHL/2yR9t9PATjnP0sBuOCLq/JvuPcCyAYkVY//BcXYI53mbs5pAAAAAElFTkSuQmCC"></button>
-    <div class="mb-drop mb-colors" hidden><div class="mb-lab">Menu bar</div><div class="mb-sws"><button class="mb-sw" data-bar="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-bar="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-bar="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-bar="#FF9F1C" style="background:#FF9F1C" aria-label="#FF9F1C"></button><button class="mb-sw" data-bar="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-bar="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-bar="#2E9CDB" style="background:#2E9CDB" aria-label="#2E9CDB"></button><button class="mb-sw" data-bar="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-bar="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbBarPick"></label></div><div class="mb-lab">Toolbar</div><div class="mb-sws"><button class="mb-sw" data-plank="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-plank="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-plank="#FF9F1C" style="background:#FF9F1C" aria-label="#FF9F1C"></button><button class="mb-sw" data-plank="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-plank="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-plank="#2E9CDB" style="background:#2E9CDB" aria-label="#2E9CDB"></button><button class="mb-sw" data-plank="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-plank="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbPlankPick"></label></div><div class="mb-lab">Background</div><div class="mb-sws"><button class="mb-sw" data-wall="#47C2FF" style="background:#47C2FF" aria-label="#47C2FF"></button><button class="mb-sw" data-wall="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-wall="#FF9F1C" style="background:#FF9F1C" aria-label="#FF9F1C"></button><button class="mb-sw" data-wall="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-wall="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-wall="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-wall="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-wall="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbWallPick"></label></div></div></div>
+    <div class="mb-drop mb-colors" hidden><div class="mb-lab">Menu bar</div><div class="mb-sws"><button class="mb-sw" data-bar="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-bar="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-bar="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-bar="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-bar="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-bar="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-bar="#2E9CDB" style="background:#2E9CDB" aria-label="#2E9CDB"></button><button class="mb-sw" data-bar="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-bar="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbBarPick"></label></div><div class="mb-lab">Toolbar</div><div class="mb-sws"><button class="mb-sw" data-plank="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-plank="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-plank="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-plank="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-plank="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-plank="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-plank="#2E9CDB" style="background:#2E9CDB" aria-label="#2E9CDB"></button><button class="mb-sw" data-plank="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-plank="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbPlankPick"></label></div><div class="mb-lab">Background</div><div class="mb-sws"><button class="mb-sw" data-wall="#47C2FF" style="background:#47C2FF" aria-label="#47C2FF"></button><button class="mb-sw" data-wall="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-wall="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-wall="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-wall="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-wall="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-wall="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-wall="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-wall="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbWallPick"></label></div></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">File</button>
     <div class="mb-drop" hidden><button data-do="openWall">Projects…</button><button data-do="pinIt">Save</button><button data-do="exportBtn">Download</button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Edit</button>
@@ -1238,22 +1275,22 @@
     <section class="sec-tools">
       <div class="group-label">Tools</div>
       <div class="tool-grid" id="toolGrid">
-        <button class="tool" data-tool="pencil" title="Pencil (B)" aria-pressed="true"><svg viewBox="1.6 1.6 20.8 20.8" fill="none" stroke="#111" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.38 21.62 L4.79 13.56 L10.44 19.21Z" fill="#F6DDB8"/><path d="M2.38 21.62 L3.46 18.02 Q5.49 18.51 5.98 20.54Z" fill="#3B3B3B"/><path d="M12.00 6.34 L4.79 13.56 Q4.35 15.88 6.67 15.44 L13.89 8.23Z" fill="#F7D667"/><path d="M13.89 8.23 L6.67 15.44 Q6.24 17.76 8.56 17.33 L15.77 10.11Z" fill="#F7C845"/><path d="M15.77 10.11 L8.56 17.33 Q8.12 19.65 10.44 19.21 L17.66 12.00Z" fill="#EFA93A"/><path d="M12.00 6.34 L14.05 4.29 L19.71 9.95 L17.66 12.00Z" fill="#E9E9E4"/><path d="M14.05 4.29 L15.32 3.02 A2.3 2.3 0 0 1 18.58 3.02 L20.98 5.42 A2.3 2.3 0 0 1 20.98 8.68 L19.71 9.95Z" fill="#F2939A"/></svg></button>
-        <button class="tool" data-tool="soft" title="Soft brush (O)" aria-label="Soft brush" aria-pressed="false"><svg viewBox="0 0 24 24"><defs><radialGradient id="softIco"><stop offset="0" stop-color="currentColor"/><stop offset=".5" stop-color="currentColor" stop-opacity=".45"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#softIco)"/></svg></button>
-        <button class="tool" data-tool="spray" title="Splatter spray (S): hold still for drips!" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.3 22.2h6.4c.8 0 1.4-.6 1.4-1.4v-9.4c0-1.6-1.3-2.9-2.9-2.9H6.8c-1.6 0-2.9 1.3-2.9 2.9v9.4c0 .8.6 1.4 1.4 1.4z"/><path d="M3.9 12.2h9.2M3.9 19.6h9.2"/><path d="M6.4 8.5V6.6h4.2v1.9"/><path d="M7.3 6.6V3.9h1.6l.8.8v1.9"/><path d="M6.2 14.4v3.2"/><path d="M12.6 4.5l8.6-2.4M12.6 5.4h8.4M12.6 6.3l8.6 1.9" stroke-width="1.4"/></svg></button>
-        <button class="tool" data-tool="fill" title="Paint bucket (K)" aria-pressed="false"><svg viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-38 13 12)"><ellipse cx="13" cy="5.5" rx="6.2" ry="2.3"/><path d="M6.8 5.5l1.4 11.7c.2 1.1 2.2 2 4.8 2s4.6-.9 4.8-2l1.4-11.7"/><path d="M19.2 5.5c3.2.3 3.4 5.3.3 6.6"/><path d="M9.8 7.4c1.8 1.4 4.6 1.4 6.4 0" /><path d="M9.7 11l.3 2.6M10.3 15.4l.1.8"/></g><path d="M5 14.8s-2.7 3.1-2.7 4.8a2.7 2.7 0 0 0 5.4 0c0-1.7-2.7-4.8-2.7-4.8z" fill="#6EC6FF"/></svg></button>
-        <button class="tool" data-tool="eraser" title="Eraser (E)" aria-pressed="false"><svg viewBox="0 0 20 25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M1.0 15.3L13.0 3.3 18.8 9.1 6.8 21.1z" fill="#FF9EC0"/><path d="M6.8 21.1L18.8 9.1L18.8 12.3L6.8 24.3z" fill="#F0628F"/><path d="M1.0 15.3L6.8 21.1L6.8 24.3L1.0 18.5z" fill="#E04B7B"/><path d="M9.5 6.8L13.0 3.3 18.8 9.1 15.3 12.6z" fill="#FFFDF7"/><path d="M15.3 12.6L18.8 9.1L18.8 12.3L15.3 15.8z" fill="#D5DDEB"/></svg></button>
-        <button class="tool dyn" data-tool="dynamite" title="Dynamite: tap the page to blow it all away (Y)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(14 11 15)" stroke="#111" stroke-width="1.2" stroke-linejoin="round"><rect x="4.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="8.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="12.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="4" y="12.5" width="13" height="2" fill="#5C5C66"/><rect x="4" y="17" width="13" height="2" fill="#5C5C66"/><ellipse cx="6.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="10.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="14.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><path d="M10.5 9c0-3 3-4 6-5" fill="none" stroke-linecap="round"/></g><path d="M20.5 1.2l.8 2 2-.4-1.2 1.6 1.4 1.4-2-.2-.4 2-1-1.8-1.8 1 .6-2-1.9-.8 2-.6z" fill="#FFA21F" stroke="#D7263D" stroke-width=".6"/></svg><span>Dynamite</span></button>
-        <button class="tool" data-tool="line" title="Straight line (L)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19L19 5"/></svg></button>
-        <button class="btn sm ico gridbtn" id="lockWidth" title="Lock brush width: lines stay the same width however hard you press or fast you draw" aria-label="Lock brush width" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="11" width="10" height="8" rx="1.8"/><path d="M9.5 11V8.5a2.5 2.5 0 0 1 5 0V11"/><path d="M2 15h3M3.5 13.5 2 15l1.5 1.5M22 15h-3M20.5 13.5 22 15l-1.5 1.5"/></svg></button>
-        <button class="btn sm ico gridbtn" id="eyedrop" title="Eyedropper: tap the page to pick a color from it" aria-label="Eyedropper" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L18 8l-2-2z"/><path d="M15.5 7.5L6 17l-1 3 3-1 9.5-9.5"/></svg></button>
+        <button class="tool" data-tool="pencil" title="Pencil (B)" aria-pressed="true"><svg viewBox="1.6 1.6 20.8 20.8" fill="none" stroke="#111" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.38 21.62 L4.79 13.56 L10.44 19.21Z" fill="#F6DDB8"/><path d="M2.38 21.62 L3.46 18.02 Q5.49 18.51 5.98 20.54Z" fill="#3B3B3B"/><path d="M12.00 6.34 L4.79 13.56 Q4.35 15.88 6.67 15.44 L13.89 8.23Z" fill="#F7D667"/><path d="M13.89 8.23 L6.67 15.44 Q6.24 17.76 8.56 17.33 L15.77 10.11Z" fill="#F7C845"/><path d="M15.77 10.11 L8.56 17.33 Q8.12 19.65 10.44 19.21 L17.66 12.00Z" fill="#EFA93A"/><path d="M12.00 6.34 L14.05 4.29 L19.71 9.95 L17.66 12.00Z" fill="#E9E9E4"/><path d="M14.05 4.29 L15.32 3.02 A2.3 2.3 0 0 1 18.58 3.02 L20.98 5.42 A2.3 2.3 0 0 1 20.98 8.68 L19.71 9.95Z" fill="#F2939A"/></svg></button>
+        <button class="tool" data-tool="fill" title="Paint bucket (K)" aria-pressed="false"><svg viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-38 13 12)"><ellipse cx="13" cy="5.5" rx="6.2" ry="2.3"/><path d="M6.8 5.5l1.4 11.7c.2 1.1 2.2 2 4.8 2s4.6-.9 4.8-2l1.4-11.7"/><path d="M19.2 5.5c3.2.3 3.4 5.3.3 6.6"/><path d="M9.8 7.4c1.8 1.4 4.6 1.4 6.4 0" /><path d="M9.7 11l.3 2.6M10.3 15.4l.1.8"/></g><path d="M5 14.8s-2.7 3.1-2.7 4.8a2.7 2.7 0 0 0 5.4 0c0-1.7-2.7-4.8-2.7-4.8z" fill="#6EC6FF"/></svg></button>
+        <button class="tool" data-tool="spray" title="Splatter spray (S): hold still for drips!" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.3 22.2h6.4c.8 0 1.4-.6 1.4-1.4v-9.4c0-1.6-1.3-2.9-2.9-2.9H6.8c-1.6 0-2.9 1.3-2.9 2.9v9.4c0 .8.6 1.4 1.4 1.4z"/><path d="M3.9 12.2h9.2M3.9 19.6h9.2"/><path d="M6.4 8.5V6.6h4.2v1.9"/><path d="M7.3 6.6V3.9h1.6l.8.8v1.9"/><path d="M6.2 14.4v3.2"/><path d="M12.6 4.5l8.6-2.4M12.6 5.4h8.4M12.6 6.3l8.6 1.9" stroke-width="1.5"/></svg></button>
+        <button class="tool" data-tool="line" title="Straight line (L)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19L19 5"/></svg></button>
+        <button class="tool" data-tool="text" title="Type (T): tap the page and type words" aria-label="Type" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7V4.5h15V7"/><path d="M12 4.5v15"/><path d="M8.5 19.5h7"/></svg></button>
+        <button class="tool" data-tool="eraser" title="Eraser (E)" aria-pressed="false"><svg viewBox="0 0 20 25" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linejoin="round" aria-hidden="true"><path d="M1.0 15.3L13.0 3.3 18.8 9.1 6.8 21.1z" fill="#FF9EC0"/><path d="M6.8 21.1L18.8 9.1L18.8 12.3L6.8 24.3z" fill="#F0628F"/><path d="M1.0 15.3L6.8 21.1L6.8 24.3L1.0 18.5z" fill="#E04B7B"/><path d="M9.5 6.8L13.0 3.3 18.8 9.1 15.3 12.6z" fill="#FFFDF7"/><path d="M15.3 12.6L18.8 9.1L18.8 12.3L15.3 15.8z" fill="#D5DDEB"/></svg></button>
+        <button class="tool" data-tool="stamp" data-stamp="heart" id="stampBtn" title="Stamps: pick a sticker, then tap the page" aria-label="Stamps" aria-pressed="false"><svg viewBox="0 0 48 48" stroke="#111" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M24 41C8 30 3 21 6 13.5 9 6 19 5.5 24 13 29 5.5 39 6 42 13.5 45 21 40 30 24 41Z" fill="#FF5A5F"/><ellipse cx="13.5" cy="15" rx="3.4" ry="2.2" transform="rotate(-35 13.5 15)" fill="#fff" stroke="none" opacity=".85"/></svg></button>
+        <button class="tool" data-tool="train" title="Train tracks (O): draw a track and a little train rides it!" aria-label="Train tracks" aria-pressed="false"><svg viewBox="32 59 251 251" fill-rule="evenodd" aria-hidden="true"><path d="M86.0 95.5 86.0 105.0 88.5 107.5 134.0 107.5 136.5 105.0 136.5 96.5 134.0 93.0 88.5 93.0Z" fill="#FF9F1C"/><path d="M175.0 100.5 175.5 112.5 250.0 112.5 251.5 108.5 256.0 108.5 257.5 112.5 270.5 112.0 270.0 100.0Z" fill="#6C4DF6"/><path d="M94.0 114.5 94.0 121.0 97.0 127.5 99.5 139.5 122.5 140.0 128.5 118.0 128.0 114.0 96.5 113.0Z" fill="#FF5A5F"/><path d="M259.5 118.5 186.5 118.0 185.0 211.0 181.0 213.5 91.5 213.0 90.0 214.5 90.0 228.0 197.0 228.5 207.0 215.5 216.5 209.5 225.5 206.5 237.0 206.5 249.0 211.5 254.5 215.5 259.0 215.5ZM205.5 130.5 241.0 130.5 243.0 132.0 244.0 168.0 242.5 170.0 206.5 171.0 203.5 168.5 203.5 132.5Z" fill="#2E9CDB"/><path d="M149.0 126.0 148.5 140.5 167.5 140.0 167.5 129.5 165.5 126.0 162.0 124.0 152.5 124.0Z" fill="#FFD84D"/><path d="M207.5 134.0 207.0 166.0 208.5 167.5 239.0 167.5 240.5 166.0 240.5 135.5 239.0 134.0Z" fill="#BFE6FF"/><path d="M75.5 145.0 69.0 150.5 67.0 158.5 68.0 202.0 71.0 206.5 76.5 209.5 85.0 209.5 85.5 145.5Z" fill="#FF9F1C"/><path d="M91.0 146.5 91.5 208.5 98.0 208.5 101.5 206.5 118.0 207.5 179.5 206.0 179.0 148.0 97.5 148.0 96.0 146.0Z" fill="#FF5A5F"/><path d="M57.5 164.0 52.0 171.5 52.0 187.0 56.5 192.5 63.0 193.5 63.5 164.5Z" fill="#FFD84D"/><path d="M222.0 212.5 222.5 216.5 233.5 216.0 233.5 212.5 231.0 211.0 224.5 211.0Z" fill="#434643"/><path d="M238.0 211.0 232.5 211.0 231.0 215.0 218.5 213.0 217.0 216.0 213.5 216.0 207.0 220.0 201.0 229.5 201.0 235.0 199.0 237.5 199.0 250.0 201.0 252.5 202.0 260.0 205.0 260.5 208.0 266.5 220.5 274.5 236.0 275.5 246.0 272.5 252.5 268.0 253.5 264.5 257.5 262.0 257.5 259.5 262.5 253.0 262.5 236.5 256.5 222.5 253.0 219.0 250.5 219.0 249.0 216.0ZM226.5 235.5 234.0 235.5 238.0 238.5 240.0 242.5 240.0 245.0 235.0 253.0 230.5 253.0 224.5 250.0 222.5 247.0 222.5 239.5Z" fill="#FFD84D"/><path d="M75.0 212.0 70.0 213.0 45.0 255.5 45.5 261.5 61.5 261.0 75.5 219.0Z" fill="#8CC63F"/><path d="M85.0 213.0 80.5 213.0 66.0 254.5 66.5 261.5 85.5 261.0 86.5 254.5Z" fill="#8CC63F"/><path d="M91.5 234.0 91.0 242.0 96.0 242.5 99.5 238.0 99.5 234.5Z" fill="#464646"/><path d="M185.0 234.5 186.0 239.5 189.5 241.5 193.5 241.0 193.0 235.0Z" fill="#474747"/><path d="M179.0 238.0 173.0 236.0 169.5 236.0 168.0 240.0 166.0 238.0 159.5 238.0 152.0 243.5 149.0 252.5 149.0 261.0 152.0 268.0 156.5 272.5 160.0 272.5 162.5 274.5 175.0 274.5 185.5 267.0 185.5 263.5 187.5 261.0 187.5 249.5 183.5 242.0Z" fill="#FFD84D"/><path d="M103.0 240.0 99.0 244.5 99.0 249.0 97.0 250.5 97.0 261.0 101.0 269.5 110.5 274.5 124.0 274.5 129.5 271.5 134.5 265.0 135.5 248.5 132.5 242.5 126.5 241.0 126.0 248.0 122.5 249.0 121.5 246.5 123.5 245.0 123.0 241.0 110.5 241.0 109.0 239.0Z" fill="#FFD84D"/><path d="M224.5 234.0 221.0 237.5 221.5 250.5 220.0 251.5 221.0 255.0 224.5 252.0 230.5 255.5 233.5 255.0 235.5 256.5 240.0 255.5 240.5 253.5 238.0 252.5 241.5 247.0 241.5 240.5 239.5 236.5 234.5 233.0ZM203.5 129.0 202.0 130.5 202.0 157.0 201.0 158.5 201.0 169.0 204.5 172.5 243.0 172.5 245.5 170.0 245.5 131.5 243.0 129.0ZM208.5 136.5 209.5 135.5 237.0 135.5 239.0 137.5 239.0 164.0 237.0 166.0 210.5 166.0 208.5 164.0ZM102.0 127.0 100.0 127.5 100.5 129.5 102.5 128.0ZM84.0 91.0 81.0 95.5 80.0 103.0 82.0 108.0 87.0 113.5 92.0 138.0 91.0 139.0 75.5 140.0 70.0 143.0 65.0 148.5 62.0 157.0 52.0 162.0 47.0 170.5 46.0 174.5 47.0 187.0 50.0 192.5 54.0 196.5 62.0 200.0 66.5 210.0 39.0 256.5 38.0 261.0 40.0 265.0 42.5 266.5 87.0 266.5 91.5 263.0 96.0 271.5 101.0 276.5 112.5 281.5 125.0 280.5 133.5 275.5 138.5 269.0 142.0 260.5 150.5 274.5 154.5 277.5 164.5 281.5 173.0 281.5 186.5 274.5 190.5 269.0 194.5 258.5 204.0 271.5 217.5 279.5 224.5 281.5 242.0 280.5 256.5 272.5 263.5 264.0 267.5 256.0 269.5 248.0 269.5 238.5 265.5 227.0 265.5 120.5 266.5 119.5 272.0 119.5 276.5 116.0 277.5 113.0 277.5 99.5 276.5 96.5 273.0 94.0 172.5 94.0 169.0 97.5 169.0 115.0 172.5 118.5 180.0 120.5 180.0 138.0 179.0 139.0 173.5 139.0 172.5 138.0 172.5 130.5 170.5 125.5 167.5 122.0 162.0 119.0 153.5 119.0 147.0 122.0 144.0 125.5 141.0 139.0 130.5 139.0 129.5 136.5 135.5 112.5 141.5 105.0 141.5 96.5 138.5 91.0 133.0 88.0 89.5 88.0ZM144.0 242.5 144.5 244.0 143.0 245.0 142.5 243.5ZM107.0 240.5 107.5 242.5 120.5 242.5 121.0 243.5 119.0 246.5 120.5 250.5 127.0 250.5 127.5 243.5 129.0 243.0 131.0 244.5 133.0 248.5 132.0 251.0 134.0 257.0 132.5 259.5 133.0 263.0 127.5 270.0 122.0 273.0 112.5 273.0 112.0 271.0 108.5 272.0 102.5 267.5 99.5 262.0 100.0 260.0 98.5 259.0 98.5 252.5 100.5 251.0 101.5 245.0ZM174.0 238.5 177.0 239.5 178.5 242.5 182.0 244.0 184.0 249.5 186.0 251.5 186.0 259.0 183.5 262.5 184.0 265.0 181.5 266.0 177.5 271.0 173.0 273.0 164.5 273.0 161.0 270.5 158.5 271.0 158.0 269.0 153.5 266.0 150.5 259.0 152.5 247.5 156.0 242.5 161.5 239.5 164.0 239.5 165.5 241.5 170.0 242.5 171.5 239.0ZM115.5 238.0 117.5 237.5 118.0 238.5 116.0 239.0ZM188.0 237.0 191.0 236.5 192.0 239.0 190.5 239.5ZM97.0 235.5 96.5 237.5 94.0 237.5 94.5 240.5 93.5 241.0 92.5 236.5ZM255.5 229.0 256.5 228.5 257.5 230.5 256.0 231.0ZM83.0 214.5 84.0 215.5 84.0 259.0 83.0 260.0 68.5 260.0 67.5 256.5 80.5 217.5ZM73.5 214.0 74.0 217.0 60.0 259.0 59.0 260.0 47.5 260.0 46.5 257.5 70.5 216.5ZM236.0 212.5 237.5 215.0 239.5 213.5 242.0 214.5 255.0 224.5 251.5 230.5 255.5 230.5 256.5 232.5 260.0 234.5 258.0 236.0 261.0 238.5 261.0 251.0 256.0 257.5 256.0 260.0 251.5 263.0 251.5 265.0 249.0 268.0 242.0 272.0 239.5 271.0 238.0 273.0 227.5 274.0 219.5 272.0 216.0 268.0 208.5 263.5 208.0 259.0 203.5 258.0 202.5 250.5 200.5 248.0 200.5 239.5 204.0 234.5 202.5 231.5 204.0 230.5 204.5 227.5 208.5 225.0 207.5 223.5 209.0 221.5 214.0 219.5 215.5 217.5 219.5 218.5 220.5 214.5 227.5 216.5 235.0 216.5 235.5 215.0 233.5 213.5ZM224.0 214.5 226.5 212.5 231.0 214.0 230.5 215.0ZM59.5 165.5 62.0 166.5 62.0 191.0 61.0 192.0 57.0 190.0 53.5 185.0 52.5 179.0 55.5 169.5ZM92.5 148.5 94.0 147.5 95.5 149.5 177.0 149.5 178.0 150.5 178.0 204.0 177.0 205.0 117.5 205.0 116.0 206.0 99.5 205.0 93.5 207.0 92.5 206.0 92.5 155.5 94.5 154.0 94.5 152.5 92.5 151.0ZM77.5 146.5 83.0 146.5 84.0 147.5 84.0 207.0 83.0 208.0 78.5 208.0 71.5 203.5 69.5 200.0 68.5 185.5 69.5 184.0 68.5 160.5 69.5 154.5 71.5 151.0ZM154.5 125.5 162.0 126.5 166.0 131.5 166.0 138.0 165.0 139.0 150.5 139.0 149.5 138.0 149.5 129.5ZM258.0 120.5 258.0 213.0 257.0 214.0 251.0 210.0 239.0 205.0 223.5 205.0 214.5 208.0 205.0 214.0 195.0 227.0 92.5 227.0 91.5 226.0 91.5 216.5 93.5 214.5 105.0 215.5 106.5 214.5 108.5 215.5 111.5 214.5 118.5 215.5 122.5 214.5 128.5 215.5 131.5 214.5 138.5 215.5 143.5 214.5 157.0 214.5 158.5 215.5 177.0 214.5 182.0 215.5 185.0 214.5 187.5 210.0 187.5 120.5 188.5 119.5 257.0 119.5ZM95.5 116.5 98.5 114.5 123.0 114.5 124.0 116.0 126.0 115.5 126.5 117.0 123.5 127.0 124.0 130.0 120.0 139.0 117.0 138.0 101.5 138.0 99.5 135.0 98.5 125.5 96.0 120.0 97.5 117.5ZM176.5 102.5 188.0 102.5 189.5 101.5 268.0 101.5 269.0 102.5 269.0 110.0 268.0 111.0 259.5 111.0 258.0 107.0 249.5 107.0 248.0 111.0 177.5 111.0 176.5 110.0ZM87.5 97.5 90.5 94.5 132.0 94.5 135.0 98.5 135.0 103.0 132.0 106.0 90.5 106.0 87.5 103.0Z" class="ol" fill="#111" fill-rule="evenodd"/></svg></button>
+        <button class="tool dyn" data-tool="dynamite" title="Dynamite: tap the page to blow it all away (Y)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(14 11 15)" stroke="#111" stroke-width="1.4" stroke-linejoin="round"><rect x="4.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="8.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="12.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="4" y="12.5" width="13" height="2" fill="#5C5C66"/><rect x="4" y="17" width="13" height="2" fill="#5C5C66"/><ellipse cx="6.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="10.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="14.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><path d="M10.5 9c0-3 3-4 6-5" fill="none" stroke-linecap="round"/></g><path d="M20.5 1.2l.8 2 2-.4-1.2 1.6 1.4 1.4-2-.2-.4 2-1-1.8-1.8 1 .6-2-1.9-.8 2-.6z" fill="#FFA21F" stroke="#D7263D" stroke-width=".6"/></svg><span>Dynamite</span></button>
       </div>
     </section>
     <section class="premium sec-tools" id="premium">
       <div class="group-label">Brush Pack <span class="tag price">$2.99</span></div>
       <div class="premium-grid">
         <button class="tool pro" data-tool="brush" title="Paintbrush (P)" aria-label="Paintbrush" aria-pressed="false">
-          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3l3 3-9 9-3-3z"/><path d="M9 12c-3 0-5 2-5 5 0 1-1 2-2 3 4 1 9 0 9-5z"/></svg>
+          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="8.8 1.3 411.4 411.4" stroke="#111" stroke-width="30.38" stroke-linejoin="round" aria-hidden="true"><path d="M402.3 23.0 385.3 24.0 366.3 36.0 330.3 63.0 254.3 127.0 161.0 213.3 161.0 228.3 199.3 267.7 215.3 267.7 268.7 209.3 334.7 132.3 365.7 93.3 397.7 48.3 402.7 39.3Z" fill="#2E9CDB"/><path d="M172.7 303.3 126.3 256.0 103.3 257.0 92.3 260.0 79.3 266.0 67.0 276.3 58.0 290.3 54.0 301.3 43.0 349.3 37.0 361.3 27.0 371.3 27.0 385.3 32.3 387.7 50.3 390.7 89.3 391.7 112.3 387.7 131.3 379.7 141.3 372.7 151.7 362.3 161.7 347.3 170.7 325.3 172.7 317.3Z" fill="#33384F" stroke="none"/><path d="M54.3 301.0 43.0 349.3 37.0 361.3 27.0 371.3 27.0 385.3 32.3 387.7 50.3 390.7 89.3 391.7 104.3 389.7 125.3 382.7 125.7 380.3 121.7 372.3 117.7 358.3 110.7 345.3 97.3 334.0 73.3 323.0 66.3 318.0Z" fill="#FF5A5F" stroke="none"/><path d="M172.7 303.3 126.3 256.0 103.3 257.0 92.3 260.0 79.3 266.0 67.0 276.3 58.0 290.3 54.0 301.3 43.0 349.3 37.0 361.3 27.0 371.3 27.0 385.3 32.3 387.7 50.3 390.7 89.3 391.7 112.3 387.7 131.3 379.7 141.3 372.7 151.7 362.3 161.7 347.3 170.7 325.3 172.7 317.3Z" fill="none"/><path d="M148.3 225.0 126.0 247.3 126.0 262.3 166.3 302.7 181.3 302.7 203.7 280.3 203.7 265.3 164.3 225.0Z" fill="#C9D3E0"/></svg>
         </button>
         <button class="tool pro" data-tool="rainbow" title="Rainbow pen (R)" aria-label="Rainbow pen" aria-pressed="false">
           <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M0.20 17.9A11.80 11.80 0 0 1 23.80 17.9H22.10A10.10 10.10 0 0 0 1.90 17.9Z" fill="#FF5A5F"/><path d="M1.84 17.9A10.16 10.16 0 0 1 22.16 17.9H20.40A8.40 8.40 0 0 0 3.60 17.9Z" fill="#FF9F1C"/><path d="M3.54 17.9A8.46 8.46 0 0 1 20.46 17.9H18.70A6.70 6.70 0 0 0 5.30 17.9Z" fill="#FFD84D"/><path d="M5.24 17.9A6.76 6.76 0 0 1 18.76 17.9H17.00A5.00 5.00 0 0 0 7.00 17.9Z" fill="#8CC63F"/><path d="M6.94 17.9A5.06 5.06 0 0 1 17.06 17.9H15.30A3.30 3.30 0 0 0 8.70 17.9Z" fill="#2E9CDB"/><path d="M8.64 17.9A3.36 3.36 0 0 1 15.36 17.9H13.60A1.60 1.60 0 0 0 10.40 17.9Z" fill="#6C4DF6"/></svg>
@@ -1262,16 +1299,16 @@
           <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="13" width="4.5" height="4.5"/><rect x="7.5" y="8.5" width="4.5" height="4.5"/><rect x="12" y="13" width="4.5" height="4.5"/><rect x="16.5" y="8.5" width="4.5" height="4.5"/></svg>
         </button>
         <button class="tool pro" data-tool="chalk" title="Chalk (C)" aria-label="Chalk" aria-pressed="false">
-          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.1 16.6 15.9 4.8a2.2 2.2 0 0 1 3.3 3.3L7.4 19.9"/><ellipse cx="5.75" cy="18.25" rx="1.8" ry="2.6" transform="rotate(45 5.75 18.25)" fill="#fff"/></svg>
+          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0.6 1 22.4 22.4" stroke="#111" stroke-width="1.35" stroke-linejoin="round" aria-hidden="true"><g transform="translate(9.6 9.2) rotate(28)"><path d="M-7.25 -2.5 H7.25 A1.375 2.5 0 0 1 7.25 2.5 H-7.25 A1.375 2.5 0 0 1 -7.25 -2.5 Z" fill="#FFFFFF"/><ellipse cx="7.25" cy="0" rx="1.375" ry="2.5" fill="#F1F1EC"/></g><g transform="translate(13.6 13.6) rotate(28)"><path d="M-7.25 -2.5 H7.25 A1.375 2.5 0 0 1 7.25 2.5 H-7.25 A1.375 2.5 0 0 1 -7.25 -2.5 Z" fill="#F7A8C8"/><ellipse cx="7.25" cy="0" rx="1.375" ry="2.5" fill="#FBD3E3"/></g><g transform="translate(11.2 12.6) rotate(135)"><path d="M-8.5 -2.6 H8.5 A1.4300000000000002 2.6 0 0 1 8.5 2.6 H-8.5 A1.4300000000000002 2.6 0 0 1 -8.5 -2.6 Z" fill="#9ED3F5"/><ellipse cx="8.5" cy="0" rx="1.4300000000000002" ry="2.6" fill="#CDEBFB"/></g><path d="M10.2 14.4 12 12.6M13.2 11.4l.9-.9" stroke-width="1.2" stroke-linecap="round" transform="translate(-1.2 -1.2)"/></svg>
         </button>
         <button class="tool pro" data-tool="fur" title="Fur (U)" aria-label="Fur" aria-pressed="false">
-          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 15H9.4v2a2.6 2.6 0 0 0 5.2 0v-2h7.9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 15C4.6 11.3 6.1 8.6 8.8 7.2 7.4 9.4 7.1 12 7.2 15z" fill="currentColor"/><path d="M10.6 16.6C10.3 11 11.6 5.8 15.4 2.6 13.4 6.8 13.5 11.4 13.4 16.6z" fill="currentColor"/><circle cx="12" cy="17" r="1.6" fill="currentColor"/><path d="M16.4 15C16.4 11.3 17.9 8.6 20.6 7.2 19.2 9.4 18.9 12 19 15z" fill="currentColor"/></svg>
+          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="20.1 18.1 116.8 116.8" stroke="#111" stroke-width="5.80" stroke-linejoin="round" aria-hidden="true"><path d="M124.7 30.3 118.3 24.0 115.3 23.0 114.0 32.3 107.3 38.0 100.3 39.0 65.3 34.0 58.3 34.0 46.3 37.0 35.0 46.3 31.0 53.3 29.0 60.3 29.0 71.3 32.3 80.3 35.7 73.3 39.3 69.7 48.3 65.7 66.3 65.7 98.3 73.7 107.3 73.7 114.3 71.7 125.7 62.3 128.7 56.3 129.7 41.3Z" fill="#EC6637"/><path d="M126.7 75.3 124.0 75.3 122.0 80.3 117.3 85.0 109.3 88.0 85.3 87.0 59.3 80.0 50.3 80.0 43.3 82.0 32.0 91.3 29.0 97.3 28.0 112.3 33.0 123.3 40.3 130.7 42.3 130.7 43.7 121.3 50.3 115.7 57.3 114.7 91.3 119.7 100.3 119.7 111.3 116.7 122.7 107.3 126.7 100.3 128.7 93.3 128.7 83.3Z" fill="#EC6637"/><path d="M119.7 32.3 112.3 41.0 107.3 43.0 87.0 41.3 98.7 49.3 92.3 52.0 86.3 52.0 86.0 53.3 91.3 56.7 100.7 59.3 99.3 61.0 88.3 61.0 90.3 64.7 98.3 68.7 108.3 68.7 120.7 61.3 124.7 54.3 125.7 45.3 124.7 40.3Z" fill="#FFFFFF" stroke-width="3.48"/><path d="M67.3 89.0 59.3 85.0 48.3 85.0 37.0 92.3 33.0 99.3 32.0 108.3 33.0 113.3 38.0 121.3 45.3 112.7 51.3 110.7 70.7 112.3 58.7 105.3 61.3 102.7 71.7 101.3 70.3 99.0 57.7 94.3 58.3 92.7 69.3 92.7Z" fill="#FFFFFF" stroke-width="3.48"/></svg>
         </button>
         <button class="tool pro" data-tool="mirror" title="Mirror (M): draw on one side, it copies on the other" aria-label="Mirror" aria-pressed="false">
-          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 6C4 6 3 12 5 15s4 3 4 3"/><path d="M15 6c5 0 6 6 4 9s-4 3-4 3"/></svg>
+          <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 6C4 6 3 12 5 15s4 3 4 3"/><path d="M15 6c5 0 6 6 4 9s-4 3-4 3"/></svg>
         </button>
-        <button class="tool pro fx" data-tool="wormhole" title="Wormhole: tap the page and it sucks your art in (W)" aria-label="Wormhole" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.3" fill="#2B1B5E" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 12c0-2 2.6-2.6 3.6-.6 1.3 2.5-1.6 5.6-4.6 4.8-4.2-1.1-4.6-6.8-1-9.2 4.6-3 10.4.6 10.2 5.8" fill="none" stroke="#B88CFF" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12c0 2-2.6 2.6-3.6.6-1.3-2.5 1.6-5.6 4.6-4.8 4.2 1.1 4.6 6.8 1 9.2-4.6 3-10.4-.6-10.2-5.8" fill="none" stroke="#6EC6FF" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="1.9" fill="#0B0620" stroke="#111" stroke-width=".8"/><circle cx="7.6" cy="6.4" r=".7" fill="#fff"/></svg><span>Wormhole</span></button>
-        <button class="tool pro fx" data-tool="blacklight" title="Black light: tap and the lights go out, your colors glow neon!" aria-label="Black light" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.6 12C5.3 5.8 18.7 5.8 22.4 12 18.7 18.2 5.3 18.2 1.6 12Z" fill="#1B0B3A" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/><path d="M4 12C7.2 8 16.8 8 20 12 16.8 16 7.2 16 4 12Z" fill="none" stroke="#4FE3FF" stroke-width="3" opacity=".35"/><path d="M4 12C7.2 8 16.8 8 20 12 16.8 16 7.2 16 4 12Z" fill="none" stroke="#4FE3FF" stroke-width="1.3"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#FF4FD8" stroke-width="3" opacity=".35"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#FF4FD8" stroke-width="1.4"/><circle cx="12" cy="12" r="1.2" fill="#FF4FD8"/><circle cx="13.4" cy="10.7" r="1" fill="none" stroke="#4FE3FF" stroke-width=".9"/><path d="M19.6 3.4v2M18.6 4.4h2M4.4 19.2v1.6M3.6 20h1.6" stroke="#FFF24F" stroke-width=".9" stroke-linecap="round"/></svg><span>Black light</span></button>
+        <button class="tool pro fx" data-tool="wormhole" title="Wormhole: tap the page and it sucks your art in (W)" aria-label="Wormhole" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.3" fill="#2B1B5E" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 12c0-2 2.6-2.6 3.6-.6 1.3 2.5-1.6 5.6-4.6 4.8-4.2-1.1-4.6-6.8-1-9.2 4.6-3 10.4.6 10.2 5.8" fill="none" stroke="#B88CFF" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12c0 2-2.6 2.6-3.6.6-1.3-2.5 1.6-5.6 4.6-4.8 4.2 1.1 4.6 6.8 1 9.2-4.6 3-10.4-.6-10.2-5.8" fill="none" stroke="#6EC6FF" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="1.9" fill="#0B0620" stroke="#111" stroke-width=".8"/><circle cx="7.6" cy="6.4" r=".7" fill="#fff"/></svg><span>Wormhole</span></button>
+        <button class="tool pro fx" data-tool="blacklight" title="Black light: tap and the lights go out, your colors glow neon!" aria-label="Black light" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.6 12C5.3 5.8 18.7 5.8 22.4 12 18.7 18.2 5.3 18.2 1.6 12Z" fill="#1B0B3A" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 12C7.2 8 16.8 8 20 12 16.8 16 7.2 16 4 12Z" fill="none" stroke="#4FE3FF" stroke-width="3" opacity=".35"/><path d="M4 12C7.2 8 16.8 8 20 12 16.8 16 7.2 16 4 12Z" fill="none" stroke="#4FE3FF" stroke-width="1.3"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#FF4FD8" stroke-width="3" opacity=".35"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#FF4FD8" stroke-width="1.4"/><circle cx="12" cy="12" r="1.2" fill="#FF4FD8"/><circle cx="13.4" cy="10.7" r="1" fill="none" stroke="#4FE3FF" stroke-width=".9"/><path d="M19.6 3.4v2M18.6 4.4h2M4.4 19.2v1.6M3.6 20h1.6" stroke="#FFF24F" stroke-width=".9" stroke-linecap="round"/></svg><span>Black light</span></button>
         <button class="tool pro fx" data-tool="tornado" title="Tornado: a twister spins your art around and drops it back down mixed up" aria-label="Tornado" aria-pressed="false"><span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.4 6C2.4 3 21.6 3 21.6 6 21.6 8.6 17.6 9.7 16.1 11.3 14.7 12.9 15.7 14.7 14.1 16.5 12.9 17.9 12.7 19.7 10.9 21.1 10.4 21.5 9.8 21.2 10 20.6 10.4 19.4 9.6 18.2 9.8 16.6 10 14.8 8.4 13.2 7.4 11.6 6 9.6 2.4 8.6 2.4 6Z" fill="#9ED9F7"/><ellipse cx="12" cy="5.7" rx="8.2" ry="2.2" fill="#D9F2FF" stroke="#4FAEE8" stroke-width="1"/><path d="M12.2 5.7C13.7 5.7 14.1 4.7 12.6 4.4 10.4 4 8.8 5.2 9.7 6.2 10.8 7.3 15.6 7.1 16.8 5.7" fill="none" stroke="#2E86DE" stroke-width="1.2" stroke-linecap="round"/><path d="M4.6 9.3C8.6 10.7 15.6 10.7 19.1 9.1M7.8 12.9C10.2 13.7 13.7 13.7 15.3 12.7M9.9 16.5C11.1 17.1 12.9 17 13.9 16.3" fill="none" stroke="#4FAEE8" stroke-width="1.4" stroke-linecap="round"/><path d="M1.6 11.4C3.4 13.5 9.3 14.1 12.2 13.7M12.4 17.7C15 17.9 18.4 17.3 19.3 16M6.9 20.1C8.3 20.7 9.7 20.7 10.7 20.3" fill="none" stroke="#2E86DE" stroke-width="1.7" stroke-linecap="round"/></svg><span>Tornado</span></button>
       </div>
       <button class="reset-link" id="relock" hidden>Lock purchases again (for testing)</button>
@@ -1279,7 +1316,7 @@
     <section class="sec-colors">
       <div class="group-label">Crayons</div>
       <div class="swatches" id="swatches"></div>
-      <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label></div>
+      <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label><button class="btn sm ico" id="eyedrop" title="Eyedropper: tap the page to pick a color from it" aria-label="Eyedropper" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L18 8l-2-2z"/><path d="M15.5 7.5L6 17l-1 3 3-1 9.5-9.5"/></svg></button></div>
     </section>
     <section class="sec-colors">
       <div class="group-label">Brush size</div>
@@ -1307,6 +1344,7 @@
         <canvas id="live" class="layer" width="1280" height="720" aria-hidden="true"></canvas>
         <canvas id="ghost" class="layer ghost" width="640" height="360" aria-hidden="true" hidden></canvas>
         <canvas id="player" class="layer" width="640" height="360" aria-label="Your animation playing. Tap to stop." hidden></canvas>
+        <canvas id="trainLayer" class="layer" aria-hidden="true"></canvas>
         <canvas id="fx" class="layer" aria-hidden="true" hidden></canvas>
         <div class="mirror-guide" id="mirrorGuide" hidden></div>
       </div>
@@ -1693,6 +1731,8 @@
     color = col;
     swWrap.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', s.dataset.color.toLowerCase() === col.toLowerCase()));
     updateDot(); syncDock();
+    try { typeRecolor(); } catch {}
+    try { refreshStickers(); } catch {}
     try { if (tool === 'stamp' && !picking) c.style.cursor = cursorFor(tool); } catch {}
   }
 
@@ -1719,8 +1759,7 @@
   c.addEventListener('pointerleave', e => { if (FX_TOOLS.has(tool) && e.pointerType !== 'touch' && fxIconFollow && !(typeof picking !== 'undefined' && picking)) fxIcon.hidden = true; });
   c.addEventListener('pointerdown', () => { if (FX_TOOLS.has(tool) && !(typeof picking !== 'undefined' && picking)) fxIcon.hidden = true; }, true);   // tapped the paper: the icon has done its job
   // while an effect is playing (dynamite fuse, wormhole...) the normal pointer shows, so you can always see it
-  const XHAIR = 'none', XHAIR_IMG = 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20d%3D%22M3.5%203.5V24l5.4-4.8%203.9%208.4%204-1.8-3.9-8.3%207.4-.3Z%22%20fill%3D%22%23FFD23F%22%20stroke%3D%22%231A1F3A%22%20stroke-width%3D%222.3%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M6.2%209v9.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.9%22/%3E%3C/svg%3E") 3 3, default';   // a chunky crosshair (dark lines with a white edge)
-  function cursorFor(t){ if (FX_TOOLS.has(t) && typeof boomBusy !== 'undefined' && boomBusy) return toolCursorCss(t); return FX_TOOLS.has(t) ? 'none' : t === 'dynamite' ? DYN_CURSOR : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? XHAIR : XHAIR; }
+  function cursorFor(t){ if (FX_TOOLS.has(t) && typeof boomBusy !== 'undefined' && boomBusy) return 'auto'; return FX_TOOLS.has(t) ? 'none' : t === 'dynamite' ? DYN_CURSOR : t === 'text' ? 'text' : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? 'crosshair' : 'crosshair'; }
   // ---------- premium lock ----------
   document.querySelectorAll('.fxdemo').forEach(el => { const b = document.querySelector(`.tool[data-tool="${el.dataset.fx}"] > svg`); if (b) el.innerHTML = b.outerHTML; });   // paywall shows the 3 effect icons
   const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror','wormhole','blacklight','tornado']);   // the paint bucket is free
@@ -1739,13 +1778,16 @@
   }
 
   function setTool(t, s){
+    if (t !== 'stamp') try { stampPop.hidden = true; } catch {}
+    if (t === 'train' && tool === 'train' && lastTrack && lastTrack.page === cur){ trainGo(lastTrack.T, lastTrack.hg); return; }   // tap again: all aboard, one more ride!
+    if (t !== 'text') try { typeFinish(); } catch {}
     if (PREMIUM.has(t) && !unlocked){ openPaywall(t); return; }
     tool = t; stamp = s || null;
+    if (t === 'text') try { toast('Tap the page to type'); } catch {}
     if (t === 'spray' && !setTool.sprayed){ setTool.sprayed = true; try { size = 15; sizeIn.value = sliderFromSize(size); updateDot(); } catch {} }   // splatter starts at 15px the first time you pick it
     try { if (picking) setPicking(false); } catch {}   // choosing any tool turns the eyedropper off
     toolBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t && (b.dataset.stamp || null) === stamp));
     c.style.cursor = cursorFor(t);
-    try { syncToolCursor(); } catch {}
     try { syncFxIcon(true); } catch {}
     try { syncRing(); } catch {}
     document.getElementById('mirrorGuide').hidden = t !== 'mirror';
@@ -1754,7 +1796,7 @@
 
 
   // ---------- shapes: press and hold the line tool to pick line, rectangle, circle or triangle ----------
-  const SHAPE_ICONS = {"line": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"><path d=\"M5 19L19 5\"/></svg>", "rect": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"6\" width=\"16\" height=\"12\" rx=\"1\"/></svg>", "ellipse": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"><circle cx=\"12\" cy=\"12\" r=\"7.5\"/></svg>", "tri": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linejoin=\"round\"><path d=\"M12 4.5L20 19H4z\"/></svg>"}, SHAPE_NAMES = { line: 'Line', rect: 'Rectangle', ellipse: 'Circle', tri: 'Triangle' };
+  const SHAPE_ICONS = {"line": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"><path d=\"M5 19L19 5\"/></svg>", "rect": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"6\" width=\"16\" height=\"12\" rx=\"1\"/></svg>", "ellipse": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><circle cx=\"12\" cy=\"12\" r=\"7.5\"/></svg>", "tri": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\"><path d=\"M12 4.5L20 19H4z\"/></svg>"}, SHAPE_NAMES = { line: 'Line', rect: 'Rectangle', ellipse: 'Circle', tri: 'Triangle' };
   let lineShape = 'line'; try { lineShape = localStorage.getItem('doodle-clubhouse-shape') || 'line'; } catch {}
   if (!SHAPE_ICONS[lineShape]) lineShape = 'line';
   function drawShape(g, a, b){
@@ -2103,6 +2145,17 @@
         let a1 = 0, a2 = 0, a3 = 0;
         for (let i = 0; i < n; i++){ const w = Math.random() * 2 - 1; a1 = a1 * .8 + w * .2; a2 = a2 * .8 + a1 * .2; a3 = a3 * .985 + a2 * .015; d[i] = a2 * 1.6 + a3 * 3; }
       }
+      else if (kind === 'roller'){
+        // a paint roller: a low, wet rolling rumble with the sticky 'crackle' of tacky paint peeling off the roller
+        let lp = 0, lp2 = 0, crk = 0, crkF = 0;
+        for (let i = 0; i < n; i++){
+          const w = Math.random() * 2 - 1; lp = lp * .965 + w * .035; lp2 = lp2 * .995 + w * .005;
+          if (Math.random() < .0035){ crk = .6 + Math.random() * .7; crkF = .3 + Math.random() * .5; }
+          crk *= .93; const cw = (Math.random() * 2 - 1) * crk;
+          d[i] = lp * 3.2 + lp2 * 9 + cw * crkF;
+        }
+        let m = 0; for (let i = 0; i < n; i++) m = Math.max(m, Math.abs(d[i])); for (let i = 0; i < n; i++) d[i] /= m;
+      }
       else { let a1 = 0, a2 = 0; for (let i = 0; i < n; i++){ const w = Math.random() * 2 - 1; a1 = a1 * .7 + w * .3; a2 = a2 * .97 + w * .03; d[i] = a1 * .9 + a2 * 1.5; } }   // soft, rounded hiss (more 'shhh' than 'tsss')
       noiseBufs[kind] = b;
     }
@@ -2110,6 +2163,7 @@
     const f1 = a.createBiquadFilter(), f2 = a.createBiquadFilter(), g = a.createGain();
     if (kind === 'pencil'){ f1.type = 'bandpass'; f1.frequency.value = 2600; f1.Q.value = .8; f2.type = 'highshelf'; f2.frequency.value = 5000; f2.gain.value = 4; }
     else if (kind === 'eraser'){ f1.type = 'bandpass'; f1.frequency.value = 850; f1.Q.value = .35; f2.type = 'lowpass'; f2.frequency.value = 1700; f2.Q.value = .2; }
+    else if (kind === 'roller'){ f1.type = 'lowpass'; f1.frequency.value = 1400; f1.Q.value = .5; f2.type = 'peaking'; f2.frequency.value = 220; f2.Q.value = .9; f2.gain.value = 7; }   // wet, squishy 'rrrsh'
     else if (kind === 'fur'){ f1.type = 'bandpass'; f1.frequency.value = 1000; f1.Q.value = .6; f2.type = 'lowpass'; f2.frequency.value = 2600; f2.Q.value = .3; }   // soft, fluffy 'fff'
     else { f1.type = 'highpass'; f1.frequency.value = 700; f2.type = 'lowpass'; f2.frequency.value = 5200; f2.Q.value = .3; }
     g.gain.value = 0.0001; let idle = 0, stopped = false;
@@ -2614,7 +2668,7 @@
     if (boomBusy) return;
     boomBusy = true; fx.hidden = false;
     // planted: the normal pointer comes straight back, so you can pick another tool while the fuse burns
-    c.style.cursor = toolCursorCss(tool); fxIcon.hidden = true;
+    c.style.cursor = 'auto'; fxIcon.hidden = true;
     fuseSound(1.3);
     const K = fxSize(), x = px * K, y = py * K, s = Math.min(FXW, FXH) / 28, FUSE = 1300, PAUSE = 350, BOOM_AT = 600;
     const parts = []; let t0 = performance.now(), boomed = false, erased = false;
@@ -2760,7 +2814,7 @@
   }, { passive: false });
   // two fingers on the page: pinch to zoom, drag to move around. A stroke the first finger just started is taken back.
   const touches = new Map(); let gesture = null, firstDownAt = 0;
-  const typing = t => t && t.closest && t.closest('input, textarea, [contenteditable="true"]');
+  const typing = t => t && t.closest && t.closest('input, textarea, [contenteditable]:not([contenteditable="false"])');
   document.addEventListener('selectstart', e => { if (!typing(e.target)) e.preventDefault(); });
   document.addEventListener('contextmenu', e => { if (!typing(e.target)) e.preventDefault(); });
   document.addEventListener('selectionchange', () => { const sel = getSelection && getSelection(); if (sel && sel.rangeCount && !typing(document.activeElement)) sel.removeAllRanges(); });
@@ -2772,7 +2826,8 @@
     drawing = false; clearInterval(sprayTimer); sprayTimer = null; lineBase = null; try { brushSoundStop(); if (spraySnd){ spraySnd.stop(.1); spraySnd = null; } clearTimeout(sprayPlipT); sprayPlipT = 0; } catch {}
     if (tx){ cancelAnimationFrame(txFrame); tx = null; }
     try { if (softS){ softS = null; cancelAnimationFrame(softRaf); softRaf = 0; }
-      if (pencilS){ pencilS = null; cancelAnimationFrame(pencilRaf); pencilRaf = 0; lctx.clearRect(0, 0, live.width, live.height); } if (pencilSnd){ pencilSnd.stop(); pencilSnd = null; } } catch {}
+      if (pencilS){ pencilS = null; cancelAnimationFrame(pencilRaf); pencilRaf = 0; lctx.clearRect(0, 0, live.width, live.height); }
+      if (trainS){ trainS = null; cancelAnimationFrame(trainRaf); trainRaf = 0; lctx.clearRect(0, 0, live.width, live.height); } if (pencilSnd){ pencilSnd.stop(); pencilSnd = null; } } catch {}
     activePointer = null; speedStroke = null;
     if (undoStack.length){ ctx.putImageData(undoStack.pop(), 0, 0); if (pushUndo.keptRedo) redoStack.splice(0, redoStack.length, ...pushUndo.keptRedo); syncHist(); }
   }
@@ -2825,8 +2880,8 @@
   }
   // ---------- brush-size ring on the mouse pointer (computers): shows exactly how big the line will be ----------
   const ring = document.createElement('div'); ring.id = 'brushRing'; ring.hidden = true; document.body.appendChild(ring);
-  const RING_X = { brush: 1.7, eraser: 2, spray: 6.4, soft: 3.4, marker: 1.8, fur: 2.2, glitter: 3 };
-  const RING_TOOLS = new Set(['pencil','eraser','marker','spray','soft','brush','rainbow','chalk','fur','mirror','line','pixel','glitter']);
+  const RING_X = { train: 4.35, brush: 1.7, eraser: 2, spray: 6.4, soft: 5, marker: 1.8, fur: 2.2, glitter: 3 };
+  const RING_TOOLS = new Set(['train','pencil','eraser','marker','spray','soft','brush','rainbow','chalk','fur','mirror','line','pixel','glitter']);
   let ringAt = null;
   function syncRing(){
     const on = ringAt && RING_TOOLS.has(tool) && !picking && !playing;
@@ -2900,21 +2955,6 @@
 
   // ---------- lock width ----------
   let widthLocked = false;   // every time the app opens, line width follows pressure and speed (the taper is on)
-  const lockBtn = document.getElementById('lockWidth');
-  // tapered stroke = width follows the pen; straight even stroke = width locked
-  const ICON_TAPER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 14.5C6.5 7.5 15.5 6.2 22.5 9.2 16.5 14.8 7.5 17.8 1.5 14.5z" fill="currentColor"/></svg>';
-  const ICON_EVEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12h17" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>';
-  const syncLockWidth = () => {
-    lockBtn.setAttribute('aria-pressed', widthLocked);
-    lockBtn.innerHTML = widthLocked ? ICON_EVEN : ICON_TAPER;
-    lockBtn.title = widthLocked ? 'Width locked: every line stays the same size (tap to let pressure change it)' : 'Width changes with pressure and speed (tap to lock it)';
-  };
-  lockBtn.addEventListener('click', () => {
-    widthLocked = !widthLocked; syncLockWidth();
-    try { localStorage.setItem('doodle-clubhouse-lock-width', widthLocked ? '1' : '0'); } catch {}
-    toast(widthLocked ? 'Brush width locked: every line stays the same size' : 'Brush width unlocked: press harder for thicker lines');
-  });
-  syncLockWidth();
 
   // ---------- history ----------
   const undoBtn = document.getElementById('undo'), redoBtn = document.getElementById('redo');
@@ -2932,7 +2972,7 @@
     const t = mk(img.width, img.height); t.getContext('2d').putImageData(img, 0, 0);
     ctx.clearRect(0, 0, W, H); ctx.drawImage(t, -Math.floor((img.width - W) / 2), -Math.floor((img.height - H) / 2));
   }
-  function undo(){ if(!undoStack.length) return; redoStack.push(snapshot()); restoreImg(undoStack.pop()); syncHist(); speedUndo = true; onCanvasChanged(); }
+  function undo(){ if(!undoStack.length) return; try { lastTrack = null; } catch {} redoStack.push(snapshot()); restoreImg(undoStack.pop()); syncHist(); speedUndo = true; onCanvasChanged(); }
   function redo(){ if(!redoStack.length) return; undoStack.push(snapshot()); restoreImg(redoStack.pop()); syncHist(); onCanvasChanged(); }
   function syncHist(){ undoBtn.disabled = !undoStack.length; redoBtn.disabled = !redoStack.length; }
   undoBtn.onclick = undo; redoBtn.onclick = redo;
@@ -3130,6 +3170,191 @@
     if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
   }
 
+
+  // ---------- Train tracks: draw a railway (wooden sleepers + two rails in your colour). When you lift,
+  // a little choo-choo train rides along it and puffs off the end. The train is just for fun: only the track stays. ----------
+  let trainS = null, trainRaf = 0, lastTrack = null;
+  const trainLayer = document.getElementById('trainLayer'), tlctx = trainLayer.getContext('2d');
+  const trainGauge = () => Math.max(7, size * 1.5);   // half the distance between the rails
+  // the smoothed path as a fine polyline with distances along it
+  function trackPoly(pts){
+    const sp = pencilSoften(pts), out = [{ x: sp[0].x, y: sp[0].y }];
+    const add = q => { const l = out[out.length - 1]; if (Math.hypot(q.x - l.x, q.y - l.y) >= 1.5) out.push(q); };
+    let P0 = sp[0];
+    for (let i = 1; i < sp.length - 1; i++){
+      const c = sp[i], n = sp[i + 1], M = { x: (c.x + n.x) / 2, y: (c.y + n.y) / 2 };
+      const steps = Math.max(2, Math.ceil((Math.hypot(c.x - P0.x, c.y - P0.y) + Math.hypot(M.x - c.x, M.y - c.y)) / 2));
+      for (let j = 1; j <= steps; j++){ const t = j / steps, u = 1 - t; add({ x: u * u * P0.x + 2 * u * t * c.x + t * t * M.x, y: u * u * P0.y + 2 * u * t * c.y + t * t * M.y }); }
+      P0 = M;
+    }
+    if (sp.length > 1) add(sp[sp.length - 1]);
+    const cum = [0]; for (let i = 1; i < out.length; i++) cum.push(cum[i - 1] + Math.hypot(out[i].x - out[i - 1].x, out[i].y - out[i - 1].y));
+    return { p: out, cum, L: cum[cum.length - 1] };
+  }
+  // where you are (and which way you face) a distance s along the track; past either end it carries on straight
+  function trackAt(T, s){
+    const p = T.p, cum = T.cum, n = p.length;
+    if (n < 2) return { x: p[0].x, y: p[0].y, a: 0 };
+    if (s <= 0){ const a = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x); return { x: p[0].x + Math.cos(a) * s, y: p[0].y + Math.sin(a) * s, a }; }
+    if (s >= T.L){ const a = Math.atan2(p[n - 1].y - p[n - 2].y, p[n - 1].x - p[n - 2].x), e = s - T.L; return { x: p[n - 1].x + Math.cos(a) * e, y: p[n - 1].y + Math.sin(a) * e, a }; }
+    let lo = 0, hi = n - 1; while (hi - lo > 1){ const m = (lo + hi) >> 1; if (cum[m] <= s) lo = m; else hi = m; }
+    const k = (s - cum[lo]) / Math.max(1e-6, cum[hi] - cum[lo]), a = Math.atan2(p[hi].y - p[lo].y, p[hi].x - p[lo].x);
+    return { x: p[lo].x + (p[hi].x - p[lo].x) * k, y: p[lo].y + (p[hi].y - p[lo].y) * k, a };
+  }
+  function drawTrack(g, T, hg, col){
+    g.save(); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    const tieL = hg * 1.45, tieW = Math.max(2, hg * .6), gap = hg * 1.5;
+    g.fillStyle = '#B07A45'; g.strokeStyle = '#6E4A26'; g.lineWidth = Math.max(1, hg * .14); g.lineJoin = 'round';
+    if (T.L < 1){ const q = T.p[0]; g.translate(q.x, q.y); g.fillRect(-tieW / 2, -tieL, tieW, tieL * 2); g.strokeRect(-tieW / 2, -tieL, tieW, tieL * 2); g.restore(); return; }
+    for (let d = gap / 2; d <= T.L; d += gap){
+      const q = trackAt(T, d); g.save(); g.translate(q.x, q.y); g.rotate(q.a);
+      g.beginPath(); g.rect(-tieW / 2, -tieL, tieW, tieL * 2); g.fill(); g.stroke(); g.restore();
+    }
+    // the two rails, side by side
+    const p = T.p, n = p.length, nx = [], ny = [];
+    for (let i = 0; i < n; i++){ const a = p[Math.max(0, i - 1)], b = p[Math.min(n - 1, i + 1)], l = Math.hypot(b.x - a.x, b.y - a.y) || 1; nx.push(-(b.y - a.y) / l); ny.push((b.x - a.x) / l); }
+    g.strokeStyle = col; g.lineWidth = Math.max(1.6, hg * .34); g.lineCap = 'butt';
+    for (const side of [-1, 1]){
+      g.beginPath();
+      for (let i = 0; i < n; i++){ const x = p[i].x + nx[i] * hg * side, y = p[i].y + ny[i] * hg * side; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke();
+    }
+    g.restore();
+  }
+  function trainStart(p){
+    trainS = { pts: [{ x: p.x, y: p.y }], s: { x: p.x, y: p.y }, raw: p, hg: trainGauge(), col: color, ticks: 0 };
+    if (live.width !== W || live.height !== H){ live.width = W; live.height = H; }
+    try { tone(330, 260, .05, .03, 'triangle'); } catch {}
+    trainRender();
+  }
+  function trainMove(p){
+    const st = trainS; st.s = { x: st.s.x + (p.x - st.s.x) * .35, y: st.s.y + (p.y - st.s.y) * .35 }; st.raw = p;
+    const q = st.pts[st.pts.length - 1], d = Math.hypot(st.s.x - q.x, st.s.y - q.y);
+    if (d >= Math.max(2.5, st.hg * .3)){ st.pts.push({ x: st.s.x, y: st.s.y });
+      // a wooden 'tok' for every few sleepers laid
+      st.ticks += d; if (st.ticks > st.hg * 4.5){ st.ticks = 0; try { const f = 520 + Math.random() * 120; tone(f, f * .7, .04, .022, 'triangle'); } catch {} } }
+    if (!trainRaf) trainRaf = requestAnimationFrame(trainRender);
+  }
+  function trainRender(){
+    trainRaf = 0; const st = trainS; if (!st) return;
+    lctx.clearRect(0, 0, live.width, live.height); drawTrack(lctx, trackPoly(st.pts), st.hg, st.col);
+  }
+  function trainEnd(){
+    const st = trainS; trainS = null; cancelAnimationFrame(trainRaf); trainRaf = 0;
+    lctx.clearRect(0, 0, live.width, live.height);
+    if (!st) return;
+    if (st.raw) st.pts.push({ x: st.raw.x, y: st.raw.y });
+    const T = trackPoly(st.pts);
+    drawTrack(ctx, T, st.hg, st.col);
+    if (T.L > st.hg * 6){ lastTrack = { T, hg: st.hg, page: cur }; trainGo(T, st.hg); }
+  }
+  // ---------- the little train ----------
+  const trains = []; let trainLoop = 0;
+  function trainGo(T, hg){
+    const carL = hg * 4.4, len = carL * 3 + hg * 1.2;
+    const v = Math.max(hg * 26, Math.min(hg * 70, (T.L + len) / 2.6));   // a quick ride, a bit longer for long tracks
+    trains.push({ T, hg, carL, len, v, t0: performance.now(), puffs: [], lastPuff: 0, lastChug: 0, chug: 0, tooted: false });
+    try { trainWhistle(); } catch {}
+    if (!trainLoop) trainLoop = requestAnimationFrame(trainFrame);
+  }
+  function trainWhistle(){
+    // 'choo-choo!': two warm whistle blasts (a soft chord with a little wobble)
+    const a = ac(); if (!a) return;
+    for (const [d, len] of [[0, .22], [.3, .34]]){
+      const t = a.currentTime + d, g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.05, t + .03); g.gain.setValueAtTime(.05, t + len - .06); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+      const lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 7; lg.gain.value = 6; lfo.connect(lg);
+      for (const f of [587.33, 739.99, 880]){ const o = a.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(f * .97, t); o.frequency.linearRampToValueAtTime(f, t + .05); lg.connect(o.frequency); o.connect(g); o.start(t); o.stop(t + len + .05); }
+      lfo.start(t); lfo.stop(t + len + .05); g.connect(a.destination);
+    }
+  }
+  function drawCar(g, x, y, a, L, Wd, body, roof, kind, hg){
+    g.save(); g.translate(x, y); g.rotate(a);
+    const r = Math.min(L, Wd) * .22;
+    const rr = (x0, y0, w, h, rad) => { g.beginPath(); g.moveTo(x0 + rad, y0); g.arcTo(x0 + w, y0, x0 + w, y0 + h, rad); g.arcTo(x0 + w, y0 + h, x0, y0 + h, rad); g.arcTo(x0, y0 + h, x0, y0, rad); g.arcTo(x0, y0, x0 + w, y0, rad); g.closePath(); };
+    g.lineWidth = Math.max(1.2, hg * .2); g.strokeStyle = '#1A1F3A'; g.lineJoin = 'round';
+    // wheels peeking out at the sides
+    g.fillStyle = '#1A1F3A'; for (const sx of [-L * .3, L * .3]) for (const sy of [-1, 1]) { rr(sx - hg * .5, sy * Wd / 2 - hg * .35 + (sy > 0 ? 0 : 0), hg, hg * .7, hg * .2); g.fill(); }
+    rr(-L / 2, -Wd / 2, L, Wd, r); g.fillStyle = body; g.fill(); g.stroke();
+    if (kind === 'engine'){
+      rr(-L / 2 + L * .06, -Wd / 2 + Wd * .14, L * .36, Wd * .72, r * .7); g.fillStyle = roof; g.fill(); g.stroke();   // the cab at the back
+      g.fillStyle = '#1A1F3A'; g.beginPath(); g.arc(L * .26, 0, Wd * .17, 0, Math.PI * 2); g.fill();                   // the chimney
+      g.fillStyle = '#FFD84D'; g.beginPath(); g.arc(L / 2 - hg * .2, 0, hg * .32, 0, Math.PI * 2); g.fill(); g.stroke(); // headlight
+    } else {
+      // a little load in each car
+      g.fillStyle = roof; for (const cx of [-L * .2, L * .2]){ g.beginPath(); g.arc(cx, 0, Wd * .24, 0, Math.PI * 2); g.fill(); g.stroke(); }
+    }
+    g.restore();
+  }
+  function trainFrame(now){
+    trainLoop = 0;
+    if (trainLayer.width !== W || trainLayer.height !== H){ trainLayer.width = W; trainLayer.height = H; }
+    tlctx.clearRect(0, 0, W, H);
+    for (let i = trains.length - 1; i >= 0; i--){
+      const tr = trains[i], dt = (now - tr.t0) / 1000, head = dt * tr.v, hg = tr.hg, T = tr.T;
+      const tailEnd = head - tr.len;
+      if (tailEnd > T.L + hg * 2 && !tr.puffs.length){ trains.splice(i, 1); continue; }
+      const fadeIn = Math.min(1, dt / .25), past = Math.max(0, tailEnd - T.L + tr.len * .2), fadeOut = Math.max(0, 1 - past / (tr.len * .9));
+      const alpha = Math.min(fadeIn, fadeOut);
+      // chug-chug, and a clickety-clack on the rail joints
+      if (alpha > .05 && now - tr.lastChug > Math.max(110, 260 - tr.v / hg * 2)){
+        tr.lastChug = now; tr.chug++;
+        try { noiseBurst(.07, tr.chug % 2 ? 420 : 300, 1.1, .045, 0, 'lowpass', 160); if (tr.chug % 4 === 0){ noiseBurst(.025, 3200, 4, .012); noiseBurst(.025, 2800, 4, .012, .06); } } catch {}
+      }
+      if (alpha > .05){
+        const W2 = hg * 2.5, cols = [['#FF5A5F', '#2E9CDB', 'engine'], ['#FFD84D', '#FF9F1C', 'car'], ['#8CC63F', '#F279B8', 'car']];
+        tlctx.save(); tlctx.globalAlpha = alpha;
+        for (let k = cols.length - 1; k >= 0; k--){
+          const mid = head - tr.carL / 2 - k * (tr.carL + hg * .6), q = trackAt(T, mid);
+          if (k < cols.length - 1){ const q2 = trackAt(T, mid - tr.carL / 2 - hg * .3); tlctx.fillStyle = '#1A1F3A'; tlctx.beginPath(); tlctx.arc(q2.x, q2.y, hg * .3, 0, Math.PI * 2); tlctx.fill(); }
+          drawCar(tlctx, q.x, q.y, q.a, tr.carL, W2, cols[k][0], cols[k][1], cols[k][2], hg);
+          if (k === 0 && now - tr.lastPuff > 140){ tr.lastPuff = now; const c = trackAt(T, mid + tr.carL * .26); tr.puffs.push({ x: c.x, y: c.y, t: now, dx: (Math.random() - .5) * hg * .8, dy: -hg * (.6 + Math.random() * .6) }); }
+        }
+        tlctx.restore();
+      }
+      // puffs of smoke that float up and fade
+      tlctx.save();
+      tr.puffs = tr.puffs.filter(pf => now - pf.t < 900);
+      for (const pf of tr.puffs){ const k = (now - pf.t) / 900; tlctx.globalAlpha = (1 - k) * .75 * Math.max(.3, alpha); tlctx.fillStyle = '#FFFFFF'; tlctx.strokeStyle = 'rgba(26,31,58,.35)'; tlctx.lineWidth = Math.max(1, hg * .12);
+        tlctx.beginPath(); tlctx.arc(pf.x + pf.dx * k * 3, pf.y + pf.dy * k * 3, hg * (.45 + k * 1.1), 0, Math.PI * 2); tlctx.fill(); tlctx.stroke(); }
+      tlctx.restore();
+    }
+    if (trains.length) trainLoop = requestAnimationFrame(trainFrame);
+    else tlctx.clearRect(0, 0, W, H);
+  }
+  // ---------- Paint roller (uses the old soft-brush slot): a wide, flat band of paint with flat ends, a little
+  // stippled 'nap' texture from the roller and slightly heavier paint along both edges, like a real roller leaves ----------
+  let rollOff = null, rollTex = null;
+  function rollerTexture(){
+    if (rollTex) return rollTex;
+    const t = mk(160, 160), g = t.getContext('2d'), r = rng(11);
+    for (let i = 0; i < 2600; i++){
+      const x = r() * 160, y = r() * 160, s = .6 + r() * 1.8, light = r() < .55;
+      g.fillStyle = light ? `rgba(255,255,255,${(.08 + r() * .16).toFixed(3)})` : `rgba(0,0,0,${(.05 + r() * .1).toFixed(3)})`;
+      g.beginPath(); g.ellipse(x, y, s, s * (.6 + r() * .6), r() * Math.PI, 0, Math.PI * 2); g.fill();
+    }
+    return rollTex = t;
+  }
+  const shadeHex = (hex, k) => { const m = /^#?([\da-f]{6})$/i.exec(hex || ''); if (!m) return hex; const n = parseInt(m[1], 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`; };
+  function rollerDraw(g, pts, r, col, box){
+    if (!box || !box.w || !box.h) return;
+    if (!rollOff) rollOff = mk(8, 8);
+    if (rollOff.width < box.w || rollOff.height < box.h){ rollOff.width = Math.max(rollOff.width, box.w); rollOff.height = Math.max(rollOff.height, box.h); }
+    const o = rollOff.getContext('2d'); o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over'; o.globalAlpha = 1; o.clearRect(0, 0, box.w, box.h);
+    o.translate(-box.x, -box.y);
+    o.lineCap = 'butt'; o.lineJoin = 'round';
+    const lone = pts.length < 2 || pts.every(q => Math.hypot(q.x - pts[0].x, q.y - pts[0].y) < 1);
+    if (lone){ o.fillStyle = col; o.fillRect(pts[0].x - r, pts[0].y - r * .35, 2 * r, r * .7); }   // a tap: a short dab of the roller
+    else {
+      o.strokeStyle = shadeHex(col, .86); o.lineWidth = 2 * r; pencilPath(o, pts); o.stroke();          // heavier paint at the edges
+      o.strokeStyle = col; o.lineWidth = Math.max(1, 2 * r - Math.max(2, r * .16)); pencilPath(o, pts); o.stroke();
+    }
+    // the roller's stipple, fixed to the page so it never swims
+    o.globalCompositeOperation = 'source-atop';
+    const pat = o.createPattern(rollerTexture(), 'repeat'); o.fillStyle = pat; o.fillRect(box.x, box.y, box.w, box.h);
+    o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over';
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    g.drawImage(rollOff, 0, 0, box.w, box.h, box.x, box.y, box.w, box.h); g.restore();
+  }
   // ---------- Soft brush: one smooth airbrush stroke, no dabs, no texture ----------
   // The whole stroke is redrawn each frame as a stack of rounded bands, widest and faintest outside, so the colour fades
   // perfectly evenly from the middle (strongest) to 0% at the outside edge. A stroke never darkens where it crosses itself.
@@ -3152,7 +3377,7 @@
   }
   // drawn straight onto the page (over a saved copy of it) every frame, so the colours you see while drawing are exactly
   // the colours that stay when you lift (a see-through preview layer rounds faint colours differently)
-  function softStart(p){ softS = { r: Math.max(6, size * 1.7) * pw(p), pts: [{ x: p.x, y: p.y }], s: { x: p.x, y: p.y }, base: undoStack[undoStack.length - 1], box: null }; softRender(); }
+  function softStart(p){ softS = { r: Math.max(8, size * 2.5) * pw(p), pts: [{ x: p.x, y: p.y }], s: { x: p.x, y: p.y }, base: undoStack[undoStack.length - 1], box: null }; softRender(); }
   function softBox(st){
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const q of st.pts){ if (q.x < x0) x0 = q.x; if (q.y < y0) y0 = q.y; if (q.x > x1) x1 = q.x; if (q.y > y1) y1 = q.y; }
@@ -3170,7 +3395,7 @@
     softRaf = 0; const st = softS; if (!st) return;
     const b = softBox(st), u = st.box ? { x: Math.min(b.x, st.box.x), y: Math.min(b.y, st.box.y), w: Math.max(b.x + b.w, st.box.x + st.box.w) - Math.min(b.x, st.box.x), h: Math.max(b.y + b.h, st.box.y + st.box.h) - Math.min(b.y, st.box.y) } : b;
     if (st.base && st.base.width === W && st.base.height === H && u.w && u.h) ctx.putImageData(st.base, 0, 0, u.x, u.y, u.w, u.h);   // put back just the part the stroke covers
-    ctx.save(); ctx.beginPath(); ctx.rect(u.x, u.y, u.w, u.h); ctx.clip(); softDraw(ctx, st.pts, st.r, color); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(u.x, u.y, u.w, u.h); ctx.clip(); rollerDraw(ctx, st.pts, st.r, color, u); ctx.restore();
     st.box = b;
   }
   function softEnd(){
@@ -3292,7 +3517,7 @@
     const st = { kind, dist: 0, last: 0, i: 0, dir: 1 };
     if (kind === 'fur') furTrill();
     if (kind === 'brush'){ st.loop = loopSound('fur'); harpNote(783.99, .015); }
-    if (kind === 'soft'){ st.loop = loopSound('fur'); tone(500, 1000, .12, .03, 'sine'); tone(1000, 1500, .08, .01, 'sine', .05); }   // 'fwip!'                    // soft 'plip' as the brush touches the paper                                                            // 'prrrp!' hello
+    if (kind === 'soft'){ st.loop = loopSound('roller'); noiseBurst(.16, 420, 1.2, .05, 0, 'lowpass', 180); tone(150, 95, .09, .03, 'sine'); st.turn = 0; }   // wet 'shlup' as the roller lands   // 'fwip!'                    // soft 'plip' as the brush touches the paper                                                            // 'prrrp!' hello
     if (kind === 'pixel') tone(784, 784, .045, .018, 'square');                                // 'bip' as it lands
     if (kind === 'rainbow') tone(1046.5, 1318.5, .12, .016, 'sine');                           // little 'ting'
     return st;
@@ -3313,9 +3538,10 @@
         const ARP = [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25], f = ARP[st.i++ % ARP.length];
         tone(f, f, .05, .02, 'square'); tone(f * 2, f * 2, .035, .007, 'square', .04); }
     } else if (st.kind === 'soft'){
-      // soft brush: a breathy, cotton-candy 'whoosh' with tiny bubbly 'bwoop!'s, like blowing soft bubbles
-      if (st.loop) st.loop.level(Math.min(.025, .004 + sp * .014), 500 + Math.min(900, sp * 450), .08);
-      if (st.dist > 45 && now - st.last > 150){ st.dist = 0; st.last = now; const f = 600 + Math.random() * 500; tone(f, f * 1.6, .1, .022, 'sine'); tone(f * 1.6, f * 2, .06, .008, 'sine', .05); }
+      // paint roller: the wet rolling sound follows your speed, with a soft 'thup' each time the roller turns round
+      if (st.loop) st.loop.level(Math.min(.09, .012 + sp * .05), 600 + Math.min(1600, sp * 700), .05);
+      st.turn += d;
+      if (st.turn > Math.max(70, size * 6) && now - st.last > 110){ st.turn = 0; st.last = now; tone(118 + Math.random() * 14, 82, .07, .022, 'sine'); if (Math.random() < .6) noiseBurst(.05, 2600 + Math.random() * 1200, 2.5, .008); }
     } else if (st.kind === 'brush'){
       // a silky 'shhh' that follows your speed, with soft wooden plinks now and then (a gentle, happy marimba)
       if (st.loop) st.loop.level(Math.min(.036, .006 + sp * .02), 700 + Math.min(1200, sp * 600), .06);   // soft paper swish
@@ -3333,7 +3559,7 @@
       if (st.loop) st.loop.stop(.2);
       if (st.kind === 'rainbow'){ tone(1567.98, 2093, .25, .016, 'sine'); tone(2093, 2637, .3, .011, 'sine', .07); }   // sparkly 'ting!' when you lift
       if (st.kind === 'pixel'){ tone(1046.5, 1046.5, .05, .018, 'square'); tone(1568, 1568, .08, .016, 'square', .06); }   // 'bling!'
-      if (st.kind === 'soft'){ tone(900, 1400, .07, .025, 'sine'); tone(1400, 2000, .06, .015, 'sine', .07); }   // 'pop-pop!'
+      if (st.kind === 'soft'){ if (st.loop) st.loop.stop(.12); noiseBurst(.12, 700, 1.4, .03, 0, 'lowpass', 260); }   // a little sticky 'tchk' as the roller lifts off
       if (st.kind === 'brush'){ harpNote(1046.5, .015); harpNote(1567.98, .011); }   // a soft harp chord when you lift   // little 'boop!' when you lift
       if (st.kind === 'fur'){ tone(880, 1320, .12, .02, 'sine'); tone(1320, 1760, .16, .016, 'sine', .1); tone(2640, 3520, .1, .004, 'sine', .1); }   // happy 'nya~!' when you lift
     } catch {}
@@ -3401,6 +3627,7 @@
       if (e.isPrimary || e.pointerType === 'mouse' || e.pointerId === activePointer) end(); else return;
     }
     if (picking){ pickColour(pt(e)); return; }
+    if (tool === 'text'){ e.preventDefault(); typeTap(pt(e)); return; }
     if (tool === 'dynamite'){ const q = pt(e); plantDynamite(q.x, q.y); return; }
     if (tool === 'wormhole'){ const q = pt(e); openWormhole(q.x, q.y); return; }
     if (tool === 'blacklight'){ const q = pt(e); blackLight(q.x, q.y); return; }
@@ -3436,6 +3663,7 @@
     else if (tool === 'glitter'){ glitterState = { carry:0 }; seg(p, p); }
     else if (tool === 'fur'){ furState = { carry:0, dir:0 }; }
     else if (tool === 'soft'){ softStart(p); }
+    else if (tool === 'train'){ trainStart(p); }
     else if (tool !== 'pencil' && tool !== 'brush' && tool !== 'rainbow') seg(p, {x:p.x+.1, y:p.y, p:p.p, pen:p.pen});
     if (tool === 'pencil' || tool === 'brush' || tool === 'rainbow') pencilStart(p);
     if (BRUSH_SND.has(tool)){ try { brushSoundStop(); brushSnd = makeBrushSound(tool); brushSndT = performance.now(); } catch {} }
@@ -3472,6 +3700,7 @@
       else if (TEX.has(tool)){ const q = tx.pts[tx.pts.length-1]; if (Math.hypot(p.x-q.x, p.y-q.y) > 2) tx.pts.push(p); }
       else if ((tool === 'pencil' || tool === 'brush' || tool === 'rainbow') && pencilS){ pencilMove(p); }
       else if (tool === 'soft' && softS){ softMove(p); }
+      else if (tool === 'train' && trainS){ trainMove(p); }
       else { if (tool === 'brush') updateBrushSpeed(last, p); seg(last, p); }
       last = p;
     }
@@ -3490,7 +3719,7 @@
       if (eraserSnd.dist > 38 && now - eraserSnd.last > 70){ eraserSnd.dist = 0; eraserSnd.last = now; try { eraserBubble(); } catch {} }
     }
   });
-  const end = e => { if (e && activePointer !== null && e.pointerId !== activePointer) return; activePointer = null; if (softS) softEnd(); txEnd(); if (pencilS) pencilEnd(); if (eraserSnd){ try { eraserBubble(1.6, .03); eraserBubble(2, .1); } catch {} eraserSnd = null; /* pop-pop: all clean! */ } if (spraySnd){ try { spraySnd.stop(.18); } catch {} spraySnd = null; } brushSoundStop(); clearTimeout(sprayPlipT); sprayPlipT = 0; drawing = false; stampTrail = null; clearInterval(sprayTimer); sprayTimer = null; sprayPt = null; lineBase = null; };
+  const end = e => { if (e && activePointer !== null && e.pointerId !== activePointer) return; activePointer = null; if (softS) softEnd(); txEnd(); if (pencilS) pencilEnd(); if (trainS) trainEnd(); if (eraserSnd){ try { eraserBubble(1.6, .03); eraserBubble(2, .1); } catch {} eraserSnd = null; /* pop-pop: all clean! */ } if (spraySnd){ try { spraySnd.stop(.18); } catch {} spraySnd = null; } brushSoundStop(); clearTimeout(sprayPlipT); sprayPlipT = 0; drawing = false; stampTrail = null; clearInterval(sprayTimer); sprayTimer = null; sprayPt = null; lineBase = null; };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   c.addEventListener('lostpointercapture', e => { if (drawing && e.pointerId === activePointer) end(e); });
   window.addEventListener('pointerup', e => { if (drawing && e.target !== c && e.pointerId === activePointer) end(e); });
@@ -3599,7 +3828,72 @@
   }
 
   // ---------- stickers ----------
+
+  // ---------- Stamps: simple stickers, all drawn in the same style (bright colours, black outline) ----------
+  // each sticker is a few shapes; 'C' means the crayon colour you picked (with lighter / darker shades of it)
+  const STICKER_OPS = {"heart":[{"d":"M24 41C8 30 3 21 6 13.5 9 6 19 5.5 24 13 29 5.5 39 6 42 13.5 45 21 40 30 24 41Z","f":"C","s":"#111","w":1.8},{"d":"M16.29 13.05 16.50 13.50 16.56 14.03 16.46 14.60 16.22 15.20 15.84 15.78 15.35 16.32 14.76 16.80 14.11 17.19 13.43 17.47 12.75 17.62 12.11 17.65 11.54 17.54 11.06 17.30 10.71 16.95 10.50 16.50 10.44 15.97 10.54 15.40 10.78 14.80 11.16 14.22 11.65 13.68 12.24 13.20 12.89 12.81 13.57 12.53 14.25 12.38 14.89 12.35 15.46 12.46 15.94 12.70Z","f":"#FFFFFF","o":0.85}],"flower":[{"d":"M15.399959594743864 13.000000000074209a8.6 8.6 0 1 0 17.2 0a8.6 8.6 0 1 0 -17.2 0Z","f":"C","s":"#111","w":1.8},{"d":"M25.861483205907497 20.60038691429225a8.6 8.6 0 1 0 17.2 0a8.6 8.6 0 1 0 -17.2 0Z","f":"C","s":"#111","w":1.8},{"d":"M21.866330077482466 32.898683909941155a8.6 8.6 0 1 0 17.2 0a8.6 8.6 0 1 0 -17.2 0Z","f":"C","s":"#111","w":1.8},{"d":"M8.935384405906847 32.899929506496534a8.6 8.6 0 1 0 17.2 0a8.6 8.6 0 1 0 -17.2 0Z","f":"C","s":"#111","w":1.8},{"d":"M4.937862040572776 20.60240241966298a8.6 8.6 0 1 0 17.2 0a8.6 8.6 0 1 0 -17.2 0Z","f":"C","s":"#111","w":1.8},{"d":"M16.8 24a7.2 7.2 0 1 0 14.4 0a7.2 7.2 0 1 0 -14.4 0Z","f":"CENTER","s":"#111","w":1.8}],"star":[{"d":"M35.6 26.1 35.4 26.6 35.4 26.9 35.3 27.0 35.1 28.1 34.8 28.8 34.8 29.1 34.6 29.4 34.6 29.7 34.1 30.7 34.1 30.9 33.9 31.2 33.5 31.8 33.0 32.3 33.0 32.4 32.8 32.5 32.8 32.7 31.6 33.5 30.6 34.0 30.3 34.0 29.7 34.3 29.3 34.3 28.9 34.5 27.8 34.7 27.1 35.0 26.7 35.0 26.6 35.1 25.6 35.4 29.5 36.3 31.5 37.3 32.2 37.8 33.8 39.4 34.6 41.0 34.6 41.2 35.1 42.5 35.1 42.8 35.2 42.9 35.2 43.2 35.4 43.7 35.4 44.2 35.6 44.8 36.1 42.5 36.2 42.4 36.3 41.8 36.6 41.2 36.7 40.6 37.6 39.0 38.7 37.8 38.8 37.8 39.3 37.4 40.8 36.6 41.0 36.6 42.4 36.0 42.7 36.0 43.4 35.7 43.8 35.7 44.2 35.5 44.6 35.5 44.7 35.4 45.1 35.4 45.0 35.2 44.6 35.2 44.2 35.0 43.8 35.0 43.4 34.8 42.7 34.7 42.2 34.5 41.9 34.5 41.8 34.4 40.7 34.1 39.7 33.6 39.0 33.2 38.5 32.7 38.4 32.7 38.4 32.5 38.2 32.5 37.6 31.8 36.8 30.3 36.8 30.1 36.6 29.8 36.6 29.5 36.4 29.2 36.3 28.6 36.1 28.2 36.1 27.7 35.9 27.3ZM18.3 3.3 18.3 3.8 18.2 3.9 18.2 4.2 18.0 4.7 18.0 5.1 17.9 5.3 17.7 6.4 17.4 6.8 17.4 7.2 17.3 7.3 17.2 7.9 16.7 9.3 16.7 9.6 16.5 9.9 16.2 11.0 15.7 12.1 15.7 12.3 15.1 13.4 14.5 14.1 14.5 14.2 13.8 14.9 13.7 14.9 13.1 15.4 12.5 15.8 10.3 16.9 9.9 16.9 8.9 17.3 8.2 17.4 7.8 17.6 7.5 17.6 7.4 17.7 7.1 17.7 6.5 17.9 6.1 17.9 6.0 18.0 5.7 18.0 5.2 18.2 4.8 18.2 4.7 18.3 3.9 18.4 3.8 18.5 3.0 18.7 3.3 18.8 3.7 18.8 3.8 18.9 4.3 18.9 4.4 19.0 4.7 19.0 4.8 19.1 5.1 19.1 5.2 19.2 5.5 19.2 5.6 19.3 7.2 19.6 7.6 19.8 8.3 19.9 8.4 20.0 10.5 20.7 12.5 21.7 14.1 23.0 14.1 23.1 15.1 24.1 15.2 24.4 15.6 25.0 16.2 26.2 16.5 27.2 16.7 27.5 16.7 27.9 17.0 28.6 17.0 28.9 17.1 29.0 17.3 30.0 17.4 30.1 17.4 30.5 17.7 30.9 17.7 31.4 17.8 31.5 17.8 31.9 17.9 32.0 17.9 32.4 18.0 32.5 18.0 33.0 18.1 33.1 18.1 33.5 18.2 33.6 18.2 34.1 18.3 34.5 18.4 34.1 18.4 33.6 18.5 33.5 18.7 32.6 18.8 32.5 18.8 32.0 19.0 31.5 19.0 30.9 19.1 30.8 19.2 30.0 19.3 29.9 19.3 29.5 19.5 29.1 19.5 28.7 19.8 28.0 19.8 27.6 20.0 27.3 20.0 27.0 21.0 24.8 22.1 23.3 23.6 21.9 25.2 21.0 25.4 21.0 26.8 20.5 27.1 20.5 27.8 20.1 28.8 19.9 29.2 19.7 29.6 19.7 29.7 19.6 30.0 19.6 30.1 19.5 30.4 19.5 30.5 19.4 30.8 19.4 30.9 19.3 31.2 19.3 31.3 19.2 31.6 19.2 31.7 19.1 32.0 19.1 32.1 19.0 33.4 18.8 33.3 18.6 33.0 18.6 32.9 18.5 31.9 18.4 31.5 18.2 31.1 18.2 30.3 17.9 29.9 17.9 29.5 17.7 29.0 17.7 28.3 17.4 28.0 17.4 27.9 17.3 27.1 17.1 26.8 16.9 26.5 16.9 25.7 16.5 25.5 16.5 24.9 16.2 24.7 16.0 23.8 15.4 22.1 13.8 21.1 12.5 20.6 11.3 20.5 10.8 20.3 10.5 20.3 10.3 19.7 8.7 19.7 8.3 19.4 7.6 19.4 7.3 19.2 6.9 19.2 6.6 19.1 6.5 19.1 6.2 19.0 6.1 19.0 5.8 18.9 5.7 18.9 5.4 18.7 4.8 18.7 4.4 18.4 3.9 18.4 3.5Z","f":"C","s":"#111","w":1.8}],"ufo":[{"d":"M6.2 40.0 6.3 40.9 9.7 42.5 14.0 43.6 19.4 44.2 28.8 44.2 34.1 43.6 38.4 42.5 41.9 40.8 41.9 40.0 41.0 39.4 40.9 37.4 35.7 30.3 26.5 31.6 19.0 31.4 13.8 30.3 12.4 30.3 6.8 38.0 6.6 39.6Z","f":"C.tint.62"},{"d":"M2.7 21.0 2.7 23.5 3.1 24.3 4.6 26.0 6.1 27.0 10.8 29.0 15.1 30.1 19.8 30.7 28.4 30.7 33.1 30.1 37.4 29.0 42.7 26.6 44.6 24.9 45.4 23.5 45.4 21.0 45.0 20.2 41.9 17.5 37.6 15.6 36.8 15.6 35.7 16.8 31.8 18.9 26.1 20.1 22.0 20.1 17.5 19.3 13.6 17.7 12.4 16.8 11.4 15.6 10.6 15.6 8.3 16.4 5.0 18.3 3.1 20.2ZM23.7 22.5 24.5 22.5 25.7 23.1 26.9 24.9 26.9 25.9 26.5 26.7 24.7 28.1 23.5 28.1 22.6 27.7 21.3 25.9 21.5 24.3 22.4 23.1ZM36.8 20.0 38.6 20.7 39.8 22.2 39.5 24.1 38.8 25.0 37.8 25.6 36.3 25.6 35.5 25.2 34.2 23.3 34.6 21.6 35.7 20.5ZM11.0 20.0 12.4 20.5 13.6 21.6 14.0 22.6 13.4 24.5 12.6 25.2 11.2 25.8 9.3 25.0 8.4 23.7 8.4 22.2 9.0 21.2Z","f":"C"},{"d":"M12.3 13.8 12.3 16.1 16.1 18.2 18.5 18.6 18.0 13.4 18.8 11.2 21.2 8.8 23.5 8.0 24.7 8.0 27.5 9.2 28.9 10.6 29.7 12.0 30.1 14.9 29.5 17.3 29.6 18.6 30.6 18.6 33.1 17.8 35.8 16.1 35.6 12.6 35.0 10.8 33.3 8.1 31.4 6.2 29.8 5.2 26.1 4.0 21.0 4.2 19.6 4.6 16.7 6.2 13.8 9.5Z","f":"#FFFFFF"},{"d":"M20.8 9.7 19.7 10.8 18.9 12.4 18.9 16.3 19.7 19.0 21.0 19.2 28.4 19.0 29.2 16.3 29.2 12.4 28.4 10.8 27.3 9.7 25.7 8.9 22.4 8.9ZM27.9 14.5 27.9 14.9 26.5 16.0 25.7 16.2 25.4 16.0 26.5 14.7ZM20.2 14.5 20.6 14.3 21.8 14.9 22.6 15.7 22.6 16.1 22.2 16.2 21.0 15.6 20.2 14.9Z","f":"#85C08F"},{"d":"M9.7 21.1 9.1 22.2 9.1 23.7 9.5 24.5 10.4 25.0 12.4 24.7 13.1 23.9 13.1 21.8 12.0 20.9Z","f":"#FFFFFF"},{"d":"M35.0 21.8 35.0 23.9 35.7 24.7 37.8 25.0 38.7 24.5 39.1 23.7 39.1 22.2 38.4 21.1 36.1 20.9Z","f":"#FFFFFF"},{"d":"M22.6 23.6 22.0 24.9 22.2 26.5 23.5 27.4 25.3 27.2 26.0 26.5 26.2 25.7 25.8 23.9 25.1 23.4Z","f":"#FFFFFF"},{"d":"M10.6 37.3 9.3 37.6 9.5 39.1 10.8 38.6ZM37.2 37.1 36.9 37.4 36.7 38.6 38.0 38.9 38.5 37.6ZM33.1 36.5 33.0 38.0 34.3 38.0 34.6 36.8ZM14.5 36.5 13.2 36.8 13.4 38.2 14.7 38.0ZM29.2 36.1 28.9 37.4 29.2 37.6 30.4 37.6 30.5 36.1ZM17.0 36.3 17.0 37.2 17.3 37.6 18.6 37.6 18.5 36.1ZM25.1 35.9 25.0 37.4 26.3 37.4 26.6 37.2 26.6 36.1 26.3 35.9ZM21.4 35.9 21.1 36.1 21.1 37.4 22.4 37.4 22.5 35.9ZM23.3 22.2 22.0 22.8 21.1 23.9 20.9 26.3 21.3 27.1 22.2 28.0 23.0 28.4 25.1 28.4 25.9 28.0 26.8 27.1 27.2 26.3 27.2 24.5 26.1 22.8 24.9 22.2ZM23.0 23.9 24.7 23.7 25.4 24.3 25.8 25.2 25.6 26.1 24.9 26.9 23.9 27.1 23.3 26.9 22.5 26.1 22.4 25.2ZM36.3 19.7 35.3 20.1 34.2 21.2 33.8 22.2 33.8 23.7 34.4 24.9 35.1 25.6 35.9 26.0 37.4 26.2 39.2 25.4 40.1 24.1 40.1 21.8 39.0 20.3 37.6 19.7ZM36.5 21.3 38.0 21.5 38.7 22.6 38.7 23.3 38.3 24.1 37.4 24.6 36.1 24.4 35.4 23.5 35.4 22.2ZM10.6 19.7 9.1 20.3 8.0 21.8 8.0 24.1 8.9 25.3 9.5 25.8 11.6 26.2 13.0 25.6 13.7 24.9 14.3 23.7 14.3 22.2 13.9 21.2 12.8 20.1 11.8 19.7ZM10.6 21.3 11.6 21.3 12.8 22.2 12.8 23.5 11.6 24.6 10.8 24.6 10.0 24.2 9.4 23.3 9.6 22.0ZM28.4 14.2 28.2 14.0 27.1 14.0 26.1 14.4 25.0 15.5 24.9 16.2 25.3 16.6 26.9 16.4 28.2 15.3ZM19.7 14.2 19.9 15.3 21.2 16.4 22.8 16.6 23.1 16.3 22.9 15.3 21.6 14.2 20.0 14.0ZM17.7 4.4 15.7 5.8 14.2 7.3 12.8 9.3 11.5 12.4 11.3 14.2 8.5 15.2 4.4 17.5 3.1 18.5 1.7 20.8 1.5 23.0 2.5 25.3 4.2 27.0 8.3 29.2 11.1 30.2 9.9 32.2 5.2 38.6 4.8 39.4 5.0 40.8 6.7 42.3 11.0 44.0 13.6 44.6 16.3 44.8 16.5 45.0 21.6 45.2 21.8 45.4 29.6 45.2 29.8 45.0 34.5 44.6 38.6 43.6 41.5 42.3 43.2 40.8 43.4 39.4 37.0 30.2 39.8 29.2 43.9 27.0 45.6 25.3 46.6 23.0 46.6 21.4 45.8 19.6 44.9 18.5 42.5 16.6 39.6 15.2 37.0 14.4 36.6 12.4 35.4 9.3 34.0 7.3 32.5 5.8 30.4 4.4 27.3 3.1 25.1 2.9 24.9 2.7 21.6 2.9ZM6.6 40.4 7.3 39.8 7.0 39.2 7.2 38.4 12.8 30.7 16.9 31.5 21.0 31.7 21.2 31.9 29.6 31.7 29.8 31.5 31.2 31.5 35.3 30.7 40.6 37.8 40.8 38.8 40.4 39.7 41.0 39.9 41.5 40.4 40.8 41.0 38.0 42.2 33.7 43.2 28.6 43.6 28.4 43.8 19.8 43.8 19.6 43.6 14.5 43.2 12.4 42.6 11.6 42.6 8.5 41.6ZM3.1 21.4 3.5 20.6 5.5 18.6 8.7 16.8 10.9 16.0 12.0 17.2 14.9 18.8 17.9 19.8 20.0 20.2 21.4 20.2 21.6 20.5 26.5 20.5 26.7 20.2 28.2 20.2 31.0 19.6 34.9 18.0 36.1 17.2 37.2 16.0 39.4 16.8 42.7 18.6 44.7 20.6 45.1 21.4 45.1 23.0 44.2 24.5 42.3 26.2 39.6 27.7 37.0 28.7 32.7 29.7 30.2 29.9 30.0 30.1 28.2 30.1 28.0 30.3 20.2 30.3 20.0 30.1 18.1 30.1 17.9 29.9 15.5 29.7 11.2 28.7 6.5 26.7 5.0 25.6 3.5 23.9 3.1 23.0ZM21.2 10.0 22.8 9.2 25.3 9.2 26.9 10.0 28.1 11.2 28.9 12.8 28.9 15.9 28.0 18.7 26.9 18.7 26.7 18.9 21.4 18.9 20.0 18.5 19.2 15.9 19.2 12.8 20.0 11.2ZM12.7 14.2 12.9 14.0 12.9 13.0 14.1 10.0 15.1 8.5 17.1 6.5 20.0 4.9 20.6 4.9 21.4 4.5 25.7 4.3 28.2 4.9 31.0 6.5 33.0 8.5 34.6 11.2 35.2 13.0 35.5 15.7 32.7 17.5 30.0 18.3 29.9 17.7 30.5 15.3 30.5 13.0 30.1 11.6 29.2 10.2 28.0 8.9 26.5 8.0 25.1 7.6 23.0 7.6 21.6 8.0 20.2 8.9 18.5 10.8 17.7 13.0 17.7 15.3 18.3 17.7 18.1 18.3 15.5 17.5 12.7 15.7Z","f":"#111","r":"evenodd"}],"peace":[{"d":"M21.4 2.7 21.3 2.8 20.4 2.8 20.2 3.0 18.2 3.3 15.5 4.2 12.7 5.6 9.3 8.0 7.4 9.9 6.2 11.5 4.2 14.8 3.0 18.2 3.0 18.7 2.5 20.1 2.4 22.4 2.2 22.5 2.2 26.2 2.4 26.4 2.5 28.5 3.3 30.8 3.3 31.3 4.0 32.8 4.0 33.1 5.0 35.0 6.2 36.8 7.4 38.3 9.3 40.2 11.9 42.2 14.7 43.8 18.8 45.1 20.4 45.3 20.5 45.4 21.6 45.4 21.7 45.6 26.4 45.6 26.5 45.4 27.6 45.4 27.7 45.3 29.1 45.1 31.7 44.4 32.2 44.1 33.3 43.8 36.3 42.1 39.6 39.5 42.2 36.3 44.2 32.8 44.2 32.5 44.8 31.3 44.8 30.8 45.1 30.2 45.1 29.7 45.6 28.3 45.7 26.0 45.9 25.9 45.9 22.1 45.7 21.9 45.7 20.5 45.6 20.4 45.6 19.6 45.4 19.4 45.3 18.4 44.7 16.5 44.4 16.1 44.1 15.0 43.0 13.0 40.7 9.9 38.9 8.2 37.3 6.8 36.2 6.2 35.7 5.7 33.7 4.7 33.4 4.7 32.3 4.0 30.0 3.3 28.0 3.0 27.9 2.8 25.0 2.7 24.8 2.5ZM26.2 28.5 27.1 29.2 34.9 37.1 34.9 37.9 33.6 39.0 30.5 40.6 28.0 41.3 26.8 41.3 26.4 40.9 26.1 40.2ZM21.9 28.5 22.0 40.3 21.3 41.3 20.1 41.3 17.6 40.6 14.5 39.0 13.2 37.9 13.2 37.1 20.8 29.3ZM26.8 6.6 27.6 6.4 30.7 7.4 32.6 8.3 34.8 9.7 38.0 12.7 39.5 14.8 40.6 16.8 41.5 19.4 41.7 20.7 41.8 20.8 41.8 21.6 42.0 21.7 42.0 23.6 42.1 23.7 42.0 24.1 42.0 25.7 41.8 25.9 41.8 26.8 41.7 27.0 41.5 28.2 40.7 30.5 39.4 33.0 38.6 33.5 38.0 33.5 37.4 33.2 26.1 22.1 26.1 7.3ZM21.3 6.6 22.0 7.3 22.0 22.1 10.5 33.4 9.5 33.5 8.8 33.0 7.4 30.5 6.6 28.2 6.3 25.9 6.1 25.7 6.1 21.7 6.3 21.6 6.6 19.4 7.7 16.5 8.0 16.2 8.1 15.6 10.1 12.7 13.3 9.7 15.5 8.3 17.4 7.4 20.5 6.4Z","f":"C","r":"evenodd","s":"#111","w":1.8}],"yinyang":[{"d":"M5 24a19 19 0 1 0 38 0a19 19 0 1 0 -38 0Z","f":"#FFFFFF"},{"d":"M24 5A19 19 0 0 1 24 43A9.5 9.5 0 0 1 24 24A9.5 9.5 0 0 0 24 5Z","f":"C","s":"#111","w":1.8},{"d":"M21 14.5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z","f":"C"},{"d":"M21 33.5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z","f":"#FFFFFF"},{"d":"M5 24a19 19 0 1 0 38 0a19 19 0 1 0 -38 0Z","s":"#111","w":1.8}],"storm":[{"d":"M26 28 19 39H24.5L21 47 32.5 33.5H26.8L30.5 28Z","f":"#FFD84D","s":"#111","w":1.8},{"d":"M12.5 30A7.2 7.2 0 0 1 12.2 15.7 10.6 10.6 0 0 1 32.2 12.6 8.6 8.6 0 0 1 36.5 30Z","f":"C","s":"#111","w":1.8}],"planet":[{"d":"M44.38 19.16 44.48 19.81 44.42 20.50 44.20 21.23 43.82 21.98 43.29 22.77 42.61 23.56 41.78 24.37 40.81 25.19 39.71 26.00 38.48 26.80 37.15 27.59 35.71 28.37 34.18 29.11 32.57 29.82 30.89 30.50 29.16 31.13 27.39 31.71 25.59 32.24 23.78 32.71 21.97 33.13 20.18 33.48 18.41 33.76 16.69 33.98 15.03 34.12 13.44 34.20 11.93 34.20 10.51 34.13 9.20 33.99 8.01 33.77 6.94 33.49 6.01 33.14 5.21 32.73 4.57 32.26 4.07 31.73 3.73 31.15 3.55 30.52 3.53 29.85 3.67 29.14 3.97 28.40 4.42 27.63 5.03 26.84 5.79 26.03 6.69 25.22 7.73 24.41 8.89 23.60 10.17 22.80 11.56 22.02 13.05 21.26 14.62 20.53 16.26 19.84 17.97 19.18 19.72 18.58 21.51 18.02 23.32 17.51 25.13 17.07 26.93 16.69 28.71 16.37 30.45 16.12 32.15 15.94 33.78 15.83 35.33 15.79 36.79 15.83 38.16 15.94 39.41 16.11 40.54 16.36 41.54 16.67 42.41 17.05 43.13 17.49 43.70 18.00 44.12 18.55 44.38 19.16ZM39.57 20.53 39.42 20.22 39.14 19.94 38.74 19.71 38.23 19.51 37.61 19.36 36.88 19.25 36.05 19.19 35.13 19.17 34.12 19.20 33.03 19.27 31.87 19.39 30.65 19.55 29.37 19.76 28.06 20.00 26.71 20.29 25.34 20.61 23.96 20.96 22.58 21.35 21.21 21.77 19.87 22.21 18.55 22.67 17.28 23.15 16.06 23.65 14.90 24.16 13.82 24.67 12.81 25.18 11.89 25.70 11.07 26.21 10.35 26.71 9.73 27.19 9.23 27.66 8.84 28.11 8.57 28.53 8.42 28.93 8.40 29.30 8.49 29.63 8.71 29.92 9.04 30.18 9.50 30.40 10.06 30.57 10.74 30.70 11.52 30.79 12.40 30.83 13.36 30.82 14.42 30.77 15.54 30.68 16.73 30.54 17.98 30.35 19.28 30.13 20.61 29.86 21.97 29.56 23.35 29.22 24.73 28.85 26.11 28.44 27.46 28.02 28.80 27.56 30.09 27.09 31.34 26.60 32.53 26.10 33.65 25.59 34.69 25.07 35.66 24.56 36.53 24.05 37.30 23.54 37.97 23.05 38.53 22.57 38.98 22.11 39.31 21.67 39.52 21.26 39.61 20.88 39.57 20.53Z","f":"C.ring","r":"evenodd","s":"#111","w":1.8},{"d":"M37.60 24.20 37.53 25.53 37.34 26.85 37.01 28.15 36.56 29.40 35.99 30.61 35.31 31.76 34.51 32.83 33.62 33.82 32.63 34.71 31.56 35.51 30.41 36.19 29.20 36.76 27.95 37.21 26.65 37.54 25.33 37.73 24.00 37.80 22.67 37.73 21.35 37.54 20.05 37.21 18.80 36.76 17.59 36.19 16.44 35.51 15.37 34.71 14.38 33.82 13.49 32.83 12.69 31.76 12.01 30.61 11.44 29.40 10.99 28.15 10.66 26.85 10.47 25.53 10.40 24.20 10.47 22.87 10.66 21.55 10.99 20.25 11.44 19.00 12.01 17.79 12.69 16.64 13.49 15.57 14.38 14.58 15.37 13.69 16.44 12.89 17.59 12.21 18.80 11.64 20.05 11.19 21.35 10.86 22.67 10.67 24.00 10.60 25.33 10.67 26.65 10.86 27.95 11.19 29.20 11.64 30.41 12.21 31.56 12.89 32.63 13.69 33.62 14.58 34.51 15.57 35.31 16.64 35.99 17.79 36.56 19.00 37.01 20.25 37.34 21.55 37.53 22.87Z","f":"C"},{"d":"M32.70 13.75 33.75 15.60 34.55 17.75 35.00 20.25 35.00 22.55 34.70 24.45 33.95 26.75 31.90 30.10 30.10 31.90 27.80 33.45 25.05 34.55 22.55 35.00 19.80 34.95 17.25 34.40 15.00 33.45 12.90 32.05 15.30 34.65 17.60 36.20 19.85 37.15 22.40 37.70 25.15 37.75 27.65 37.30 30.40 36.20 32.70 34.65 34.45 32.90 36.00 30.60 36.95 28.35 37.50 25.80 37.55 23.05 37.10 20.55 36.00 17.80 34.45 15.50Z","f":"C.shade.82"},{"d":"M22.78 13.64 23.01 14.16 23.06 14.78 22.91 15.47 22.57 16.20 22.06 16.92 21.41 17.61 20.65 18.23 19.82 18.75 18.95 19.14 18.10 19.38 17.31 19.47 16.60 19.39 16.03 19.15 15.62 18.76 15.39 18.24 15.34 17.62 15.49 16.93 15.83 16.20 16.34 15.48 16.99 14.79 17.75 14.17 18.58 13.65 19.45 13.26 20.30 13.02 21.09 12.93 21.80 13.01 22.37 13.25Z","f":"C.tint.6"},{"d":"M27.89 12.65 27.94 12.87 27.93 13.11 27.85 13.35 27.71 13.58 27.51 13.79 27.27 13.98 26.99 14.12 26.69 14.22 26.39 14.27 26.10 14.26 25.83 14.20 25.61 14.09 25.43 13.94 25.31 13.75 25.26 13.53 25.27 13.29 25.35 13.05 25.49 12.82 25.69 12.61 25.93 12.42 26.21 12.28 26.51 12.18 26.81 12.13 27.10 12.14 27.37 12.20 27.59 12.31 27.77 12.46Z","f":"C.tint.6"},{"d":"M37.60 24.20 37.53 25.53 37.34 26.85 37.01 28.15 36.56 29.40 35.99 30.61 35.31 31.76 34.51 32.83 33.62 33.82 32.63 34.71 31.56 35.51 30.41 36.19 29.20 36.76 27.95 37.21 26.65 37.54 25.33 37.73 24.00 37.80 22.67 37.73 21.35 37.54 20.05 37.21 18.80 36.76 17.59 36.19 16.44 35.51 15.37 34.71 14.38 33.82 13.49 32.83 12.69 31.76 12.01 30.61 11.44 29.40 10.99 28.15 10.66 26.85 10.47 25.53 10.40 24.20 10.47 22.87 10.66 21.55 10.99 20.25 11.44 19.00 12.01 17.79 12.69 16.64 13.49 15.57 14.38 14.58 15.37 13.69 16.44 12.89 17.59 12.21 18.80 11.64 20.05 11.19 21.35 10.86 22.67 10.67 24.00 10.60 25.33 10.67 26.65 10.86 27.95 11.19 29.20 11.64 30.41 12.21 31.56 12.89 32.63 13.69 33.62 14.58 34.51 15.57 35.31 16.64 35.99 17.79 36.56 19.00 37.01 20.25 37.34 21.55 37.53 22.87Z","s":"#111","w":1.8},{"d":"M44.38 19.16 44.48 19.75 44.44 20.37 44.27 21.03 43.98 21.71 43.55 22.41 42.99 23.13 42.31 23.86 41.52 24.60 40.61 25.34 39.59 26.08 38.47 26.81 37.26 27.53 35.96 28.24 34.58 28.92 33.13 29.58 31.63 30.21 30.07 30.80 28.48 31.36 26.86 31.87 25.22 32.34 23.57 32.77 21.92 33.14 20.29 33.46 18.68 33.72 17.11 33.93 15.58 34.08 14.10 34.17 12.69 34.21 11.35 34.18 10.10 34.09 8.93 33.94 7.87 33.74 6.90 33.48 6.05 33.16 5.32 32.80 4.70 32.38 4.21 31.91 3.85 31.40 3.62 30.84 L8.43 29.47 8.56 29.75 8.80 30.01 9.14 30.23 9.57 30.42 10.10 30.58 10.71 30.70 11.41 30.78 12.20 30.82 13.06 30.83 13.99 30.80 14.98 30.73 16.04 30.62 17.14 30.48 18.30 30.30 19.48 30.09 20.70 29.84 21.94 29.57 23.19 29.26 24.45 28.93 25.70 28.57 26.94 28.18 28.17 27.78 29.37 27.36 30.53 26.92 31.65 26.47 32.72 26.01 33.73 25.55 34.68 25.08 35.56 24.61 36.37 24.14 37.10 23.68 37.74 23.23 38.29 22.79 38.75 22.36 39.11 21.95 39.38 21.56 39.54 21.19 39.61 20.85 39.57 20.53Z","f":"C.ring"},{"d":"M44.38 19.16 44.48 19.75 44.44 20.37 44.27 21.03 43.98 21.71 43.55 22.41 42.99 23.13 42.31 23.86 41.52 24.60 40.61 25.34 39.59 26.08 38.47 26.81 37.26 27.53 35.96 28.24 34.58 28.92 33.13 29.58 31.63 30.21 30.07 30.80 28.48 31.36 26.86 31.87 25.22 32.34 23.57 32.77 21.92 33.14 20.29 33.46 18.68 33.72 17.11 33.93 15.58 34.08 14.10 34.17 12.69 34.21 11.35 34.18 10.10 34.09 8.93 33.94 7.87 33.74 6.90 33.48 6.05 33.16 5.32 32.80 4.70 32.38 4.21 31.91 3.85 31.40 3.62 30.84","s":"#111","w":1.8},{"d":"M39.57 20.53 39.61 20.85 39.54 21.19 39.38 21.56 39.11 21.95 38.75 22.36 38.29 22.79 37.74 23.23 37.10 23.68 36.37 24.14 35.56 24.61 34.68 25.08 33.73 25.55 32.72 26.01 31.65 26.47 30.53 26.92 29.37 27.36 28.17 27.78 26.94 28.18 25.70 28.57 24.45 28.93 23.19 29.26 21.94 29.57 20.70 29.84 19.48 30.09 18.30 30.30 17.14 30.48 16.04 30.62 14.98 30.73 13.99 30.80 13.06 30.83 12.20 30.82 11.41 30.78 10.71 30.70 10.10 30.58 9.57 30.42 9.14 30.23 8.80 30.01 8.56 29.75 8.43 29.47","s":"#111","w":1.8},{"d":"M18.90 31.64 17.75 31.81 16.63 31.96 15.55 32.07 14.51 32.15 13.51 32.19 12.57 32.20 11.67 32.18 10.83 32.12 10.06 32.03 9.35 31.91 8.71 31.75","s":"C.ringhi","w":1.3}],"butterfly":[{"d":"M22.5 22C16 8 4 7 4.5 16 5 23 14 25 22.5 24Z","f":"C","s":"#111","w":1.8},{"d":"M25.5 22C32 8 44 7 43.5 16 43 23 34 25 25.5 24Z","f":"C","s":"#111","w":1.8},{"d":"M22.5 25C14 25 8 31 10.5 36.5 13 41 20 36 22.5 28Z","f":"C.tint.5","s":"#111","w":1.8},{"d":"M25.5 25C34 25 40 31 37.5 36.5 35 41 28 36 25.5 28Z","f":"C.tint.5","s":"#111","w":1.8},{"d":"M24.0 15H24.000000000000004A2.4 2.4 0 0 1 26.400000000000002 17.4V34.6A2.4 2.4 0 0 1 24.000000000000004 37H24.0A2.4 2.4 0 0 1 21.6 34.6V17.4A2.4 2.4 0 0 1 24.0 15Z","f":"#111","s":"#111","w":1.8},{"d":"M23 15.5 19.5 8.5M25 15.5 28.5 8.5","s":"#111","w":1.8},{"d":"M17.5 8a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z","f":"#111"},{"d":"M27.1 8a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z","f":"#111"}]}, STICKER_NAMES = {"heart": "Heart", "flower": "Flower", "star": "Star", "ufo": "UFO", "peace": "Peace sign", "yinyang": "Yin yang", "storm": "Storm cloud", "planet": "Planet", "butterfly": "Butterfly"};
+  const hexRgb = h => { const m = /^#?([\da-f]{6})$/i.exec(h || ''); if (!m) return [17, 17, 17]; const n = parseInt(m[1], 16); return [n >> 16, n >> 8 & 255, n & 255]; };
+  const rgbHex = a => '#' + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  function stickerFill(tok, col){
+    if (!tok || tok[0] === '#') return tok;
+    let c = hexRgb(col); const lum = (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255;
+    if (lum < .1) c = [255, 90, 95];                                  // black crayon (the starting colour): stickers come out red, like the red crayon
+    const shade = k => c.map(v => v * k), tint = k => c.map(v => v + (255 - v) * k);
+    if (tok === 'C') return rgbHex(c);
+    if (tok === 'CENTER') return (c[0] > 200 && c[1] > 170 && c[2] < 140) ? '#FF9F1C' : '#FFD84D';   // flower middle: yellow, or orange on a yellow flower
+    if (tok === 'C.ring') return rgbHex(shade(.72));
+    if (tok === 'C.ringhi') return rgbHex(shade(.72).map(v => v + (255 - v) * .35));
+    const m = /^C\.(shade|tint)\.(\d+)$/.exec(tok); if (m){ const k = parseFloat('0.' + m[2]); return rgbHex(m[1] === 'shade' ? shade(k) : tint(k)); }
+    return rgbHex(c);
+  }
+  function stickerSVG(k, col){
+    return '<svg viewBox="0 0 48 48" aria-hidden="true">' + STICKER_OPS[k].map(o => `<path d="${o.d}" fill="${o.f ? stickerFill(o.f, col) : 'none'}"${o.r ? ` fill-rule="${o.r}"` : ''}${o.o ? ` opacity="${o.o}"` : ''}${o.s ? ` stroke="${stickerFill(o.s, col)}" stroke-width="${o.w}" stroke-linejoin="round" stroke-linecap="round"` : ''}/>`).join('') + '</svg>';
+  }
+  const stickerPaths = {};
+  function stickerPaint(g, k, col){   // draws a sticker in a 48×48 box
+    const P = stickerPaths[k] || (stickerPaths[k] = STICKER_OPS[k].map(o => new Path2D(o.d)));
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    STICKER_OPS[k].forEach((o, i) => {
+      g.globalAlpha = o.o || 1;
+      if (o.f){ g.fillStyle = stickerFill(o.f, col); g.fill(P[i], o.r || 'nonzero'); }
+      g.globalAlpha = 1;
+      if (o.s){ g.strokeStyle = stickerFill(o.s, col); g.lineWidth = o.w; g.stroke(P[i]); }
+    });
+  }
+  const STICKERS = new Proxy({}, { get: (_, k) => STICKER_OPS[k] ? stickerSVG(k, typeof color === 'string' ? color : '#FF5A5F') : undefined, ownKeys: () => Object.keys(STICKER_OPS), getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) });
+  const stampBtn = document.getElementById('stampBtn');
+  const stampPop = document.createElement('div'); stampPop.className = 'stamp-pop'; stampPop.hidden = true;
+  stampPop.innerHTML = Object.keys(STICKERS).map(k => `<button type="button" data-st="${k}" title="${STICKER_NAMES[k]}" aria-label="${STICKER_NAMES[k]}">${STICKERS[k]}</button>`).join('');
+  document.body.appendChild(stampPop);
+  function placeStampPop(){
+    const b = document.getElementById('board').getBoundingClientRect();
+    stampPop.style.left = ((Math.max(b.left, 0) + Math.min(b.right, innerWidth)) / 2) + 'px';
+    // sit just above the bottom of the page, and above any tool bar that pops up over it (phones)
+    let bottom = Math.min(innerHeight, b.bottom);
+    document.querySelectorAll('.tools, #dock').forEach(el => { const r = el.getBoundingClientRect(); if (r.width && r.height && getComputedStyle(el).display !== 'none' && r.top > b.top + b.height * .5 && r.top < bottom) bottom = r.top; });
+    stampPop.style.top = Math.max(8, bottom - stampPop.offsetHeight - 10) + 'px';
+  }
+  function refreshStickers(){
+    stampPop.querySelectorAll('[data-st]').forEach(b => { b.innerHTML = STICKERS[b.dataset.st]; });
+    const k = stampBtn.dataset.stamp, old = stampBtn.querySelector('svg'); if (old && STICKER_OPS[k]) old.outerHTML = STICKERS[k];
+  }
+  refreshStickers();
+  function syncStampPop(){ stampPop.querySelectorAll('[data-st]').forEach(b => b.setAttribute('aria-pressed', b.dataset.st === stampBtn.dataset.stamp)); }
+  function openStampPop(on){ stampPop.hidden = !on; if (on){ syncStampPop(); placeStampPop(); } }
+  addEventListener('resize', () => { if (!stampPop.hidden) placeStampPop(); });
+  // the Stamps button: the tray pops up; tap the button again to tuck it away
+  let stampWasOpen = false;
+  stampBtn.addEventListener('pointerdown', () => { stampWasOpen = !stampPop.hidden && tool === 'stamp'; }, true);
+  stampBtn.addEventListener('click', () => { openStampPop(!stampWasOpen); stampWasOpen = false; });
+  stampPop.addEventListener('click', e => {
+    const b = e.target.closest('[data-st]'); if (!b) return;
+    const k = b.dataset.st; stampBtn.dataset.stamp = k;
+    const old = stampBtn.querySelector('svg'); if (old) old.outerHTML = STICKERS[k];   // the button shows the sticker you picked
+    setTool('stamp', k); syncStampPop();
+    try { SFX.plop(); } catch {}
+  });
   function drawStamp(kind, x, y, s, col, g = ctx, tilt = true){
+    if (STICKER_OPS[kind]){ const w = s * 1.7; g.save(); g.translate(x, y); if (tilt) g.rotate((Math.random() - .5) * 0.4); g.globalCompositeOperation = 'source-over'; g.scale(w / 48, w / 48); g.translate(-24, -24); stickerPaint(g, kind, col); g.restore(); return; }
     g.save(); g.translate(x, y); if (tilt) g.rotate((Math.random()-.5)*0.5);
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     g.fillStyle = col; g.strokeStyle = '#1D2A28'; g.lineWidth = Math.max(2, s*0.05); g.lineJoin='round'; g.lineCap='round';
@@ -3628,7 +3922,7 @@
   // while a sticker is picked, the mouse pointer becomes that sticker (in the current color)
   function stickerCursor(){
     const n = 44, k = document.createElement('canvas'); k.width = k.height = n;
-    drawStamp(stamp, n / 2, n / 2, 34, color, k.getContext('2d'), false);
+    drawStamp(stamp, n / 2, n / 2, STICKER_OPS[stamp] ? (n - 4) / 1.7 : 34, color, k.getContext('2d'), false);
     return `url("${k.toDataURL()}") ${n / 2} ${n / 2}, copy`;
   }
 
@@ -3934,9 +4228,14 @@
   const PRODUCT_ID = 'brush_pack';
   let PRICE = '$2.99', store = null, buying = false;
   function showPrice(p){ PRICE = p; document.querySelectorAll('.price').forEach(e => e.textContent = p); }
+  let storeSetUp = false;
   function setupStore(){
-    if (!NATIVE || !window.CdvPurchase) return;
+    // the purchase plugin can show up before it's ready (e.g. when the app is reopened): wait for it, and never let it stop the app
+    if (storeSetUp || !NATIVE || !window.CdvPurchase) return;
     const { store: st, ProductType, Platform } = window.CdvPurchase;
+    if (!st || typeof st.register !== 'function' || !ProductType || !Platform) return;
+    storeSetUp = true;
+    try {
     store = st;
     store.register([{ id: PRODUCT_ID, type: ProductType.NON_CONSUMABLE, platform: Platform.APPLE_APPSTORE }]);
     store.when()
@@ -3946,6 +4245,7 @@
       .receiptUpdated(() => { if (store.owned(PRODUCT_ID) && !unlocked) grantUnlock(false); });
     store.error(() => { buying = false; $('gateMsg').textContent = 'The App Store couldn’t finish that. Please try again.'; });
     store.initialize([Platform.APPLE_APPSTORE]);
+    } catch (err){ store = null; storeSetUp = false; console.warn('store', err); }
   }
   $('buy').onclick = async () => {
     if (!store){
@@ -3969,6 +4269,7 @@
     $('payFine').textContent = 'One-time purchase through the App Store. Family Sharing included.';
     document.addEventListener('deviceready', setupStore, false);
     if (window.CdvPurchase) setupStore();
+    setTimeout(setupStore, 1500); setTimeout(setupStore, 5000);   // in case the plugin finished loading late
   }
   $('relock').onclick = () => {
     unlocked = false; framesUnlocked = false;
@@ -4059,51 +4360,116 @@
     mbEl.querySelector('.mb-colors').addEventListener('click', e => e.stopPropagation());
   }
 
-  // ---------- the pointer is always the tool: never the computer's arrow or pointing hand ----------
-  // Everywhere outside the paper the pointer is a little picture of the tool you have (pencil, spray can, dynamite...).
-  const CURSOR_TIP = { pencil: [4, 20], brush: [3, 21], rainbow: [12, 16], chalk: [5, 18], soft: [12, 12], spray: [12, 12], eraser: [5, 19], fill: [5, 20] };
-  const curCache = {};
-  function toolCursorCss(t){
-    if (curCache[t]) return curCache[t];
-    const b = document.querySelector(`.tool[data-tool="${t}"] > svg`);
-    if (!b) return XHAIR;
-    const inner = b.innerHTML, vb = b.getAttribute('viewBox') || '0 0 24 24';
-    const attrs = ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin'].map(a => b.getAttribute(a) ? `${a}="${b.getAttribute(a)}"` : '').join(' ');
-    // the icon with a white outline around it, so it shows on any colour
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="${vb}" style="color:#1A1F3A"><defs><filter id="o" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.3" result="d"/><feFlood flood-color="#fff"/><feComposite in2="d" operator="in" result="w"/><feMerge><feMergeNode in="w"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#o)"><g ${attrs}>${inner}</g></g></svg>`;
-    const [hx, hy] = CURSOR_TIP[t] || [12, 12], k = 32 / 24;
-    return curCache[t] = `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${Math.round(hx * k)} ${Math.round(hy * k)}, crosshair`;
+
+  // ---------- Type tool: tap the page, type words, pick a font, then it's painted onto the page ----------
+  const TYPE_FONTS = [
+    { n: 'Simple', f: '"Nunito", ui-rounded, system-ui, sans-serif', w: '800' },
+    { n: 'Bubble', f: '"Bagel Fat One", "Arial Rounded MT Bold", sans-serif', w: '400' },
+    { n: 'Marker', f: '"Permanent Marker", "Marker Felt", cursive', w: '400' },
+    { n: 'Hand', f: '"Patrick Hand", "Noteworthy", "Chalkboard SE", cursive', w: '400' },
+    { n: 'Comic', f: '"Bangers", "Chalkboard SE", Impact, sans-serif', w: '400' },
+    { n: 'Fancy', f: '"Pacifico", "Snell Roundhand", cursive', w: '400' },
+    { n: 'Spooky', f: '"Creepster", "Chalkduster", fantasy', w: '400' }
+  ];
+  let typeFont = 0, typeSize = 0, typeAt = null, typeLoop = 0, typeRotA = 0;
+  const typeEd = document.createElement('div'); typeEd.id = 'typeEd'; typeEd.hidden = true;
+  typeEd.setAttribute('contenteditable', 'true'); try { typeEd.contentEditable = 'plaintext-only'; } catch {}
+  typeEd.setAttribute('autocapitalize', 'sentences'); typeEd.setAttribute('spellcheck', 'false'); typeEd.dataset.ph = 'Type here';
+  const typeMove = document.createElement('div'); typeMove.id = 'typeMove'; typeMove.hidden = true; typeMove.title = 'Drag to move the words';
+  typeMove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>';
+  const typeRot = document.createElement('div'); typeRot.id = 'typeRot'; typeRot.hidden = true; typeRot.title = 'Drag to turn the words';
+  typeRot.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 3.5v4h-4"/></svg>';
+  const typeBar = document.createElement('div'); typeBar.id = 'typeBar'; typeBar.hidden = true;
+  typeBar.innerHTML = '<div class="tfonts">' + TYPE_FONTS.map((t, i) => `<button type="button" data-tf="${i}" title="${t.n}" aria-label="${t.n} font" style="font-family:${t.f.replace(/"/g, '&quot;')}; font-weight:${t.w}">Aa</button>`).join('') + '</div><div class="tctl">'
+    + '<button type="button" class="tsz" data-tsz="-1" aria-label="Smaller words">A−</button><button type="button" class="tsz" data-tsz="1" aria-label="Bigger words">A+</button>'
+    + '<span class="tsep"></span><button type="button" class="tx" id="typeCancel" aria-label="Cancel">✕</button><button type="button" class="tdone" id="typeDone">✓ Done</button></div>';
+  document.body.append(typeEd, typeMove, typeRot, typeBar);
+  // tapping the bar never takes the keyboard away from the words
+  ['pointerdown', 'mousedown'].forEach(ev => typeBar.addEventListener(ev, e => { if (e.target.closest('button')) e.preventDefault(); }));
+  const typeFontCss = () => { const t = TYPE_FONTS[typeFont]; return `${t.w} ${typeSize}px ${t.f}`; };
+  function typeSync(){
+    typeBar.querySelectorAll('[data-tf]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.tf === typeFont));
+    const t = TYPE_FONTS[typeFont]; typeEd.style.fontFamily = t.f; typeEd.style.fontWeight = t.w; typeEd.style.color = color;
+    typePlace();
   }
-  const curStyle = document.createElement('style'); document.head.appendChild(curStyle);
-  function syncToolCursor(){
-    const css = FX_TOOLS.has(tool) ? toolCursorCss(tool) : XHAIR;   // only the effects (dynamite, wormhole, neon, tornado) use their picture as the pointer
-    const ui = ['#menubar', 'header', '.tools', '.dock', '#extras', '.film', '.more-sheet', '.overlay', '.psize-pop', '.shape-pop'].map(x => `html body:not(.picking) ${x}:not(#c), html body:not(.picking) ${x} *:not(#c)`).join(', ');
-    // over the menu bar, tool bar and pop-out panels: a simple crosshair; everywhere else off the paper: the tool itself
-    curStyle.textContent = `html body:not(.picking), html body:not(.picking) *:not(#c){cursor:${css}!important} ${ui}{cursor:${XHAIR}!important}`;
+  // keep the words stuck to the same spot on the paper while the page is zoomed or moved
+  function typePlace(){
+    if (!typeAt) return;
+    const r = c.getBoundingClientRect(), k = r.width / W;
+    typeEd.style.fontSize = (typeSize * k) + 'px';
+    const ox = r.left + typeAt.x * k - 7, oy = r.top + typeAt.y * k - 4, w = typeEd.offsetWidth, h = typeEd.offsetHeight;
+    typeEd.style.transform = `translate(${ox}px, ${oy}px) translate(${w / 2}px, ${h / 2}px) rotate(${typeRotA}rad) translate(${-w / 2}px, ${-h / 2}px)`;
+    // the two handles ride on the box's top corners, turning with it
+    const cs = Math.cos(typeRotA), sn = Math.sin(typeRotA), cx = ox + w / 2, cy = oy + h / 2;
+    const corner = (px, py) => [cx + (px - w / 2) * cs - (py - h / 2) * sn, cy + (px - w / 2) * sn + (py - h / 2) * cs];
+    const [mx, my] = corner(0, 0), [rx, ry] = corner(w, 0);
+    typeMove.style.left = mx + 'px'; typeMove.style.top = my + 'px';
+    typeRot.style.left = rx + 'px'; typeRot.style.top = ry + 'px';
+    typePlace.center = [cx, cy];
+    const pr = document.getElementById('board').getBoundingClientRect();
+    typeBar.style.top = Math.max(8, pr.top + 8) + 'px';
+    const bw = typeBar.offsetWidth, mid = (Math.max(pr.left, 0) + Math.min(pr.right, innerWidth)) / 2;
+    typeBar.style.left = Math.max(8 + bw / 2, Math.min(innerWidth - 8 - bw / 2, mid)) + 'px';
   }
-  syncToolCursor();
-  // the crosshair itself: the Doodle Clubhouse pointer (yellow arrow), drawn on top of everything
-  const xh = document.createElement('div'); xh.id = 'xhair'; xh.hidden = true;
-  xh.innerHTML = '<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><path d="M3.5 3.5V24l5.4-4.8 3.9 8.4 4-1.8-3.9-8.3 7.4-.3Z" fill="#FFD23F" stroke="#1A1F3A" stroke-width="2.3" stroke-linejoin="round"/><path d="M6.2 9v9.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".9"/></svg>';
-  document.body.appendChild(xh);
-  const UI_SEL = '#menubar, header, .tools, .dock, #extras, .film, .more-sheet, .overlay, .psize-pop, .shape-pop';
-  function xhairWanted(e){
-    if (e.pointerType === 'touch' || document.body.classList.contains('picking')) return false;
-    const t = e.target, inUI = t && t.closest && t.closest(UI_SEL);
-    if (inUI) return true;
-    if (t === c){
-      if (e.pointerType === 'mouse' && RING_TOOLS.has(tool)) return false;   // the brush-size circle shows instead
-      if (FX_TOOLS.has(tool) || tool === 'stamp') return false;              // effects and stickers have their own picture
-      return true;
-    }
-    return !FX_TOOLS.has(tool);
+  function typeOpen(q){
+    if (!typeSize) typeSize = Math.round(Math.max(28, Math.min(W, H) * .07));
+    typeAt = { x: q.x, y: q.y - typeSize * .6 }; typeRotA = 0;
+    typeEd.textContent = ''; typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = false;
+    try { clearTimeout(toast.t); document.getElementById('toast').hidden = true; } catch {}
+    typeSync(); typeEd.focus();
+    try { const sel = getSelection(), rg = document.createRange(); rg.selectNodeContents(typeEd); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg); } catch {}
+    cancelAnimationFrame(typeLoop);
+    const loop = () => { if (!typeAt) return; typePlace(); typeLoop = requestAnimationFrame(loop); }; typeLoop = requestAnimationFrame(loop);
   }
-  document.addEventListener('pointermove', e => {
-    const on = xhairWanted(e); xh.hidden = !on;
-    if (on) xh.style.transform = `translate(${e.clientX - 3}px, ${e.clientY - 3}px)`;
-  }, { capture: true, passive: true });
-  document.addEventListener('pointerleave', () => { xh.hidden = true; });
-  document.documentElement.addEventListener('mouseleave', () => { xh.hidden = true; });
+  function typeClose(){
+    typeAt = null; cancelAnimationFrame(typeLoop);
+    typeEd.hidden = typeMove.hidden = typeRot.hidden = typeBar.hidden = true; typeEd.blur(); typeEd.textContent = '';
+  }
+  // paint the words onto the page, exactly where they sit on screen
+  async function typeFinish(){
+    if (!typeAt) return;
+    const text = (typeEd.innerText || '').replace(/ /g, ' ').replace(/\s+$/, '');
+    const at = typeAt, font = typeFontCss(), sz = typeSize, col = color, rot = typeRotA;
+    const k = c.getBoundingClientRect().width / W, bw = typeEd.offsetWidth / k, bh = typeEd.offsetHeight / k;
+    const pcx = at.x - 7 / k + bw / 2, pcy = at.y - 4 / k + bh / 2;   // the middle of the box, on the paper: the words turn around it
+    typeClose();
+    if (!text.trim()) return;
+    try { await Promise.race([document.fonts.load(font, text), new Promise(r => setTimeout(r, 1200))]); } catch {}
+    pushUndo();
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    if (rot){ ctx.translate(pcx, pcy); ctx.rotate(rot); ctx.translate(-pcx, -pcy); }
+    ctx.font = font; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    const m = ctx.measureText('Hg'), asc = m.fontBoundingBoxAscent || sz * .9, desc = m.fontBoundingBoxDescent || sz * .25, lh = sz * 1.2;
+    const top = at.y;   // the box's border and padding sit outside the words' spot
+    text.split('\n').forEach((line, i) => ctx.fillText(line, at.x, top + i * lh + (lh - (asc + desc)) / 2 + asc));
+    ctx.restore();
+    try { SFX.plop(); } catch {}
+    onCanvasChanged();
+  }
+  function typeTap(q){ if (typeAt){ typeFinish(); return; } typeOpen(q); }
+  function typeRecolor(){ if (typeAt) typeEd.style.color = color; }
+  typeBar.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => { typeFont = +b.dataset.tf; typeSync(); typeEd.focus(); });
+  typeBar.querySelectorAll('[data-tsz]').forEach(b => b.onclick = () => { typeSize = Math.round(Math.max(12, Math.min(Math.max(W, H) * .5, typeSize * (b.dataset.tsz > 0 ? 1.25 : 0.8)))); typeSync(); typeEd.focus(); });
+  document.getElementById('typeDone').onclick = () => typeFinish();
+  document.getElementById('typeCancel').onclick = () => typeClose();
+  // drag the blue handle to move the words
+  let typeDrag = null;
+  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt } }; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
+  typeMove.addEventListener('pointermove', e => { if (!typeDrag) return; const k = c.getBoundingClientRect().width / W; typeAt = { x: typeDrag.at.x + (e.clientX - typeDrag.x) / k, y: typeDrag.at.y + (e.clientY - typeDrag.y) / k }; typePlace(); });
+  const typeDragEnd = () => { if (typeDrag){ typeDrag = null; typeEd.focus(); } };
+  typeMove.addEventListener('pointerup', typeDragEnd); typeMove.addEventListener('pointercancel', typeDragEnd);
+  // drag the orange handle around to turn the words (it clicks to straight when close)
+  let typeTurn = null;
+  const typeAng = e => { const [cx, cy] = typePlace.center || [0, 0]; return Math.atan2(e.clientY - cy, e.clientX - cx); };
+  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!typeAt) return; typeTurn = { a: typeAng(e), r: typeRotA }; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
+  typeRot.addEventListener('pointermove', e => {
+    if (!typeTurn) return;
+    let r = typeTurn.r + typeAng(e) - typeTurn.a; const step = Math.PI / 2, near = Math.round(r / step) * step;
+    if (Math.abs(r - near) < .07) r = near;
+    typeRotA = r; typePlace();
+  });
+  const typeTurnEnd = () => { if (typeTurn){ typeTurn = null; typeEd.focus(); } };
+  typeRot.addEventListener('pointerup', typeTurnEnd); typeRot.addEventListener('pointercancel', typeTurnEnd);
   // ---------- instant taps ----------
   // Buttons react the moment the finger or Apple Pencil lifts, instead of waiting for the browser's own (sometimes
   // slow, sometimes missing with the Pencil) click. The browser's late click that follows is ignored.
@@ -4140,9 +4506,9 @@
     $('shareDoodle').onclick = () => askGrownUp(async () => { if (!viewing) return; try { const blob = await (await fetch(viewing.full)).blob(); await nativeShare(`doodle-${viewing.id}.jpg`, blob); } catch {} });
   }
 
-  const keyTools = { b:'pencil', s:'spray', k:'fill', l:'line', e:'eraser', p:'brush', r:'rainbow', x:'pixel', o:'soft', u:'fur', c:'chalk', y:'dynamite', w:'wormhole', v:'blacklight', m:'mirror' };
+  const keyTools = { b:'pencil', s:'spray', k:'fill', l:'line', e:'eraser', p:'brush', r:'rainbow', x:'pixel', o:'train', u:'fur', c:'chalk', y:'dynamite', w:'wormhole', v:'blacklight', m:'mirror', t:'text' };
   document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
     if (e.key === 'Escape'){ document.querySelectorAll('.overlay').forEach(o => o.hidden = true); if (panel) setPanel(panel); return; }
     if (!e.ctrlKey && !e.metaKey && (e.key === '+' || e.key === '=')) { zoomAt(zoom * 1.4); return; }
     if (!e.ctrlKey && !e.metaKey && e.key === '-') { zoomAt(zoom / 1.4); return; }
@@ -4258,7 +4624,7 @@
   const isMid = e => e && e.m;
   let speedStroke = null;
   const SPEED_W = { pencil: s => s + 4, eraser: s => s * 2 + 6, marker: s => s * 1.8 + 4, spray: s => s * 6.4 + 8, soft: s => s * 4.6 + 8, brush: s => s * 2.6 + 8,
-    rainbow: s => s + 8, pixel: s => s * 2 + 14, fur: s => s * 5 + 8, glitter: s => s * 3 + 8, mirror: s => s + 6, line: s => s + 6 };
+    train: s => s * 4.4 + 12, rainbow: s => s + 8, pixel: s => s * 2 + 14, fur: s => s * 5 + 8, glitter: s => s * 3 + 8, mirror: s => s + 6, line: s => s + 6 };
   function speedStrokeStart(p){
     if (tool === 'fill' || tool === 'dynamite' || tool === 'wormhole' || tool === 'blacklight' || tool === 'tornado') { speedStroke = null; return; }
     const L = Math.max(W, H);
@@ -5150,7 +5516,7 @@
     // Extra: 8 buttons, as big as fit (up to about 20% bigger than the tools)
     bs.setProperty('--te', Math.max(18, Math.min(Math.round(tb * 1.2), Math.floor((h - 8 - 10 - 7 * 3) / 8))) + 'px');
     // Color: the 10 crayons, Mix and the size slider all in one column
-    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 10 * 4) / 11))) + 'px');   // 9 crayons + Mix + (+, -), filling the column
+    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 11 * 4) / 12))) + 'px');   // 9 crayons + Mix + (+, -), filling the column
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
   addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
