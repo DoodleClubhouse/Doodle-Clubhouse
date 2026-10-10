@@ -1239,7 +1239,11 @@
     html body .tools{width:128px; padding:9px; gap:8px}
     html body .tools .tool-grid, html body .tools .premium-grid{grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px}
     html body .tools .swatches{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:4px}
-    html body .tools .tool-grid .tool, html body .tools .premium-grid .tool{aspect-ratio:6/5}   /* a little wider than tall: everything fits taller */
+    /* square buttons, and the icon always sits inside its button */
+    html body .tools .tool-grid .tool, html body .tools .premium-grid .tool{aspect-ratio:1/1; min-width:0; min-height:0; padding:0}
+    html body .tools .tool-grid .tool > svg, html body .tools .premium-grid .tool > svg{width:58%!important; height:58%!important}
+    html body .tools .tool-grid .tool.dyn{display:flex; align-items:center; justify-content:center; gap:0; grid-column:auto}
+    html body .tools .tool-grid .tool.dyn > svg{flex:none}
     html body .tools .group-label{margin-bottom:5px}
     /* Brush Pack buttons the same size as the tools above (its dark box reaches out to the edges instead) */
     html body .tools .premium{margin-inline:-7px; padding:7px}
