@@ -1717,6 +1717,7 @@
     document.documentElement.style.setProperty('--stripe', light ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)');
     wallIn.value = col.toLowerCase();
     try { localStorage.setItem('doodle-clubhouse-wall-colour-v2', col); } catch {}
+    if (window.dcColorBackup) window.dcColorBackup();
   }
   wallIn.addEventListener('input', e => setWall(e.target.value));
   { let saved = '#47C2FF'; try { saved = localStorage.getItem('doodle-clubhouse-wall-colour-v2') || saved; } catch {} setWall(/^#[0-9a-f]{6}$/i.test(saved) ? saved : '#47C2FF'); }
@@ -4506,6 +4507,7 @@
       document.querySelectorAll('.mb-sw[data-bar]').forEach(b => b.setAttribute('aria-pressed', b.dataset.bar.toLowerCase() === col.toLowerCase()));
       $('mbBarPick').value = col.toLowerCase();
       try { localStorage.setItem('doodle-clubhouse-bar-colour-v2', col); } catch {}
+      if (window.dcColorBackup) window.dcColorBackup();
     }
     // the main tool bar (and the menu along the bottom on phones): its colour, a darker edge, and light words on dark colours
     function setPlank(col){
@@ -4516,6 +4518,7 @@
       document.querySelectorAll('.mb-sw[data-plank]').forEach(x => x.setAttribute('aria-pressed', x.dataset.plank.toLowerCase() === col.toLowerCase()));
       $('mbPlankPick').value = col.toLowerCase();
       try { localStorage.setItem('doodle-clubhouse-plank-colour', col); } catch {}
+      if (window.dcColorBackup) window.dcColorBackup();
     }
     document.querySelectorAll('.mb-sw[data-plank]').forEach(x => x.addEventListener('click', () => setPlank(x.dataset.plank)));
     $('mbPlankPick').addEventListener('input', e => setPlank(e.target.value));
@@ -4534,6 +4537,38 @@
     setBar(/^#[0-9a-f]{6}$/i.test(saved) ? saved : '#F2B84B');
     // the colour menu stays open while you try colours (taps inside it don't close it)
     mbEl.querySelector('.mb-colors').addEventListener('click', e => e.stopPropagation());
+    // ---- remember the menu bar / toolbar / background colors for next time ----
+    // Phones (iPhone especially) can clear the browser's quick storage when an app is closed, so the colors are
+    // also kept in the app's own settings (on iPhone/iPad) and in the drawing storage, and put back when the app opens.
+    {
+      const KEYS = { bar: 'doodle-clubhouse-bar-colour-v2', plank: 'doodle-clubhouse-plank-colour', wall: 'doodle-clubhouse-wall-colour-v2' };
+      const ok = c => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
+      const prefs = () => { try { return NATIVE && window.Capacitor.Plugins && window.Capacitor.Plugins.Preferences; } catch { return null; } };
+      const now = () => { const o = {}; for (const k in KEYS){ try { const v = localStorage.getItem(KEYS[k]); if (ok(v)) o[k] = v; } catch {} } return o; };
+      let ready = false, t = 0;
+      window.dcColorBackup = () => {
+        if (!ready) return;   // nothing is written until the saved colors have been put back
+        clearTimeout(t);
+        t = setTimeout(async () => {
+          const v = JSON.stringify(now());
+          try { const P = prefs(); if (P) await P.set({ key: 'colors', value: v }); } catch {}
+          try { const db = await openDb(); await new Promise(res => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(v, 'colors'); tx.oncomplete = tx.onerror = res; }); db.close(); } catch {}
+        }, 300);
+      };
+      setTimeout(async () => {
+        let saved = null;
+        try { const P = prefs(); if (P){ const r = await P.get({ key: 'colors' }); if (r && r.value) saved = JSON.parse(r.value); } } catch {}
+        if (!saved) try { const db = await openDb(); saved = await new Promise(res => { const r = db.transaction(STORE).objectStore(STORE).get('colors'); r.onsuccess = () => res(r.result ? JSON.parse(r.result) : null); r.onerror = () => res(null); }); db.close(); } catch {}
+        ready = true;
+        if (saved){
+          const cur = now();
+          if (ok(saved.bar) && saved.bar !== cur.bar) setBar(saved.bar);
+          if (ok(saved.plank) && saved.plank !== cur.plank) setPlank(saved.plank);
+          if (ok(saved.wall) && saved.wall !== cur.wall){ setWall(saved.wall); markWall(saved.wall); $('mbWallPick').value = saved.wall.toLowerCase(); }
+        }
+        window.dcColorBackup();
+      }, 0);
+    }
     // ---- the color spectrum: tap a rainbow circle to open it under that row, tap it again to put it away ----
     {
       const drop = mbEl.querySelector('.mb-colors');
