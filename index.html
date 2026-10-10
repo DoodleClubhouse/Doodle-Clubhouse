@@ -1225,6 +1225,14 @@
   /* pop-up windows (speed art, projects, buy, delete...) always sit above the menu bar */
   html body .overlay{z-index:35}
   html body .toast{z-index:50}
+  /* the house (logo) button and its color menu also work when the top menu bar is hidden (phone on its side) */
+  header .mb-logo-menu{position:relative; z-index:40}
+  header .mb-logo-btn{background:none; border:0; border-radius:8px; padding:2px 4px!important; cursor:pointer; display:grid; place-items:center}
+  header .mb-logo-btn[aria-expanded="true"]{background:var(--ink)}
+  header .mb-logo-btn .mb-logo{height:30px; width:auto; margin:0!important; display:block; pointer-events:none}
+  header .mb-drop{position:absolute; left:0; top:calc(100% + 4px); min-width:236px; background:#fff; border:3px solid var(--ink); border-radius:8px; box-shadow:5px 5px 0 var(--ink); padding:6px; display:flex; flex-direction:column; z-index:40;
+    max-height:calc(100vh - 56px); max-height:calc(100dvh - 56px); overflow-y:auto; -webkit-overflow-scrolling:touch}
+  header .mb-drop[hidden]{display:none!important}
   /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
   .menubar .mb-sep-trash{margin:0 12px}
   .menubar .mb-ico[data-do="clear"]{margin-left:4px}
@@ -4489,8 +4497,8 @@
   // ---------- menu bar (iPad / computer): File / Edit / View / Goodies drop-downs ----------
   {
     const mb = document.getElementById('menubar');
-    const closeAll = () => mb.querySelectorAll('.mb-menu').forEach(m => { m.querySelector('.mb-drop').hidden = true; m.querySelector('.mb-item').setAttribute('aria-expanded', 'false'); });
-    mb.querySelectorAll('.mb-item').forEach(it => it.addEventListener('click', () => {
+    const closeAll = () => document.querySelectorAll('.mb-menu').forEach(m => { m.querySelector('.mb-drop').hidden = true; m.querySelector('.mb-item').setAttribute('aria-expanded', 'false'); });
+    document.querySelectorAll('.mb-item').forEach(it => it.addEventListener('click', () => {
       const drop = it.parentElement.querySelector('.mb-drop'), open = drop.hidden;
       closeAll(); drop.hidden = !open; it.setAttribute('aria-expanded', String(open));
       const snd = document.getElementById('mbSound'); if (snd) snd.textContent = $('soundBtn').getAttribute('aria-pressed') === 'false' ? 'Unmute' : 'Mute';
@@ -4502,6 +4510,16 @@
     const syncMbHist = () => { mb.querySelectorAll('.mb-ico[data-do="undo"]').forEach(b => b.disabled = $('undo').disabled); mb.querySelectorAll('.mb-ico[data-do="redo"]').forEach(b => b.disabled = $('redo').disabled); };
     const syncPct = () => { const z = $('zoomReset'); if (z) $('mbPct').textContent = z.textContent; };
     new MutationObserver(syncPct).observe($('zoomReset'), { childList: true, characterData: true, subtree: true }); syncPct();
+    // phone on its side: the menu bar is hidden, so the house button (with its color menu) moves up into the corner
+    {
+      const logoMenu = mb.querySelector('.mb-logo-menu'), headLogo = document.querySelector('header .logo');
+      const placeLogo = () => {
+        const barHidden = getComputedStyle(mb).display === 'none';
+        if (barHidden && logoMenu.parentElement === mb){ closeAll(); headLogo.after(logoMenu); headLogo.hidden = true; }
+        else if (!barHidden && logoMenu.parentElement !== mb){ closeAll(); mb.prepend(logoMenu); headLogo.hidden = false; }
+      };
+      placeLogo(); addEventListener('resize', placeLogo); addEventListener('orientationchange', () => setTimeout(placeLogo, 200));
+    }
     new MutationObserver(syncMbHist).observe($('undo'), { attributes: true }); new MutationObserver(syncMbHist).observe($('redo'), { attributes: true }); syncMbHist();
   }
 
@@ -4543,7 +4561,7 @@
     let saved = '#F2B84B'; try { saved = localStorage.getItem('doodle-clubhouse-bar-colour-v2') || saved; } catch {}   // matches the tool bar unless changed
     setBar(/^#[0-9a-f]{6}$/i.test(saved) ? saved : '#F2B84B');
     // the colour menu stays open while you try colours (taps inside it don't close it)
-    mbEl.querySelector('.mb-colors').addEventListener('click', e => e.stopPropagation());
+    document.querySelector('.mb-colors').addEventListener('click', e => e.stopPropagation());
     // ---- remember the menu bar / toolbar / background colors for next time ----
     // Phones (iPhone especially) can clear the browser's quick storage when an app is closed, so the colors are
     // also kept in the app's own settings (on iPhone/iPad) and in the drawing storage, and put back when the app opens.
@@ -4578,7 +4596,7 @@
     }
     // ---- the color spectrum: tap a rainbow circle to open it under that row, tap it again to put it away ----
     {
-      const drop = mbEl.querySelector('.mb-colors');
+      const drop = document.querySelector('.mb-colors');
       const spec = document.createElement('div'); spec.className = 'mb-spec'; spec.hidden = true;
       spec.innerHTML = '<div class="mb-spec-wrap"><canvas class="sv" width="400" height="240"></canvas><i class="knob sv-k"></i></div><div class="mb-spec-wrap"><canvas class="hue" width="400" height="44"></canvas><i class="knob hue-k"></i></div>';
       const sv = spec.querySelector('.sv'), hueC = spec.querySelector('.hue'), svK = spec.querySelector('.sv-k'), hueK = spec.querySelector('.hue-k');
