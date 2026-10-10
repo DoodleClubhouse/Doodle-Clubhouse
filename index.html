@@ -4684,27 +4684,16 @@
   }
   const typeCentre = true;   // on every screen (phone, iPad, computer): the words never hide under the font bar or keyboard
   let typeView = null;   // how the page was zoomed and placed before typing (put back afterwards)
-  // zoom the page so the whole page fits in the space you can see (between the font bar and the keyboard),
-  // and slide it so the words are as close to the middle as they can be with the whole page still showing
   function typeSteer(){
-    if (!typeView || !typeAt || typeDrag || typeTurn) return;
-    const b = board.getBoundingClientRect(), tb = typeBar.getBoundingClientRect(), vv = window.visualViewport;
-    const top = Math.max(b.top, typeBar.hidden ? b.top : tb.bottom) + 26;   // room for the move / turn handles
-    const bottom = Math.max(top + 60, Math.min(b.bottom, vv ? vv.offsetTop + vv.height : innerHeight) - 10);   // the keyboard's top edge
-    const left = b.left + 10, right = b.right - 10;
-    const pw = paper.offsetWidth, ph = paper.offsetHeight; if (!pw || !ph) return;
-    const zt = Math.max(ZMIN, Math.min(1, (right - left) / pw, (bottom - top) / ph));
-    // the middle of the words, measured from the middle of the paper (at 100%)
-    const k = c.getBoundingClientRect().width / W, bw = typeEd.offsetWidth / k, bh = typeEd.offsetHeight / k;
-    const lx = ((typeAt.x - 7 / k + bw / 2) / W - .5) * pw, ly = ((typeAt.y - 4 / k + bh / 2) / H - .5) * ph;
-    const fit = (want, lo, hi, half) => Math.max(lo + half, Math.min(hi - half, want));
-    const bcx = b.left + b.width / 2, bcy = b.top + b.height / 2;
-    const pcx = fit((left + right) / 2 - lx * zt, left, right, pw * zt / 2), pcy = fit((top + bottom) / 2 - ly * zt, top, bottom, ph * zt / 2);
-    const tx = pcx - bcx, ty = pcy - bcy;
-    const dz = zt - zoom, dx = tx - panX, dy = ty - panY;
-    if (Math.abs(dz) < .002 && Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
-    const e = Math.abs(dz) < .004 && Math.hypot(dx, dy) < 2 ? 1 : .25;   // glide there
-    zoom += dz * e; panX += dx * e; panY += dy * e; applyZoom();
+    if (!typeView || !typePlace.center || typeDrag || typeTurn) return;
+    const b = document.getElementById('board').getBoundingClientRect(), tb = typeBar.getBoundingClientRect(), vv = window.visualViewport;
+    const top = Math.max(b.top, typeBar.hidden ? b.top : tb.bottom) + 10;
+    const bottom = Math.min(b.bottom, vv ? vv.offsetTop + vv.height : innerHeight) - 10;   // the keyboard's top edge
+    const tx = (b.left + b.right) / 2, ty = bottom > top ? (top + bottom) / 2 : top + 40;
+    const [cx, cy] = typePlace.center, dx = tx - cx, dy = ty - cy;
+    if (Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
+    const e = Math.hypot(dx, dy) < 2 ? 1 : .25;   // glide there
+    panX += dx * e; panY += dy * e; applyZoom();
   }
   function typeClose(){
     typeAt = null; cancelAnimationFrame(typeLoop);
