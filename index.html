@@ -1247,10 +1247,14 @@
     html body .tools .group-label{margin-bottom:5px}
     /* Brush Pack buttons the same size as the tools above (its dark box reaches out to the edges instead) */
     html body .tools .premium{margin-inline:-7px; padding:7px}
+    /* bought: no dark box, the brushes carry straight on under the tools with the same spacing as every other row */
+    html body .tools .premium.unlocked{margin:-2px 0 0; padding:0}
+    html body .tools .premium .reset-link{display:none!important}   /* the testing-only re-lock link (it was invisible here anyway) left a gap */
     html body .tools .premium{padding:7px}
     html body .tools .premium .group-label{flex-wrap:wrap; gap:4px}
     html body .tools .custom-row{flex-wrap:wrap; justify-content:space-between}
-    html body .tools .extra-btn{font-size:12px; padding:8px 4px}
+    html body .tools .extra-btn{font-size:15px; padding:9px 4px; gap:5px}
+    html body .tools .extra-btn svg{width:19px; height:19px}
     html body .logo{width:128px}
     html body .extras{left:var(--toolsR, 158px)}
     html body .film{left:var(--toolsR, 156px)}
@@ -2831,7 +2835,7 @@
     // shrink the whole tools column evenly (buttons, icons and words together) when the window is too short.
     // Uses transform: CSS zoom scaled the icons and words but not the buttons on some browsers.
     const secs = [...toolsPanel.children].filter(x => !x.classList.contains('tray-min'));
-    secs.forEach(x => { x.style.zoom = ''; x.style.transform = ''; x.style.width = ''; x.style.marginBottom = ''; x.style.transformOrigin = ''; });
+    secs.forEach(x => { x.style.zoom = ''; x.style.transform = ''; x.style.width = ''; x.style.marginBottom = ''; x.style.marginLeft = ''; x.style.marginRight = ''; x.style.marginTop = ''; x.style.transformOrigin = ''; });
     toolsPanel.style.width = '';
     markToolsEdge();
     if (getComputedStyle(document.getElementById('dock')).display !== 'none') return;   // phones: the strip wraps instead of shrinking
@@ -2840,10 +2844,16 @@
     let z = Math.max(.45, toolsPanel.clientHeight / toolsPanel.scrollHeight);
     const cs = getComputedStyle(toolsPanel), padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
     const inner = toolsPanel.clientWidth - padX, outer = toolsPanel.offsetWidth - toolsPanel.clientWidth + padX;
+    // each section's own margins (the Brush Pack box reaches out past the edges; once bought it tucks up closer)
+    const panelGap = parseFloat(cs.rowGap) || 0;
+    const base = new Map(secs.map(x => { const c = getComputedStyle(x); return [x, { ml: parseFloat(c.marginLeft) || 0, mr: parseFloat(c.marginRight) || 0, mt: parseFloat(c.marginTop) || 0 }]; }));
     const apply = () => secs.forEach(x => {
       x.style.transform = ''; x.style.marginBottom = '';
-      const mx = (parseFloat(getComputedStyle(x).marginLeft) || 0) + (parseFloat(getComputedStyle(x).marginRight) || 0);
-      x.style.width = (inner - mx) + 'px';   // laid out at full size (a box reaching out past the edges stays that much wider)...
+      const m = base.get(x);
+      x.style.width = (inner - m.ml - m.mr) + 'px';   // laid out at full size (a box reaching out past the edges stays that much wider)...
+      // margins shrink along with everything else, so every button column and row gap stays lined up
+      if (m.ml || m.mr){ x.style.marginLeft = (m.ml * z) + 'px'; x.style.marginRight = (m.mr * z) + 'px'; }
+      if (m.mt) x.style.marginTop = ((panelGap + m.mt) * z - panelGap) + 'px';
       const h = x.offsetHeight;
       // ...then everything scales together, so icons and words stay in proportion with their buttons
       x.style.transformOrigin = 'top left'; x.style.transform = `scale(${z.toFixed(3)})`;
