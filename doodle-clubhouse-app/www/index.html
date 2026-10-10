@@ -1245,6 +1245,21 @@
   header .mb-drop{position:absolute; left:0; top:calc(100% + 4px); min-width:236px; background:#fff; border:3px solid var(--ink); border-radius:8px; box-shadow:5px 5px 0 var(--ink); padding:6px; display:flex; flex-direction:column; z-index:40;
     max-height:calc(100vh - 56px); max-height:calc(100dvh - 56px); overflow-y:auto; -webkit-overflow-scrolling:touch}
   header .mb-drop[hidden]{display:none!important}
+  /* ---------- side tool bar (iPad either way, computer): 2 buttons across instead of 3, so the paper gets more room ---------- */
+  @media (min-width:761px) and (min-height:501px){
+    html body .tools{width:128px; padding:9px; gap:8px}
+    html body .tools .tool-grid, html body .tools .premium-grid{grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px}
+    html body .tools .swatches{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:4px}
+    html body .tools .tool-grid .tool, html body .tools .premium-grid .tool{aspect-ratio:6/5}   /* a little wider than tall: everything fits taller */
+    html body .tools .group-label{margin-bottom:5px}
+    html body .tools .premium{padding:7px}
+    html body .tools .premium .group-label{flex-wrap:wrap; gap:4px}
+    html body .tools .custom-row{flex-wrap:wrap; justify-content:space-between}
+    html body .tools .extra-btn{font-size:12px; padding:8px 4px}
+    html body .logo{width:128px}
+    html body .extras{left:var(--toolsR, 158px)}
+    html body .film{left:var(--toolsR, 156px)}
+  }
   /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
   .menubar .mb-sep-trash{margin:0 12px}
   .menubar .mb-ico[data-do="clear"]{margin-left:4px}
@@ -2822,6 +2837,7 @@
     const secs = [...toolsPanel.children].filter(x => !x.classList.contains('tray-min'));
     secs.forEach(x => { x.style.zoom = ''; x.style.transform = ''; x.style.width = ''; x.style.marginBottom = ''; x.style.transformOrigin = ''; });
     toolsPanel.style.width = '';
+    markToolsEdge();
     if (getComputedStyle(document.getElementById('dock')).display !== 'none') return;   // phones: the strip wraps instead of shrinking
     const tooBig = () => toolsPanel.scrollHeight > toolsPanel.clientHeight + 1;
     if (!tooBig()) return;
@@ -2839,7 +2855,10 @@
     });
     apply();
     for (let k = 0; k < 10 && tooBig() && z > .45; k++){ z = Math.max(.45, z * .97); apply(); }
+    markToolsEdge();
   }
+  // pop-outs beside the tool bar (Extra, Pages) start just past its right edge, however wide it ends up
+  function markToolsEdge(){ try { const r = toolsPanel.getBoundingClientRect(); if (r.width) document.documentElement.style.setProperty('--toolsR', Math.round(r.right + 14) + 'px'); } catch {} }
   new ResizeObserver(fitTools).observe(toolsPanel);
   window.addEventListener('resize', fitTools);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTools);
