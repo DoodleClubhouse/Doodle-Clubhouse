@@ -1231,6 +1231,18 @@
   /* pop-up windows (speed art, projects, buy, delete...) always sit above the menu bar */
   html body .overlay{z-index:35}
   html body .toast{z-index:50}
+  /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
+  .menubar .mb-sep-trash{margin:0 12px}
+  .menubar .mb-ico[data-do="clear"]{margin-left:4px}
+  /* the "any color" circles in the house menu: the real color box sits on top so a finger tap on iPhone opens it */
+  .mb-mix input{pointer-events:auto!important; opacity:.011!important; cursor:pointer; font-size:16px}
+  /* Projects: last session's work that was never saved */
+  .pin.unsaved{border-color:#E8A317; border-style:dashed; background:#FFF8E6}
+  .pin .unsaved-tag{position:absolute; right:10px; top:10px; background:#E8A317; color:#fff; font:800 11px/1 var(--body); padding:4px 8px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em}
+  .pin .unsaved-name{font:800 13px/1.2 var(--body); color:var(--ink)}
+  .pin .unsaved-note{font:700 11px/1.3 var(--body); color:#A0660A}
+  .pin .unsaved-btns{display:flex; gap:6px; flex-wrap:wrap}
+  .pin .unsaved-btns .btn{padding:6px 9px; font-size:12px; box-shadow:0 2px 0 var(--ink)}
   /* tool icons a little bigger in their buttons */
   html body .tool > svg{width:27px; height:27px}
   html body .tool-grid > .gridbtn svg{width:25px!important; height:25px!important}
@@ -1242,15 +1254,16 @@
   <div class="mb-menu mb-logo-menu"><button class="mb-item mb-logo-btn" aria-haspopup="true" aria-expanded="false" aria-label="Colors"><img class="mb-logo" alt="Doodle Clubhouse" src="data:image/png;base64,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"></button>
     <div class="mb-drop mb-colors" hidden><div class="mb-lab">Menu bar</div><div class="mb-sws"><button class="mb-sw" data-bar="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-bar="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-bar="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-bar="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-bar="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-bar="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-bar="#2E9CDB" style="background:#2E9CDB" aria-label="#2E9CDB"></button><button class="mb-sw" data-bar="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-bar="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbBarPick"></label></div><div class="mb-lab">Toolbar</div><div class="mb-sws"><button class="mb-sw" data-plank="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-plank="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-plank="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-plank="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-plank="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-plank="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-plank="#2E9CDB" style="background:#2E9CDB" aria-label="#2E9CDB"></button><button class="mb-sw" data-plank="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-plank="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbPlankPick"></label></div><div class="mb-lab">Background</div><div class="mb-sws"><button class="mb-sw" data-wall="#47C2FF" style="background:#47C2FF" aria-label="#47C2FF"></button><button class="mb-sw" data-wall="#FFFFFF" style="background:#FFFFFF" aria-label="#FFFFFF"></button><button class="mb-sw" data-wall="#FFD84D" style="background:#FFD84D" aria-label="#FFD84D"></button><button class="mb-sw" data-wall="#F279B8" style="background:#F279B8" aria-label="#F279B8"></button><button class="mb-sw" data-wall="#FF5A5F" style="background:#FF5A5F" aria-label="#FF5A5F"></button><button class="mb-sw" data-wall="#3DB83D" style="background:#3DB83D" aria-label="#3DB83D"></button><button class="mb-sw" data-wall="#F2B84B" style="background:#F2B84B" aria-label="#F2B84B"></button><button class="mb-sw" data-wall="#6C4DF6" style="background:#6C4DF6" aria-label="#6C4DF6"></button><button class="mb-sw" data-wall="#1A1F3A" style="background:#1A1F3A" aria-label="#1A1F3A"></button><label class="mb-sw mb-mix" title="Pick any color"><input type="color" id="mbWallPick"></label></div></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">File</button>
-    <div class="mb-drop" hidden><button data-do="openWall">Projects…</button><button data-do="pinIt">Save</button><button data-do="exportBtn">Download</button></div></div>
+    <div class="mb-drop" hidden><button data-do="newProject">New Project</button><button data-do="openWall">Projects…</button><button data-do="pinIt">Save</button><button data-do="exportBtn">Download</button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Edit</button>
     <div class="mb-drop" hidden><button data-do="undo">Undo</button><button data-do="redo">Redo</button><hr><button data-do="soundBtn" id="mbSound">Mute</button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Speed Art</button>
     <div class="mb-drop" hidden><button data-do="speedBtn">Preview &amp; Edit</button><button data-fn="speedExport">Download video</button></div></div>
   <span class="mb-spacer"></span>
+  <button class="mb-ico" data-do="clear" aria-label="Delete art" title="Delete art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+  <span class="mb-sep mb-sep-trash"></span>
   <div class="mb-zoom"><button class="mb-ico" data-do="zoomOut" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button><button class="mb-pct" data-do="zoomReset" id="mbPct" aria-label="Actual size">100%</button><button class="mb-ico" data-do="zoomIn" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg></button></div>
   <span class="mb-sep"></span>
-  <button class="mb-ico" data-do="clear" aria-label="Delete art" title="Delete art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
   <button class="mb-ico" data-do="undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
   <button class="mb-ico" data-do="redo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
 </nav>
@@ -2045,7 +2058,7 @@
     g.clearRect(0, 0, layer.width, layer.height);
     const path = new Path2D();
     pts.forEach((q, i) => i ? path.lineTo(q.x, q.y) : path.moveTo(q.x, q.y));
-    if (pts.length === 1) path.lineTo(pts[0].x + .1, pts[0].y);
+    if (pts.length === 1) path.lineTo(pts[0].x + .5, pts[0].y);   // a tap: a dot
     g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
     if (kind === 'ribbon'){
       // a flat ribbon held at an angle that slowly twists along its length; the back side shows darker
@@ -2819,9 +2832,22 @@
     zoom = z; panX = cx - ux * zoom; panY = cy - uy * zoom; applyZoom();
   }
   const boardPoint = (x, y) => { const r = board.getBoundingClientRect(); return [x - r.left - r.width / 2, y - r.top - r.height / 2]; };
-  document.getElementById('zoomIn').onclick = () => zoomAt(zoom * 1.4);
-  document.getElementById('zoomOut').onclick = () => zoomAt(zoom / 1.4);
-  document.getElementById('zoomReset').onclick = () => zoomAt(1);
+  // the + and - buttons: after a pinch moved the paper off to one side, they bring it back to the middle.
+  // Going past 100% stops right on 100%, so the whole page shows with nothing cut off.
+  function zoomStep(up){
+    const z0 = zoom; let z = up ? zoom * 1.4 : zoom / 1.4;
+    if ((z0 < 1 && z > 1) || (z0 > 1 && z < 1)) z = 1;
+    zoom = Math.max(ZMIN, Math.min(ZMAX, z));
+    if (zoom <= 1 + 1e-6){ panX = 0; panY = 0; }   // 100% or smaller: centred, the whole page in view
+    else { panX *= zoom / z0; panY *= zoom / z0; }  // zoomed in: keeps the middle of the screen where it is
+    applyZoom();
+  }
+  // back to the normal, whole-page view (used after Delete all and new projects too)
+  function zoomHome(){ zoom = 1; panX = 0; panY = 0; applyZoom(); }
+  window.zoomHome = zoomHome;
+  document.getElementById('zoomIn').onclick = () => zoomStep(true);
+  document.getElementById('zoomOut').onclick = () => zoomStep(false);
+  document.getElementById('zoomReset').onclick = () => zoomHome();
   board.addEventListener('wheel', e => {
     if (e.ctrlKey || e.metaKey){ e.preventDefault(); const [cx, cy] = boardPoint(e.clientX, e.clientY); zoomAt(zoom * Math.exp(-e.deltaY * .0025), cx, cy); }
     else if (zoom > 1){ e.preventDefault(); panX -= e.deltaX; panY -= e.deltaY; applyZoom(); }
@@ -3075,7 +3101,7 @@
   function pencilPath(g, pts){
     pts = pencilSoften(pts);
     g.beginPath(); g.moveTo(pts[0].x, pts[0].y);
-    if (pts.length === 1){ g.lineTo(pts[0].x + 0.01, pts[0].y); return; }
+    if (pts.length === 1){ g.lineTo(pts[0].x + 0.5, pts[0].y); return; }
     for (let i = 1; i < pts.length - 1; i++){
       const a = pts[i], b = pts[i + 1];
       g.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
@@ -3092,7 +3118,7 @@
     const seg = (a, b) => { g.lineWidth = Math.max(.6, w * (K(a) + K(b)) / 2);
       if (rb){ run += Math.hypot(b.x - a.x, b.y - a.y); g.strokeStyle = `hsl(${(rb.h0 + run * rb.rate) % 360} 90% 58%)`; }
       g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); };
-    if (pts.length === 1){ seg(pts[0], { x: pts[0].x + .01, y: pts[0].y, k: K(pts[0]) }); return; }
+    if (pts.length === 1){ seg(pts[0], { x: pts[0].x + .5, y: pts[0].y, k: K(pts[0]) }); return; }
     let P0 = pts[0], prev = pts[0];
     for (let i = 1; i < pts.length - 1; i++){
       const c = pts[i], n = pts[i + 1], M = { x: (c.x + n.x) / 2, y: (c.y + n.y) / 2, k: (K(c) + K(n)) / 2 };
@@ -3171,6 +3197,17 @@
     cancelAnimationFrame(pencilRaf); pencilRaf = 0;
     lctx.clearRect(0, 0, live.width, live.height);
     if (!st) return;
+    // just a tap (finger or Pencil barely moved): leave a round dot. iPhone/iPad draw nothing for a line with no
+    // length, so the dot is a tiny real line with round ends, and the brush skips its thin start/end taper.
+    { const o = st.pts[0], far = Math.max(1.2, st.base * .12);
+      if ([...st.pts, st.raw].every(q => Math.hypot(q.x - o.x, q.y - o.y) < far)){
+        const k = st.kind === 'brush' ? (widthLocked ? 1 : (st.raw.pen ? .45 + Math.min(1, st.raw.p || .5) * .9 : 1)) : (o.k || 1);
+        st.pts = [{ x: o.x - .4, y: o.y, k }, { x: o.x + .4, y: o.y, k }];
+        pencilInk(ctx); pencilDraw(ctx, st.pts, st.base, st.rb);
+        if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
+        return;
+      }
+    }
     // ease into the point where the pen lifted
     const kEnd = st.s.k || 1;
     let s2 = st.s; for (let i = 0; i < 5; i++){ s2 = { x: s2.x + (st.raw.x - s2.x) * .45, y: s2.y + (st.raw.y - s2.y) * .45, k: kEnd }; st.pts.push(s2); }
@@ -3424,7 +3461,7 @@
     strokeStyle(); ctx.lineWidth = size * 1.8;
     ctx.beginPath(); ctx.moveTo(markerPts[0].x, markerPts[0].y);
     markerPts.forEach(p => ctx.lineTo(p.x, p.y));
-    if (markerPts.length === 1) ctx.lineTo(markerPts[0].x + .1, markerPts[0].y);
+    if (markerPts.length === 1 || markerPts.every(q => Math.hypot(q.x - markerPts[0].x, q.y - markerPts[0].y) < .5)) ctx.lineTo(markerPts[0].x + .5, markerPts[0].y);
     ctx.stroke(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   // Splatter spray: paint flicked everywhere - lots of round drops from tiny specks to big blobs, splats with
@@ -3670,15 +3707,17 @@
     }
     drawing = true; last = p; start = p;
     if (tool === 'brush'){ brushV = 0; brushF = prevF = 1; }
-    if (tool === 'line'){ lineBase = snapshot(); }
+    if (tool === 'line'){ lineBase = snapshot();
+      // a tap with the straight line leaves a dot (moving away draws the line as usual)
+      if (lineShape === 'line'){ strokeStyle(); ctx.lineWidth = size; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + .5, p.y); ctx.stroke(); } }
     else if (tool === 'marker'){ markerBase = undoStack[undoStack.length-1]; markerPts = [p]; drawMarker(); }
     else if (tool === 'spray'){ sprayPt = p; sprayLast = null; sprayStill = 0; sprayDrips = []; try { spraySnd && spraySnd.stop(); spraySnd = null; /* no air hiss: just cute splatters */ waterSplash(); clearTimeout(sprayPlipT); let n = 0; const drip = () => { waterDrop(); if (++n % 9 === 0) waterPlop(); sprayPlipT = setTimeout(drip, 20 + Math.random() * 40); }; sprayPlipT = setTimeout(drip, 30); } catch {} spray(); sprayTimer = setInterval(spray, 30); }
     else if (TEX.has(tool)){ txStart(p); }
     else if (tool === 'glitter'){ glitterState = { carry:0 }; seg(p, p); }
-    else if (tool === 'fur'){ furState = { carry:0, dir:0 }; }
+    else if (tool === 'fur'){ furState = { carry:0, dir:-Math.PI / 2 }; seg(p, p); }   // a tap leaves a little tuft
     else if (tool === 'soft'){ softStart(p); }
     else if (tool === 'train'){ trainStart(p); }
-    else if (tool !== 'pencil' && tool !== 'brush' && tool !== 'rainbow') seg(p, {x:p.x+.1, y:p.y, p:p.p, pen:p.pen});
+    else if (tool !== 'pencil' && tool !== 'brush' && tool !== 'rainbow') seg(p, {x:p.x+.5, y:p.y, p:p.p, pen:p.pen});   // a tap leaves a dot (a line with no length shows nothing on iPhone)
     if (tool === 'pencil' || tool === 'brush' || tool === 'rainbow') pencilStart(p);
     if (BRUSH_SND.has(tool)){ try { brushSoundStop(); brushSnd = makeBrushSound(tool); brushSndT = performance.now(); } catch {} }
   });
@@ -4019,17 +4058,21 @@
     $('doClear').textContent = 'Delete';
     $('confirmOverlay').hidden = false; $('cancelClear').focus();
   };
-  $('newAnim').onclick = () => { $('confirmOverlay').hidden = true; setCurProject(0); startOver(); };
+  $('newAnim').onclick = () => { $('confirmOverlay').hidden = true; $('newProject').onclick(); };
   $('cancelClear').onclick = () => $('confirmOverlay').hidden = true;
   $('doClear').onclick = () => {
     $('confirmOverlay').hidden = true;
     try { localStorage.removeItem(DRAFT); } catch {}
     startOver();   // every page goes, back to one blank page (also restarts the speed art recording)
+    try { window.zoomHome(); } catch {}   // zoomed or moved: the fresh page fills the space again
     toast('All art deleted');
   };
 
   // ---------- projects: save the whole project (every page, paper, size, speed) and open it again later ----------
   const PROJ_KEY = 'doodle-clubhouse-current-project';
+  // projDirty: changes not saved to Projects yet.  openSession: the "previous session project" that's open (0 = none)
+  let projDirty = false, openSession = 0, booted = false;
+  const KEEP_SESSIONS = 2;   // only the last 2 unsaved sessions are kept
   let curProject = 0; try { curProject = +localStorage.getItem(PROJ_KEY) || 0; } catch {}
   const setCurProject = id => { curProject = id || 0; try { id ? localStorage.setItem(PROJ_KEY, String(id)) : localStorage.removeItem(PROJ_KEY); } catch {} };
   async function projStore(mode, fn){
@@ -4045,6 +4088,47 @@
     const r = st.openCursor();
     r.onsuccess = () => { const cu = r.result; if (!cu) return; if (String(cu.key).startsWith('project:')) out.push(cu.value); cu.continue(); };
   }).then(l => (l || []).sort((a, b) => b.updated - a.updated));
+  // ---------- previous sessions: work left unsaved when the app closed (only the most recent 2 are kept) ----------
+  const sessPut = rec => projStore('readwrite', st => st.put(rec, 'session:' + rec.id));
+  const sessDel = id => projStore('readwrite', st => st.delete('session:' + id));
+  const sessGet = id => projStore('readonly', (st, set) => { const r = st.get('session:' + id); r.onsuccess = () => set(r.result); });
+  const sessList = () => projStore('readonly', (st, set) => {
+    const out = []; set(out);
+    const r = st.openCursor();
+    r.onsuccess = () => { const cu = r.result; if (!cu) return; if (String(cu.key).startsWith('session:')) out.push(cu.value); cu.continue(); };
+  }).then(l => (l || []).sort((a, b) => b.updated - a.updated));
+  // is there any art at all on these pages?
+  async function blobsHaveArt(blobs){
+    for (const b of blobs || []){
+      if (!b) continue;
+      try {
+        const bmp = await createImageBitmap(b), k = mk(bmp.width, bmp.height), g = k.getContext('2d', { willReadFrequently: true });
+        g.drawImage(bmp, 0, 0); bmp.close && bmp.close();
+        const d = g.getImageData(0, 0, k.width, k.height).data;
+        for (let i = 3; i < d.length; i += 4) if (d[i]) return true;
+      } catch {}
+    }
+    return false;
+  }
+  // keep a set of pages as a "previous session project" (rec: blobs, W, H, speed, paperType, cur, speedLog, project, session)
+  async function stashSession(rec){
+    const blobs = (rec.blobs || []).filter(Boolean);
+    if (!blobs.length || !(await blobsHaveArt(blobs))) return false;
+    const w = rec.W || W, h = rec.H || H, k = Math.min(1, 360 / Math.max(w, h)), tw = Math.round(w * k), th = Math.round(h * k);
+    let thumb = '';
+    try {
+      const tmp = mk(tw, th), tg = tmp.getContext('2d');
+      tg.drawImage(paperCanvas(tw, th, ['white', 'lined', 'chalk'].includes(rec.paperType) ? rec.paperType : paperType), 0, 0);
+      const b = await createImageBitmap(blobs[Math.min(rec.cur || 0, blobs.length - 1)]); tg.drawImage(b, 0, 0, tw, th); b.close && b.close();
+      thumb = tmp.toDataURL('image/jpeg', 0.8);
+    } catch {}
+    const id = rec.session || Date.now();
+    await sessPut({ id, session: true, updated: rec.ts || Date.now(), W: w, H: h, speed: rec.speed || 'medium', paperType: rec.paperType || paperType, cur: Math.min(rec.cur || 0, blobs.length - 1), blobs, speedLog: Array.isArray(rec.speedLog) ? rec.speedLog : [], thumb, pages: blobs.length, from: rec.project || 0 });
+    // only the newest few stay; older unsaved sessions disappear
+    const all = await sessList();
+    for (const old of all.slice(KEEP_SESSIONS)) { try { await sessDel(old.id); } catch {} }
+    return true;
+  }
   // older "wall of fame" pins become one-page projects, once
   async function migratePins(){
     const old = load(); if (!old.length) return;
@@ -4071,6 +4155,9 @@
       const id = curProject || Date.now();
       await projPut({ id, updated: Date.now(), W, H, speed, paperType, cur, blobs: frames.map(f => f.blob), speedLog: (await speedChain, speedLog.slice()), thumb: tmp.toDataURL('image/jpeg', 0.8), pages: frames.length });
       const was = curProject; setCurProject(id);
+      projDirty = false;
+      if (openSession){ const sid = openSession; openSession = 0; try { await sessDel(sid); } catch {} }
+      schedulePersist();
       toast(was ? 'Project saved' : 'Saved to your projects!');
     } catch { toast('This browser won’t let the app save projects'); }
     finally { saving = false; }
@@ -4079,6 +4166,27 @@
 
   async function openProject(id){
     const p = await projGet(id); if (!p || !Array.isArray(p.blobs) || !p.blobs.length) { toast('That project could not be opened'); return; }
+    await stashIfUnsaved();
+    await loadRecord(p);
+    projDirty = false; openSession = 0;
+    setCurProject(id); schedulePersist();
+    $('wallOverlay').hidden = true; toast('Project opened');
+  }
+  // open a "previous session project": it stays marked unsaved until you hit Save
+  async function openSessionProject(id){
+    const p = await sessGet(id); if (!p || !Array.isArray(p.blobs) || !p.blobs.length) { toast('That project could not be opened'); renderWall(); return; }
+    if (openSession !== id) await stashIfUnsaved();
+    await loadRecord(p);
+    setCurProject(p.from || 0);
+    projDirty = true; openSession = id; schedulePersist();
+    $('wallOverlay').hidden = true; toast('Opened. Tap Save to keep it!');
+  }
+  // what you were working on has changes that aren't saved: keep it in Projects as a previous session first
+  async function stashIfUnsaved(){
+    if (!projDirty) return false;
+    try { await refitP; await commit(); await speedChain; return await stashSession(curRecord()); } catch { return false; }
+  }
+  async function loadRecord(p){
     if (playing) stopPlay();
     await refitP;
     paperSetDims(p.W, p.H);
@@ -4089,17 +4197,39 @@
     speed = FPS[p.speed] && p.speed !== 'slow' ? p.speed : 'medium'; syncSpeed();
     speedReset(); speedLog = Array.isArray(p.speedLog) ? p.speedLog.filter(Boolean).map(e => e instanceof Blob ? { b: e, paths: [] } : e) : [];
     await paintBlob(frames[cur].blob);
-    resetHistory(); renderStrip(); await drawGhost(); syncDock(); schedulePersist();
-    setCurProject(id);
-    $('wallOverlay').hidden = true; toast('Project opened');
+    resetHistory(); renderStrip(); await drawGhost(); syncDock();
+    try { window.zoomHome(); } catch {}
   }
 
   let viewing = null;
   async function renderWall(){
     const wall = $('wall'); wall.innerHTML = '<div class="empty">Loading…</div>';
     try { await migratePins(); } catch {}
-    let list = []; try { list = await projList(); } catch {}
+    let list = [], sess = []; try { list = await projList(); } catch {} try { sess = await sessList(); } catch {}
     wall.innerHTML = '';
+    sess.slice(0, KEEP_SESSIONS).forEach(item => {
+      const el = document.createElement('div'); el.className = 'pin unsaved' + (item.id === openSession ? ' current' : '');
+      const d = new Date(item.updated), n = item.pages || (item.blobs || []).length || 1;
+      el.innerHTML = `<img alt="Previous session project" src="${item.thumb || ''}"><span class="pages">${n} page${n === 1 ? '' : 's'}</span><span class="unsaved-tag">Unsaved</span>`
+        + `<div class="unsaved-name">Previous session project</div>`
+        + `<div class="unsaved-note">Not saved. It will disappear soon if you don’t save it.</div>`
+        + `<div class="pin-row"><span>${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}, ${d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</span></div>`
+        + `<div class="unsaved-btns"><button class="btn primary s-save">Save</button><button class="btn s-open">Open</button></div>`;
+      el.querySelector('img').onclick = () => openSessionProject(item.id);
+      el.querySelector('.s-open').onclick = () => openSessionProject(item.id);
+      el.querySelector('.s-save').onclick = async () => {
+        try {
+          const id = item.from || Date.now();
+          await projPut({ id, updated: Date.now(), W: item.W, H: item.H, speed: item.speed, paperType: item.paperType, cur: item.cur, blobs: item.blobs, speedLog: item.speedLog || [], thumb: item.thumb, pages: item.pages });
+          await sessDel(item.id);
+          if (openSession === item.id){ openSession = 0; projDirty = false; setCurProject(id); schedulePersist(); }
+          toast('Saved to your projects!');
+        } catch { toast('This browser won’t let the app save projects'); }
+        renderWall();
+      };
+      wall.appendChild(el);
+    });
+    if (!list.length && sess.length) return;
     if (!list.length){ wall.innerHTML = '<div class="empty">No projects yet. Hit “Save” to keep everything you’ve made, every page.</div>'; return; }
     list.forEach(item => {
       const el = document.createElement('div'); el.className = 'pin' + (item.id === curProject ? ' current' : '');
@@ -4118,7 +4248,12 @@
   }
   $('openWall').onclick = () => { renderWall(); $('wallOverlay').hidden = false; $('closeWall').focus(); };
   $('closeWall').onclick = () => $('wallOverlay').hidden = true;
-  $('newProject').onclick = () => { $('wallOverlay').hidden = true; setCurProject(0); startOver(); toast('New project started'); };
+  $('newProject').onclick = async () => {
+    $('wallOverlay').hidden = true;
+    const kept = await stashIfUnsaved();
+    setCurProject(0); startOver(); try { window.zoomHome(); } catch {}
+    toast(kept ? 'New project! The last one is in Projects (unsaved)' : 'New project started');
+  };
   $('closeView').onclick = () => $('viewOverlay').hidden = true;
   $('editDoodle').onclick = () => { $('viewOverlay').hidden = true; };
   document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.hidden = true; }));
@@ -4367,6 +4502,10 @@
     document.querySelectorAll('.mb-sw[data-bar]').forEach(b => b.addEventListener('click', () => setBar(b.dataset.bar)));
     $('mbWallPick').addEventListener('input', e => { setWall(e.target.value); markWall(e.target.value); });
     $('mbBarPick').addEventListener('input', e => setBar(e.target.value));
+    // some phones only report the chosen color when their color chooser closes
+    $('mbBarPick').addEventListener('change', e => setBar(e.target.value));
+    $('mbPlankPick').addEventListener('change', e => setPlank(e.target.value));
+    $('mbWallPick').addEventListener('change', e => { setWall(e.target.value); markWall(e.target.value); });
     $('mbWallPick').value = wallIn.value; markWall(wallIn.value);
     let saved = '#F2B84B'; try { saved = localStorage.getItem('doodle-clubhouse-bar-colour-v2') || saved; } catch {}   // matches the tool bar unless changed
     setBar(/^#[0-9a-f]{6}$/i.test(saved) ? saved : '#F2B84B');
@@ -4487,7 +4626,8 @@
   // ---------- instant taps ----------
   // Buttons react the moment the finger or Apple Pencil lifts, instead of waiting for the browser's own (sometimes
   // slow, sometimes missing with the Pencil) click. The browser's late click that follows is ignored.
-  const TAP_SEL = 'button, [role="button"], .sw, label.custom, label.mb-mix';
+  // (the house menu's "any color" circles are left to the phone itself: iPhone only opens its color chooser for a real tap on the color box)
+  const TAP_SEL = 'button, [role="button"], .sw, label.custom';
   let tapDown = null, tapFired = null;
   document.addEventListener('pointerdown', e => {
     tapDown = null;
@@ -4623,7 +4763,7 @@
   const drawThumb = f => { const g = f.thumb.getContext('2d'); g.clearRect(0, 0, TW, TH); g.drawImage(c, 0, 0, TW, TH); };
   function onCanvasChanged(){
     if (!frames.length) return;
-    const f = frames[cur]; f.dirty = true; f.edited = true; drawThumb(f); schedulePersist(); speedRecord();
+    const f = frames[cur]; f.dirty = true; f.edited = true; drawThumb(f); projDirty = true; schedulePersist(); speedRecord();
   }
   // ---------- speed art recorder: a small picture of the page after each change ----------
   let speedLog = [], speedT = 0, speedPending = false, speedUndo = false, speedChain = Promise.resolve();
@@ -4779,6 +4919,7 @@
     await commit();
     const f = newFrame();
     if (copy){ f.blob = frames[cur].blob; f.dirty = false; }
+    projDirty = true;
     frames.splice(cur + 1, 0, f); cur++;
     if (!copy) blank();
     drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
@@ -4793,11 +4934,12 @@
     frames.splice(cur, 1); cur = Math.min(cur, frames.length - 1);
     await paintBlob(frames[cur].blob);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
-    busy = false; schedulePersist(); toast('Page deleted');
+    projDirty = true; busy = false; schedulePersist(); toast('Page deleted');
   }
   function startOver(){
     if (playing) stopPlay();
     frames = [newFrame()]; cur = 0; blank(); drawThumb(frames[0]); speedReset();
+    projDirty = false; openSession = 0;
     resetHistory(); renderStrip(); drawGhost(); schedulePersist(); toast('New animation ready');
   }
 
@@ -4862,14 +5004,24 @@
     } catch { return null; }
   }
   let persistT = 0;
+  // what's on the go right now; "unsaved" means there are changes that never went into Projects
+  const curRecord = () => ({ v: 2, cur, speed, W, H, paperType, blobs: frames.map(f => f.blob), speedLog, unsaved: projDirty, project: curProject, session: openSession, ts: Date.now() });
   function schedulePersist(){
     clearTimeout(persistT);
     persistT = setTimeout(async () => {
       if (busy || playing || (window.quietFor && !window.quietFor(1200))) return schedulePersist();
       await commit();
-      await speedChain; dbPut({ v: 2, cur, speed, W, H, blobs: frames.map(f => f.blob), speedLog });
+      await speedChain; dbPut(curRecord());
     }, 900);
-  }  // ---------- paper size (button beside the zoom) ----------
+  }
+  // the app is being closed or put away: keep the very latest straight away (no waiting)
+  async function persistNow(){
+    if (!booted || playing) return;
+    clearTimeout(persistT);
+    try { await commit(); dbPut(curRecord()); } catch {}
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) persistNow(); });
+  window.addEventListener('pagehide', () => persistNow());  // ---------- paper size (button beside the zoom) ----------
   let paperAutoFit = () => {}, paperSetDims = () => {}, paperSetMode = () => {}, paperSyncModes = () => {};
   {
     const btnP = $('psizeBtn'), pop = $('psizePop'), lbl = $('psizeLbl'), fitLbl = $('psizeFitLbl');
@@ -5483,30 +5635,18 @@
   async function boot(){
     blank();
     const saved = await dbGet();
-    if (saved && Array.isArray(saved.blobs) && saved.blobs.length && saved.blobs.every(Boolean)){
-      let blobs = saved.blobs;
-      if ((saved.W || 1500) !== W || (saved.H || 1000) !== H || saved.v !== 2){
-        // saved on a different-shaped screen, or before paper types existed: fit each frame once
-        const tmp = mk(W, H), tg = tmp.getContext('2d', { willReadFrequently: true });
-        blobs = [];
-        for (const b of saved.blobs){
-          const bmp = await createImageBitmap(b); fitDraw(tg, bmp, bmp.width, bmp.height, W, H);
-          if (saved.v !== 2) stripPaper(tg, W, H);
-          blobs.push(await new Promise(r => tmp.toBlob(r, 'image/png')));
-        }
-      }
-      frames = blobs.map(b => ({ thumb: mk(TW, TH), blob: b, dirty: false }));
-      await Promise.all(frames.map(async f => { const b = await bmpOf(f.blob, TW, TH); f.thumb.getContext('2d').drawImage(b, 0, 0, TW, TH); }));
-      cur = Math.min(saved.cur || 0, frames.length - 1);
-      speed = FPS[saved.speed] && saved.speed !== 'slow' ? saved.speed : 'medium';
-      speedLog = Array.isArray(saved.speedLog) ? saved.speedLog.filter(Boolean).map(e => e instanceof Blob ? { b: e, paths: [] } : e) : [];
-      await paintBlob(frames[cur].blob);
-    } else {
-      frames = [newFrame()]; cur = 0;
-      await restoreDraft();   // a fresh start is a blank page (no starter doodle)
-      drawThumb(frames[0]);
+    // the app always opens on a new, empty project. Anything left unsaved last time is kept in Projects
+    // as a "previous session project" (only the last 2 are kept).
+    if (saved && Array.isArray(saved.blobs) && saved.blobs.length && saved.unsaved !== false){
+      try { await stashSession(saved); } catch {}
     }
+    setCurProject(0);
+    if (saved){ try { await dbPut({ v: 2, blobs: [], unsaved: false, ts: Date.now() }); } catch {} }
+    frames = [newFrame()]; cur = 0;
+    if (!saved && await restoreDraft()) projDirty = true;   // a fresh start is a blank page (no starter doodle)
+    drawThumb(frames[0]);
     renderStrip(); syncSpeed(); drawGhost(); syncHist(); syncDock();
+    booted = true;
   }
 
   // ---------- phone dock ----------
