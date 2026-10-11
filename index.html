@@ -1290,6 +1290,8 @@
   body:has(#premium.unlocked) .group-pop .lock{display:none}
   body:has(#premium.unlocked) .group-pop .tool.pro{border-color:var(--ink); box-shadow:0 2px 0 var(--ink)}
   body:has(#premium.unlocked) .group-pop .tool.pro[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  /* the whole dark Brush Pack box opens the shop until it's bought */
+  #premium:not(.unlocked){cursor:pointer}
   /* Brush Pack shop: a little hand shows how to press-and-hold the wormhole to pick the tornado */
   .perk-tip{grid-column:span 2}
   .tipdemo{position:relative; display:block; height:60px; border-radius:6px; background:var(--paper); overflow:hidden}
@@ -4768,6 +4770,11 @@
   }
   addEventListener('resize', () => fitPay());
   function openPaywall(t){ pendingTool = t; showPaywall('brushes'); }
+  // tapping anywhere in the dark Brush Pack box (not just a brush) opens the shop while it's still locked
+  $('premium').addEventListener('click', e => {
+    if (unlocked || e.target.closest('button')) return;
+    showPaywall('brushes');
+  });
   function openFramePaywall(copy){ pendingCopy = copy; showPaywall('frames'); }
   function startFlipDemo(){
     const g = $('demoFrames').getContext('2d'); let k = 0;
