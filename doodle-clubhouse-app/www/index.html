@@ -1266,8 +1266,8 @@
     html body .tools #toolsLabel{display:none}
     html body .tools #crayonsLabel, html body .tools #sizeLabel{display:none}   /* no words over the crayons and the size slider */
     /* crayons 20% bigger (28px): the row reaches out to the bar's edges a little to make room */
-    html body .tools .swatches{grid-template-columns:repeat(3, 36px); gap:6px 8px; margin-inline:-7px; justify-content:center}   /* 4 rows of 3 */
-    html body .tools .swatches > .sw{width:36px; height:36px}
+    html body .tools .swatches{grid-template-columns:repeat(3, 34px); gap:5px 0; margin-inline:0; justify-content:space-between}   /* 4 rows of 3, edges lined up with the buttons above */
+    html body .tools .swatches > .sw{width:34px; height:34px}
     /* 30% more room between the last Brush Pack button and the crayons */
     html body .tools .premium + .sec-colors{margin-top:4.5px}
     html body .tools .premium.unlocked + .sec-colors{margin-top:2.4px}   /* the buttons speak for themselves: no "TOOLS" word on top */
