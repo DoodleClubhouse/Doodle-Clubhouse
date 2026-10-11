@@ -1259,7 +1259,8 @@
     html body .tools .tool-grid .tool.dyn{display:flex; align-items:center; justify-content:center; gap:0; grid-column:auto}
     html body .tools .tool-grid .tool.dyn > svg{flex:none}
     html body .tools .group-label{margin-bottom:5px}
-    html body .tools #toolsLabel{display:none}   /* the buttons speak for themselves: no "TOOLS" word on top */
+    html body .tools #toolsLabel{display:none}
+    html body .tools #crayonsLabel, html body .tools #sizeLabel{display:none}   /* no words over the crayons and the size slider */   /* the buttons speak for themselves: no "TOOLS" word on top */
     /* Brush Pack buttons the same size as the tools above (its dark box reaches out to the edges instead) */
     html body .tools .premium{margin-inline:-7px; padding:7px}
     /* bought: no dark box, the brushes carry straight on under the tools with the same spacing as every other row */
@@ -1392,12 +1393,12 @@
       <button class="reset-link" id="relock" hidden>Lock purchases again (for testing)</button>
     </section>
     <section class="sec-colors">
-      <div class="group-label">Crayons</div>
+      <div class="group-label" id="crayonsLabel">Crayons</div>
       <div class="swatches" id="swatches"></div>
       <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label></div>
     </section>
     <section class="sec-colors">
-      <div class="group-label">Brush size</div>
+      <div class="group-label" id="sizeLabel">Brush size</div>
       <div class="size-row">
         <input type="range" id="size" min="0" max="200" value="64" aria-label="Brush size">
         <div class="size-dot"><i id="sizeDot"></i></div>
