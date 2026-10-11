@@ -1096,7 +1096,9 @@
     html body[data-panel="tools"][data-tset="basic"] .tools .sec-tools .tool-grid{flex:1 1 auto!important; width:100%!important; justify-content:space-between}
     html body[data-panel="tools"][data-tset="basic"] .tools .sec-tools .tool-grid > *{flex:1 1 0!important; width:auto!important; height:auto!important; aspect-ratio:1!important; max-width:44px!important; min-width:0!important}
     html body[data-panel="colors"] .tools{padding:8px!important}
-    html body[data-panel="colors"] .swatches{margin-right:0!important; grid-template-columns:repeat(6, minmax(0, 1fr))!important; width:100%}
+    html body[data-panel="colors"] .swatches{margin-right:0!important; grid-template-columns:repeat(10, minmax(0, 1fr))!important; width:100%}
+    /* upright phone: one row of 10 (grey and the light purple stay on the bigger screens) */
+    html body[data-panel="colors"] .swatches .sw[data-color="#A8A8A8"], html body[data-panel="colors"] .swatches .sw[data-color="#A539FE"]{display:none!important}
     html body .film{padding:6px 8px!important}
     html body .more-sheet{padding:10px!important}
     html body .extras{padding:6px 8px!important}
@@ -1948,14 +1950,22 @@
   const sliderFromSize = s => Math.round(Math.sqrt(Math.max(0, s - 2) / 78) * 200);
   sizeIn.addEventListener('input', () => { size = sizeFromSlider(+sizeIn.value); updateDot(); sizeTick(); });
   // the size slider plays little notes as it slides: higher to the right (bigger), lower to the left (smaller)
+  // little wooden marimba notes that snap to a happy (pentatonic) scale, so any slide sounds like a tune
   let sizeSndV = null, sizeSndT = 0;
+  const PENTA = [0, 2, 4, 7, 9];
   function sizeTick(){
     const v = +sizeIn.value, now = performance.now();
-    if (sizeSndV !== null && Math.abs(v - sizeSndV) < 5) return;   // a note every few steps, not a buzz
-    if (now - sizeSndT < 28) return;
-    sizeSndV = v; sizeSndT = now;
-    const f = 240 * Math.pow(2, v / 200 * 2.4);                      // about 240 Hz at the far left up to 1270 Hz at the far right
-    try { tone(f, f * 1.03, .07, .06, 'triangle'); } catch {}
+    const step = Math.round(v / 200 * 15);                            // 16 notes across the slider (3 octaves)
+    if (step === sizeSndV) return;
+    if (now - sizeSndT < 45) return;                                   // quick slides still sound like a run, not a buzz
+    sizeSndV = step; sizeSndT = now;
+    const semi = Math.floor(step / 5) * 12 + PENTA[step % 5];
+    const f = 262 * Math.pow(2, semi / 12);                            // middle C up to about C7
+    try {
+      tone(f, f * .998, .22, .085, 'sine');                            // the warm body of the note
+      tone(f * 4, f * 4, .045, .022, 'sine');                          // the bright wooden 'tock' on top
+      tone(f * 2, f * 2, .09, .02, 'triangle');
+    } catch {}
   }
   sizeIn.value = sliderFromSize(size);
   function updateDot(){
