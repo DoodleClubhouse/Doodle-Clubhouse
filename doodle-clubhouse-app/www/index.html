@@ -1096,7 +1096,7 @@
     html body[data-panel="tools"][data-tset="basic"] .tools .sec-tools .tool-grid{flex:1 1 auto!important; width:100%!important; justify-content:space-between}
     html body[data-panel="tools"][data-tset="basic"] .tools .sec-tools .tool-grid > *{flex:1 1 0!important; width:auto!important; height:auto!important; aspect-ratio:1!important; max-width:44px!important; min-width:0!important}
     html body[data-panel="colors"] .tools{padding:8px!important}
-    html body[data-panel="colors"] .swatches{margin-right:0!important; grid-template-columns:repeat(10, minmax(0, 1fr))!important; width:100%}
+    html body[data-panel="colors"] .swatches{margin-right:0!important; grid-template-columns:repeat(6, minmax(0, 1fr))!important; width:100%}
     html body .film{padding:6px 8px!important}
     html body .more-sheet{padding:10px!important}
     html body .extras{padding:6px 8px!important}
@@ -1116,7 +1116,6 @@
     html body[data-panel="colors"] .sz-step{display:flex!important; flex-direction:column; align-items:center; gap:4px; width:var(--sw, 24px)}
     html body[data-panel="colors"] .sz-btn{width:var(--sw, 24px); height:var(--sw, 24px)}
     html body[data-panel="colors"] .sz-prev{width:calc(var(--sw, 24px) + 6px)}
-    html body[data-panel="colors"] .sw[data-color="#8B5A2B"]{display:none!important}
     html body[data-panel="colors"] .swatches > *{border-radius:6px!important}
     html body[data-panel="colors"] .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--plank), 0 0 0 4px var(--ink)}
     html body[data-panel="colors"] .tools > section.sec-colors > .group-label{display:none!important}
@@ -1250,7 +1249,7 @@
   @media (min-width:761px) and (min-height:501px){
     html body .tools{width:128px; padding:9px; gap:8px}
     html body .tools .tool-grid, html body .tools .premium-grid{grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px}
-    html body .tools .swatches{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:4px}
+    html body .tools .swatches{grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px}   /* 3 rows of 4, a bit bigger */
     /* square buttons, and the icon always sits inside its button */
     html body .tools .tool-grid .tool, html body .tools .premium-grid .tool{aspect-ratio:1/1; min-width:0; min-height:0; padding:0}
     /* icons get a fixed size (the buttons here are always 52px before the bar is shrunk, and shrinking scales icons too).
@@ -1659,7 +1658,8 @@
   // true inside the iPhone/iPad app (Capacitor); false on the web preview
   const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   const PAPER = '#FFFDF7';
-  const COLORS = ['#111111','#FF5A5F','#FF9F1C','#FFD84D','#8CC63F','#2E9CDB','#6C4DF6','#F279B8','#8B5A2B','#FFFFFF'];
+  // 12 crayons (3 rows of 4 on the side tool bar): black, grey, white, brown / red, orange, yellow, green / blue, indigo, purple, pink
+  const COLORS = ['#111111','#A8A8A8','#FFFFFF','#8B5A2B','#FF5A5F','#FF9F1C','#FFD84D','#8CC63F','#2E9CDB','#6C4DF6','#A539FE','#F279B8'];
   const c = document.getElementById('c');
   const ctx = c.getContext('2d', { willReadFrequently: true });
   // Paper size: 1280 x 720 (wide) unless the family picked another size (Tall, Square, Fill my screen or their own)
@@ -6052,7 +6052,7 @@
     // Extra: 8 buttons, as big as fit (up to about 20% bigger than the tools)
     bs.setProperty('--te', Math.max(18, Math.min(Math.round(tb * 1.2), Math.floor((h - 8 - 10 - 7 * 3) / 8))) + 'px');
     // Color: the 10 crayons, Mix and the size slider all in one column
-    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 11 * 4) / 12))) + 'px');   // 9 crayons + Mix + (+, -), filling the column
+    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 14 * 4) / 15))) + 'px');   // 12 crayons + Mix + (+, -)   // 9 crayons + Mix + (+, -), filling the column
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
   addEventListener('orientationchange', () => setTimeout(layoutSide, 250));
