@@ -1886,10 +1886,11 @@
   // ---------- premium lock ----------
   document.querySelectorAll('.fxdemo').forEach(el => { const b = document.querySelector(`.tool[data-tool="${el.dataset.fx}"] > svg`); if (b) el.innerHTML = b.outerHTML; });   // paywall shows the 3 effect icons
   const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror','wormhole','blacklight','tornado','flush']);   // the paint bucket is free
-  const UNLOCK_KEY = 'doodle-clubhouse-brushpack';
+  // web / artifact preview uses fresh keys, so it starts locked again (the App Store app keeps its real purchase)
+  const UNLOCK_KEY = NATIVE ? 'doodle-clubhouse-brushpack' : 'doodle-clubhouse-brushpack-web2';
   let unlocked = false; try { unlocked = localStorage.getItem(UNLOCK_KEY) === '1'; } catch {}
   let pendingTool = null;
-  const FRAMES_KEY = 'doodle-clubhouse-unlimited-frames', FREE_FRAMES = 5;
+  const FRAMES_KEY = NATIVE ? 'doodle-clubhouse-unlimited-frames' : 'doodle-clubhouse-unlimited-frames-web2', FREE_FRAMES = 5;
   let framesUnlocked = false; try { framesUnlocked = localStorage.getItem(FRAMES_KEY) === '1'; } catch {}
   unlocked = framesUnlocked = unlocked || framesUnlocked;   // one purchase unlocks everything
   let payProduct = 'brushes', pendingCopy = false, flipTimer = 0;
