@@ -1290,6 +1290,31 @@
   body:has(#premium.unlocked) .group-pop .lock{display:none}
   body:has(#premium.unlocked) .group-pop .tool.pro{border-color:var(--ink); box-shadow:0 2px 0 var(--ink)}
   body:has(#premium.unlocked) .group-pop .tool.pro[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  /* Brush Pack shop: a little hand shows how to press-and-hold the wormhole to pick the tornado */
+  .perk-tip{grid-column:span 2}
+  .tipdemo{position:relative; display:block; height:60px; border-radius:6px; background:var(--paper); overflow:hidden}
+  .tipdemo .tip-btn, .tipdemo .tip-btn2{position:absolute; width:40px; height:40px; border:2px solid var(--ink); border-radius:9px; background:#fff; box-shadow:0 2px 0 var(--ink); display:grid; place-items:center}
+  .tipdemo .tip-btn{left:calc(50% - 60px); top:9px; animation:tipBtn 4.6s infinite}
+  .tipdemo .tip-btn::after{content:""; position:absolute; right:3px; bottom:3px; border-left:7px solid transparent; border-bottom:7px solid var(--ink); opacity:.8}
+  .tipdemo .tip-btn i, .tipdemo .tip-btn2 i{position:absolute; inset:0; display:grid; place-items:center}
+  .tipdemo i svg{width:24px; height:24px}
+  .tipdemo .tip-a{animation:tipA 4.6s infinite} .tipdemo .tip-b{animation:tipB 4.6s infinite}
+  .tipdemo .tip-pop{position:absolute; left:calc(50% - 12px); top:3px; padding:4px; background:var(--plank); border:2px solid var(--ink); border-radius:11px; box-shadow:0 3px 0 var(--ink); animation:tipPop 4.6s infinite; transform-origin:left center}
+  .tipdemo .tip-btn2{position:relative; animation:tipBtn2 4.6s infinite}
+  .tipdemo .tip-hand{position:absolute; left:50%; top:0; width:30px; height:30px; animation:tipHand 4.6s infinite; z-index:2; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+  .tipdemo .tip-hand svg{width:30px; height:30px; display:block}
+  @keyframes tipHand{
+    0%{transform:translate(70px, 60px) scale(1); opacity:0} 8%{opacity:1}
+    20%{transform:translate(-53px, 28px) scale(1)} 24%,44%{transform:translate(-53px, 28px) scale(.88)} 48%{transform:translate(-53px, 28px) scale(1)}
+    60%{transform:translate(4px, 28px) scale(1)} 63%{transform:translate(4px, 28px) scale(.86)} 67%{transform:translate(4px, 28px) scale(1)}
+    80%{transform:translate(70px, 60px) scale(1); opacity:1} 86%,100%{transform:translate(70px, 60px); opacity:0}
+  }
+  @keyframes tipBtn{0%,23%{background:#fff} 25%,44%{background:#E6E8F0} 46%,100%{background:#fff}}
+  @keyframes tipPop{0%,36%{opacity:0; transform:scale(.6)} 41%,66%{opacity:1; transform:scale(1)} 70%,100%{opacity:0; transform:scale(.6)}}
+  @keyframes tipBtn2{0%,62%{background:#fff} 63%,67%{background:#1A1F3A} 68%,100%{background:#fff}}
+  @keyframes tipA{0%,68%{opacity:1} 70%,92%{opacity:0} 96%,100%{opacity:1}}
+  @keyframes tipB{0%,68%{opacity:0} 70%,92%{opacity:1} 96%,100%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .tipdemo *{animation:none!important} .tipdemo .tip-pop{opacity:1} .tipdemo .tip-hand{transform:translate(4px, 28px)} .tipdemo .tip-b{opacity:0} }
   /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
   .menubar .mb-sep-trash{margin:0 12px}
   .menubar .mb-ico[data-do="clear"]{margin-left:4px}
@@ -1612,6 +1637,7 @@
       <div class="perk perk-fx"><span class="fxdemo" data-fx="blacklight"></span><b>Black light</b>Lights out, your colors glow neon</div>
       <div class="perk perk-fx"><span class="fxdemo" data-fx="tornado"></span><b>Tornado</b>A twister spins your art around</div>
       <div class="perk perk-fx"><span class="fxdemo" data-fx="flush"></span><b>Flush</b>Swirl your whole page down the drain</div>
+      <div class="perk perk-tip"><span class="tipdemo" aria-hidden="true"><span class="tip-btn"><i class="tip-a" data-fx="wormhole"></i><i class="tip-b" data-fx="tornado"></i></span><span class="tip-pop"><span class="tip-btn2"><i data-fx="tornado"></i></span></span><span class="tip-hand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2.6a1.6 1.6 0 0 1 3.2 0v7.1l.3-.1a1.6 1.6 0 0 1 2.8 1 1.6 1.6 0 0 1 2.7 1.1 1.6 1.6 0 0 1 2.6 1.2V16c0 3.6-2.6 6-6 6h-1.3c-2.1 0-3.6-.9-4.8-2.6l-4-5.6a1.6 1.6 0 0 1 2.5-2l2 2.2Z" fill="#FFFFFF" stroke="#1A1F3A" stroke-width="1.5" stroke-linejoin="round"/><path d="M12.2 10v3.6M15.3 11v3M18 12.2v2.4" stroke="#1A1F3A" stroke-width="1.1" stroke-linecap="round"/></svg></span></span><b>Hold for more</b>Buttons with a little corner arrow hide another tool. Press and hold to pick it, like the tornado inside the wormhole.</div>
       <div class="perk perk-wide" hidden><canvas id="demoFill" width="300" height="80" aria-hidden="true"></canvas><b>Paint bucket</b>Fill a whole shape with one tap</div>
     </div>
     <div class="perks" id="perksFrames" hidden>
@@ -1872,7 +1898,7 @@
   const PL_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="44" height="44"><defs><linearGradient id="plWood" x1="0" x2="1"><stop offset="0" stop-color="#9C5F2A"/><stop offset=".35" stop-color="#F0C48A"/><stop offset=".7" stop-color="#D49556"/><stop offset="1" stop-color="#8A5022"/></linearGradient><radialGradient id="plCup" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#FFB3B5"/><stop offset=".35" stop-color="#FF5A5F"/><stop offset=".8" stop-color="#D2323A"/><stop offset="1" stop-color="#8E1A21"/></radialGradient><linearGradient id="plRim" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#E8474D"/><stop offset="1" stop-color="#8E1A21"/></linearGradient></defs><ellipse cx="12" cy="22.3" rx="8.6" ry="1.2" fill="#000" opacity=".18"/><rect x="10.5" y="1.4" width="3" height="12.8" rx="1.4" fill="url(#plWood)" stroke="#6B3B14" stroke-width=".7"/><ellipse cx="12" cy="1.9" rx="1.5" ry=".55" fill="#F6D7AE" stroke="#6B3B14" stroke-width=".5"/><path d="M11.3 4.2v8M12.9 3.2v4.5" stroke="#8A5022" stroke-width=".35" opacity=".6"/><path d="M4.4 20.1C4.4 16 7.8 13.2 12 13.2S19.6 16 19.6 20.1Z" fill="url(#plCup)" stroke="#7D1219" stroke-width=".9"/><path d="M7.1 17.1C8.3 15.6 10 14.8 12 14.7" fill="none" stroke="#FFE1E2" stroke-width="1.2" stroke-linecap="round" opacity=".9"/><ellipse cx="12" cy="20.2" rx="8.4" ry="1.7" fill="url(#plRim)" stroke="#7D1219" stroke-width=".8"/><ellipse cx="12" cy="19.8" rx="6.6" ry=".7" fill="#FF8A8E" opacity=".55"/></svg>')}") 22 38, grab`;   // the plunger is the pointer (its cup is the spot)
   function cursorFor(t){ if (FX_TOOLS.has(t) && typeof boomBusy !== 'undefined' && boomBusy) return 'auto'; return FX_TOOLS.has(t) ? 'none' : t === 'dynamite' ? DYN_CURSOR : t === 'plunger' ? PL_CURSOR : t === 'text' ? 'text' : t === 'stamp' && stamp ? stickerCursor() : t === 'fill' ? 'crosshair' : 'crosshair'; }
   // ---------- premium lock ----------
-  document.querySelectorAll('.fxdemo').forEach(el => { const b = document.querySelector(`.tool[data-tool="${el.dataset.fx}"] > svg`); if (b) el.innerHTML = b.outerHTML; });   // paywall shows the 3 effect icons
+  document.querySelectorAll('.fxdemo, .tipdemo i[data-fx]').forEach(el => { const b = document.querySelector(`.tool[data-tool="${el.dataset.fx}"] > svg`); if (b) el.innerHTML = b.outerHTML; });   // paywall shows the 3 effect icons
   const PREMIUM = new Set(['brush','rainbow','pixel','fur','chalk','mirror','wormhole','blacklight','tornado','flush']);   // the paint bucket is free
   // web / artifact preview uses fresh keys, so it starts locked again (the App Store app keeps its real purchase)
   const UNLOCK_KEY = NATIVE ? 'doodle-clubhouse-brushpack' : 'doodle-clubhouse-brushpack-web2';
