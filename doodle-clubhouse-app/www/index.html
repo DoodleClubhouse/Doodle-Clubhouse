@@ -680,9 +680,9 @@
   #speedBtn:hover, .more-sheet [data-proxy="speedBtn"]:hover{background:#E8484D}
   @media (min-width:761px) and (min-height:501px){ .more-sheet [data-proxy="clear"], .more-sheet [data-proxy="speedBtn"]{display:none} }
 
-  /* sideways screens (iPad, computers): Pages is a button under Extra, and the pages bar pops out from it (the drawing gets the full height) */
+  /* iPad (either way up) and computers: Frames is a button under Extra, and the frames bar pops out from it (the drawing gets the full height) */
   #pagesBtn{display:none}
-  @media (orientation:landscape) and (min-width:761px) and (min-height:501px){
+  @media (min-width:761px) and (min-height:501px){
     .tools > #pagesBtn{display:flex}
     .film{display:none; position:fixed; z-index:7; left:206px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); padding-right:44px}
     body[data-panel="frames"] .film{display:flex}
