@@ -1253,7 +1253,10 @@
     html body .tools .swatches{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:4px}
     /* square buttons, and the icon always sits inside its button */
     html body .tools .tool-grid .tool, html body .tools .premium-grid .tool{aspect-ratio:1/1; min-width:0; min-height:0; padding:0}
-    html body .tools .tool-grid .tool > svg, html body .tools .premium-grid .tool > svg{width:58%!important; height:58%!important}
+    /* icons get a fixed size (the buttons here are always 52px before the bar is shrunk, and shrinking scales icons too).
+       A %-size can't be worked out inside a square button on iPad Safari, which let icons spill out. */
+    html body .tools .tool-grid .tool > svg, html body .tools .premium-grid .tool > svg{width:30px!important; height:30px!important; max-width:100%; max-height:100%; flex:none}
+    html body .tools .tool-grid .tool[data-tool="dynamite"] > svg{transform:scale(1.2)}
     html body .tools .tool-grid .tool.dyn{display:flex; align-items:center; justify-content:center; gap:0; grid-column:auto}
     html body .tools .tool-grid .tool.dyn > svg{flex:none}
     html body .tools .group-label{margin-bottom:5px}
@@ -1272,6 +1275,8 @@
     html body .extras{left:var(--toolsR, 158px)}
     html body .film{left:var(--toolsR, 156px)}
   }
+  /* phones: the small tool buttons keep the dynamite icon inside its button */
+  @media (max-width:760px), (max-height:500px){ html body .tool[data-tool="dynamite"] > svg{transform:scale(1.08)} }
   /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
   .menubar .mb-sep-trash{margin:0 12px}
   .menubar .mb-ico[data-do="clear"]{margin-left:4px}
