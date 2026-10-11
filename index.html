@@ -4664,7 +4664,12 @@
   };
   $('closeView').onclick = () => $('viewOverlay').hidden = true;
   $('editDoodle').onclick = () => { $('viewOverlay').hidden = true; };
-  document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.hidden = true; }));
+  // tap outside a pop-up window to close it - but not the very tap that opened it
+  // (on iPad the finger's late click could land on the dark backdrop and shut the Brush Pack shop straight away)
+  document.querySelectorAll('.overlay').forEach(o => {
+    new MutationObserver(() => { if (!o.hidden) o._openedAt = performance.now(); }).observe(o, { attributes: true, attributeFilter: ['hidden'] });
+    o.addEventListener('click', e => { if (e.target === o && performance.now() - (o._openedAt || 0) > 450) o.hidden = true; });
+  });
 
   // ---------- keyboard ----------
   // ---------- paywall with grown-up check ----------
