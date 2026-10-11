@@ -1281,6 +1281,7 @@
   html body .sw, html body .custom input[type=color]{border-color:var(--ink)!important}
   html body .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px var(--ink)}
   html body.plank-dark .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px #fff}   /* the "picked" ring still shows on a dark bar */
+  html body .sw[aria-pressed="true"]{position:relative; z-index:2}   /* the picked ring sits on top of the crayons next to it */
   /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
   .menubar .mb-sep-trash{margin:0 12px}
   .menubar .mb-ico[data-do="clear"]{margin-left:4px}
