@@ -1187,8 +1187,8 @@
   body.plank-dark .group-label, body.plank-dark .free-note, body.plank-dark .dock button, body.plank-dark .custom, body.plank-dark .size-num{color:#fff}
   body.plank-dark .dock button[aria-expanded="true"]{background:#fff; color:var(--ink)}
   body.plank-dark .tool[aria-pressed="true"], body.plank-dark #eyedrop[aria-pressed="true"], body.plank-dark #lockWidth[aria-pressed="true"]{color:#FFD84D}
-  body.plank-dark .sw, body.plank-dark .custom input[type=color], body.plank-dark .sz-btn{border-color:#fff}
-  body.plank-dark .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px #fff}
+  body.plank-dark .sz-btn{border-color:#fff}
+  /* crayons (and Mix) always keep their black outline, whatever colour the tool bar is */
   body.plank-dark #size::-webkit-slider-runnable-track{background:#fff; box-shadow:none}
   body.plank-dark #size::-moz-range-track{background:#fff}
   body.plank-dark .size-dot i{box-shadow:0 0 0 2px #fff}
@@ -1273,6 +1273,14 @@
   }
   /* phones: the small tool buttons keep the dynamite icon inside its button */
   @media (max-width:760px), (max-height:500px){ html body .tool[data-tool="dynamite"] > svg{transform:scale(1.08)} }
+  /* colour pop-out on any phone-style screen: the crayons always stay on ONE row (or one column on a sideways phone) */
+  @media (max-width:760px) and (orientation:landscape) and (min-height:501px){
+    html body[data-panel="colors"] .swatches{grid-template-columns:none!important; grid-auto-flow:column!important; grid-auto-columns:minmax(0, 32px)!important}
+  }
+  /* crayon outlines are always black, even on a dark tool bar */
+  html body .sw, html body .custom input[type=color]{border-color:var(--ink)!important}
+  html body .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px var(--ink)}
+  html body.plank-dark .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px #fff}   /* the "picked" ring still shows on a dark bar */
   /* trash can sits on the left of the zoom buttons, with a little gray line and some room between them */
   .menubar .mb-sep-trash{margin:0 12px}
   .menubar .mb-ico[data-do="clear"]{margin-left:4px}
