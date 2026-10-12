@@ -58,7 +58,7 @@ Apple needs a public web address for your privacy policy and support. Private Gi
 3. To test buying without paying:
    - Create a tester under **Users and Access → Sandbox → Test Accounts**.
    - On your iPhone, sign in to it under **Settings → App Store → Sandbox Account**.
-4. Check drawing, stickers, dynamite, animation, Save/Share (after the grown-up question), buying the Brush Pack and **Restore purchase**.
+4. Check drawing, stamps, train tracks, Type, dynamite, animation, Speed Art, Save/Share, buying the Brush Pack and **Restore purchase**.
 5. If you can, ask someone with an **iPad** to test too.
 
 ## 8. Fill in the store page and submit
@@ -67,9 +67,9 @@ Apple needs a public web address for your privacy policy and support. Private Gi
 3. **Pricing and Availability:** Free.
 4. **Version 1.0 page:**
    - Paste the description, keywords, subtitle and promo text from `STORE-LISTING.md`.
-   - Upload `iphone-6.9in-*.png` to the 6.9" iPhone slot and `ipad-13in-*.png` to the 13" iPad slot.
+   - Upload the three `iphone-6.9in-*.png` to the 6.9" iPhone slot and the three `ipad-13in-*.png` to the 13" iPad slot.
    - Add the Support and Privacy URLs from step 6.
-   - Set Category to **Kids, 6–8**, and answer the age rating questions (all **None**).
+   - Set Category to **Entertainment** (secondary **Graphics & Design**), not Kids, and answer the age rating questions (all **None / No**) for a **4+** rating.
    - Choose the TestFlight build and tick the **Brush Pack** in-app purchase so it's reviewed with the app.
    - Paste the review notes from `STORE-LISTING.md`.
 5. **Add for Review → Submit.** Review usually takes 1–3 days.
