@@ -182,6 +182,7 @@
   html, body, body *{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent}
   input, textarea, [contenteditable="true"]{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default}
   .board{position:relative; min-width:0; min-height:0; display:grid; place-items:center; overflow:hidden; touch-action:none}
+  html, body{touch-action:pan-x pan-y}   /* no pinch-zooming the whole app (the paper has its own zoom) */
   .paper{transform-origin:50% 50%; will-change:transform}
   .zoom-ctl{display:flex; align-self:center; background:var(--paper); border:2px solid var(--ink); border-radius:10px; overflow:hidden; box-shadow:0 3px 0 var(--ink); flex:none}
   .zoom-ctl button{border:0; background:none; color:var(--ink); font:800 13px/1 var(--body); padding:8px 9px; cursor:pointer; display:grid; place-items:center; min-width:34px; font-variant-numeric:tabular-nums}
@@ -1999,13 +2000,14 @@
       pop.style.left = Math.max(8, Math.min(innerWidth - pw - 8, left)) + 'px'; pop.style.top = Math.max(8, Math.min(innerHeight - ph - 8, top)) + 'px';
       try { SFX.paper(); } catch {}
     };
-    let hold = 0, held = false;
+    let hold = 0, held = false, wasOpen = false;
     btns.forEach(b => {
-      b.addEventListener('pointerdown', () => { if (pop.contains(b)) return; held = false; clearTimeout(hold); hold = setTimeout(() => { held = true; open(); }, 450); });
+      b.addEventListener('pointerdown', () => { if (pop.contains(b)) return; wasOpen = !pop.hidden; if (wasOpen) return; held = false; clearTimeout(hold); hold = setTimeout(() => { held = true; open(); }, 450); });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, () => clearTimeout(hold)));
       b.addEventListener('contextmenu', e => { if (pop.contains(b)) return; e.preventDefault(); clearTimeout(hold); held = true; open(); });
       b.addEventListener('click', e => {
         if (!pop.contains(b) && held){ held = false; e.stopImmediatePropagation(); return; }   // the hold opened the menu: no tool change
+        if (!pop.contains(b) && wasOpen){ wasOpen = false; pop.hidden = true; e.stopImmediatePropagation(); return; }   // tap it again: the menu closes
         if (pop.contains(b)){   // picked from the menu: it takes the button's place
           const cur = shown(); cur.replaceWith(b); pop.appendChild(cur); pop.hidden = true;
           // the finger's late 'click' must not land on whatever button now sits under it
@@ -3153,6 +3155,25 @@
   }, { passive: false });
   // two fingers on the page: pinch to zoom, drag to move around. A stroke the first finger just started is taken back.
   const touches = new Map(); let gesture = null, firstDownAt = 0;
+  // palm rejection: right after the Apple Pencil touches the page, fingers / the side of your hand are ignored for a moment,
+  // so writing quickly with your hand resting on the screen never draws blobs, zooms, or undoes (2-finger tap) your last letter
+  let lastPenAt = -1e9;
+  ['pointerdown', 'pointermove', 'pointerup'].forEach(t => window.addEventListener(t, e => { if (e.pointerType === 'pen') lastPenAt = performance.now(); }, true));
+  const penRecent = () => performance.now() - lastPenAt < 1200;
+  // iPad: stop the screen itself from zooming in (which hid the tool bars), and put it right if it ever happens
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
+  function unzoomScreen(){
+    const vv = window.visualViewport;
+    if (vv && vv.scale > 1.01){
+      const m = document.querySelector('meta[name="viewport"]');
+      if (m){ const c0 = m.getAttribute('content'); m.setAttribute('content', c0.replace(/maximum-scale=[\d.]+/, 'maximum-scale=1.0') + ', minimum-scale=1'); setTimeout(() => m.setAttribute('content', c0), 300); }
+    }
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+    if (document.documentElement.scrollTop || document.body.scrollTop){ document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }
+  }
+  if (window.visualViewport){ visualViewport.addEventListener('resize', () => setTimeout(unzoomScreen, 120)); visualViewport.addEventListener('scroll', () => setTimeout(unzoomScreen, 120)); }
+  window.addEventListener('pointerup', () => setTimeout(unzoomScreen, 200), true);
   const typing = t => t && t.closest && t.closest('input, textarea, [contenteditable]:not([contenteditable="false"])');
   document.addEventListener('selectstart', e => { if (!typing(e.target)) e.preventDefault(); });
   document.addEventListener('contextmenu', e => { if (!typing(e.target)) e.preventDefault(); });
@@ -3173,7 +3194,8 @@
   }
   board.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
-    if (e.pointerType === 'pen'){ touches.clear(); gesture = null; return; }   // the Pencil never starts a pinch
+    if (e.pointerType === 'pen'){ touches.clear(); gesture = null; return; }
+    if (e.pointerType === 'touch' && penRecent()){ e.stopImmediatePropagation(); return; }   // the hand resting while you write with the Pencil   // the Pencil never starts a pinch
     if (drawing && activeType === 'pen'){ e.stopImmediatePropagation(); return; }   // a palm resting while the Pencil draws: ignore it
     if (e.isPrimary){ touches.clear(); gesture = null; }
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -3236,6 +3258,25 @@
   c.addEventListener('pointerleave', () => { ringAt = null; syncRing(); });
   c.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse'){ ringAt = { x: e.clientX, y: e.clientY }; syncRing(); } });
   sizeIn.addEventListener('input', syncRing);
+  {
+    // touch or Pencil anywhere on the slider (not only exactly on the knob) and slide; works right up to both ends
+    let sliding = null;
+    const setFrom = e => {
+      const r = sizeIn.getBoundingClientRect(), vertical = r.height > r.width * 1.5, tw = 26;
+      let t = vertical ? 1 - (e.clientY - r.top - tw / 2) / Math.max(1, r.height - tw) : (e.clientX - r.left - tw / 2) / Math.max(1, r.width - tw);
+      t = Math.max(0, Math.min(1, t));
+      const mn = +sizeIn.min || 0, mx = +sizeIn.max || 100, v = Math.round(mn + t * (mx - mn));
+      if (+sizeIn.value !== v){ sizeIn.value = v; sizeIn.dispatchEvent(new Event('input', { bubbles: true })); }
+    };
+    sizeIn.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse') return;   // the mouse already works well with the normal slider
+      e.preventDefault(); sliding = e.pointerId; try { sizeIn.setPointerCapture(e.pointerId); } catch {} setFrom(e);
+    });
+    sizeIn.addEventListener('pointermove', e => { if (sliding === e.pointerId){ e.preventDefault(); setFrom(e); } });
+    const stop = e => { if (sliding === e.pointerId){ sliding = null; sizeIn.dispatchEvent(new Event('change', { bubbles: true })); } };
+    sizeIn.addEventListener('pointerup', stop); sizeIn.addEventListener('pointercancel', stop);
+    sizeIn.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+  }
   addEventListener('keyup', syncRing);
   eyeBtn.addEventListener('click', () => { setPicking(!picking); if (picking) toast('Tap anything to pick its color'); });
   // the colour of whatever is drawn at that spot on screen (buttons, icons, panels, the background…)
@@ -4883,6 +4924,7 @@
       if (e.target !== c) return;
       if (e.pointerType === 'pen') tapPen = true;
       if (e.pointerType !== 'touch') return;
+      if (penRecent()) return;   // a resting hand while writing is never an undo tap
       if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = activeType === 'pen' && drawing; }
       tapPts.set(e.pointerId, { x: e.clientX, y: e.clientY }); tapMax = Math.max(tapMax, tapPts.size);
     }, true);
@@ -5288,13 +5330,14 @@
       if (Math.hypot(e.clientX - g.x, e.clientY - g.y) < 6) return;
       g.moved = true; typePicked = g.r;
       if (!typePickUp()){ typeGrab = null; return; }
+      typeBar.style.visibility = 'hidden';   // just moving the words: no font bar
       g.at = { ...typeAt };
     }
     const k = c.getBoundingClientRect().width / W;
     typeAt = { x: g.at.x + (e.clientX - g.x) / k, y: g.at.y + (e.clientY - g.y) / k };
   }, true);
   const typeGrabEnd = async e => {
-    const g = typeGrab; if (!g || (e && e.pointerId !== g.id)) return; typeGrab = null;
+    const g = typeGrab; if (!g || (e && e.pointerId !== g.id)) return; typeGrab = null; typeBar.style.visibility = '';
     if (!g.moved){ typePicked = g.r; typeHover = null; typeSelKick(); return; }   // a tap: pick them
     await typeFinish();                                                            // put them down where they were dragged
     const l = frames[cur] && frames[cur].texts; if (l && l.length){ typePicked = l[l.length - 1]; typeSelKick(); }
@@ -5315,9 +5358,9 @@
   document.getElementById('typeCancel').onclick = () => typeClose();
   // drag the blue handle to move the words
   let typeDrag = null;
-  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const picked = !typeAt; if (picked && !typePickUp()) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt }, picked }; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
+  typeMove.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const picked = !typeAt; if (picked && !typePickUp()) return; typeDrag = { x: e.clientX, y: e.clientY, at: { ...typeAt }, picked }; typeBar.style.visibility = 'hidden'; try { typeMove.setPointerCapture(e.pointerId); } catch {} });
   typeMove.addEventListener('pointermove', e => { if (!typeDrag) return; const k = c.getBoundingClientRect().width / W; typeAt = { x: typeDrag.at.x + (e.clientX - typeDrag.x) / k, y: typeDrag.at.y + (e.clientY - typeDrag.y) / k }; typePlace(); });
-  const typeDragEnd = () => { if (typeDrag){ const picked = typeDrag.picked; typeDrag = null; if (picked) typeDropKeepPicked(); else typeFocus(); } };
+  const typeDragEnd = () => { typeBar.style.visibility = ''; if (typeDrag){ const picked = typeDrag.picked; typeDrag = null; if (picked) typeDropKeepPicked(); else typeFocus(); } };
   // words grabbed by a handle while they were picked: put them down and keep them picked (box, handles, Edit)
   async function typeDropKeepPicked(){
     await typeFinish();
@@ -5328,7 +5371,7 @@
   // (it clicks to straight when close)
   let typeTurn = null;
   const typeAng = e => { const [cx, cy] = typePlace.center || [0, 0]; return Math.atan2(e.clientY - cy, e.clientX - cx); };
-  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const picked = !typeAt; if (picked && !typePickUp()) return; typeTurn = { a: typeAng(e), r: typeRotA, x: e.clientX, y: e.clientY, moved: false, picked, acc: 0 }; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
+  typeRot.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const picked = !typeAt; if (picked && !typePickUp()) return; typeTurn = { a: typeAng(e), r: typeRotA, x: e.clientX, y: e.clientY, moved: false, picked, acc: 0 }; typeBar.style.visibility = 'hidden'; try { typeRot.setPointerCapture(e.pointerId); } catch {} });
   typeRot.addEventListener('pointermove', e => {
     if (!typeTurn) return;
     if (!typeTurn.moved){ if (Math.hypot(e.clientX - typeTurn.x, e.clientY - typeTurn.y) < 6) return; typeTurn.moved = true; }
@@ -5338,6 +5381,7 @@
     typeRotA = r; typePlace();
   });
   const typeTurnEnd = () => {
+    typeBar.style.visibility = '';
     if (!typeTurn) return;
     const t = typeTurn; typeTurn = null;
     if (!t.moved){   // a tap: next quarter turn
