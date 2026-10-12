@@ -58,10 +58,17 @@ workflows:
           agvtool new-version -all $((LATEST + 1))
       - name: Build the app
         script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+      - name: Upload to App Store Connect (gives up instead of hanging)
+        script: |
+          # Apple's upload tool sometimes waits forever. Each try stops after 12 minutes, and it tries twice,
+          # so a slow night at Apple can't use up a whole hour of build minutes.
+          IPA=$(ls build/ios/ipa/*.ipa | head -1)
+          for try in 1 2; do
+            if perl -e 'alarm shift; exec @ARGV' 720 app-store-connect publish --path "$IPA"; then exit 0; fi
+            echo "Upload try $try didn't finish; trying again in 30 seconds"; sleep 30
+          done
+          echo "Apple's upload didn't answer. The finished app (App.ipa) is saved under Artifacts; try again later or use Transporter."
+          exit 1
     artifacts:
       - build/ios/ipa/*.ipa
       - doodle-clubhouse-app/build/ios/ipa/*.ipa
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: false   # just upload; internal testers get it without Apple beta review
