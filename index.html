@@ -1923,9 +1923,12 @@
     if (t === 'train' && tool === 'train' && lastTrack && lastTrack.page === cur){ trainGo(lastTrack.T, lastTrack.hg); return; }   // tap again: all aboard, one more ride!
     if (t !== 'text') try { typeFinish(); } catch {}
     if (PREMIUM.has(t) && !unlocked){ openPaywall(t); return; }
+    // every tool keeps its own size: the spray starts at 15px, everything else at 10px, and a size you set stays with that tool
+    const sizes = setTool.sizes || (setTool.sizes = {});
+    if (tool) sizes[tool] = size;
     tool = t; stamp = s || null;
     if (t === 'text') try { toast('Tap the page to type'); } catch {}
-    if (t === 'spray' && !setTool.sprayed){ setTool.sprayed = true; try { size = 15; sizeIn.value = sliderFromSize(size); updateDot(); } catch {} }   // splatter starts at 15px the first time you pick it
+    try { const want = sizes[t] !== undefined ? sizes[t] : (t === 'spray' ? 15 : 10); if (want !== size){ size = want; sizeIn.value = sliderFromSize(size); updateDot(); } } catch {}
     try { if (picking) setPicking(false); } catch {}   // choosing any tool turns the eyedropper off
     toolBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t && (b.dataset.stamp || null) === stamp));
     c.style.cursor = cursorFor(t);
