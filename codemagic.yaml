@@ -21,6 +21,9 @@ workflows:
     scripts:
       - name: Install packages
         script: npm install
+      - name: App Store rating plugin (the little "rate this app" stars box)
+        script: |
+          npm install @capacitor-community/in-app-review@^7 || npm install @capacitor-community/in-app-review --legacy-peer-deps || echo "rating plugin skipped: the app simply won't ask for ratings"
       - name: Download the app fonts
         script: |
           mkdir -p www/fonts

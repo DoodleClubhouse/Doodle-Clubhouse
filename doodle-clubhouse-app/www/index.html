@@ -4548,7 +4548,7 @@
     dlPop.querySelector('b').textContent = label || 'Downloading…';
     dlPop.querySelector('i').style.width = Math.max(0, Math.min(100, p)) + '%'; dlPop.hidden = false;
   }
-  function dlDone(){ dlPop.querySelector('i').style.width = '100%'; setTimeout(() => { dlPop.hidden = true; }, 350); }
+  function dlDone(){ dlPop.querySelector('i').style.width = '100%'; setTimeout(() => { dlPop.hidden = true; }, 350); try { window.reviewWin(); } catch {} }
   const toast = (msg, top) => {
     const t = $('toast'); t.textContent = msg; t.hidden = false;
     // help bubbles always pop up at the top middle of the paper
@@ -4728,7 +4728,7 @@
           await projPut({ id, updated: Date.now(), W: item.W, H: item.H, speed: item.speed, paperType: item.paperType, cur: item.cur, blobs: item.blobs, speedLog: item.speedLog || [], thumb: item.thumb, pages: item.pages });
           await sessDel(item.id);
           if (openSession === item.id){ openSession = 0; projDirty = false; setCurProject(id); schedulePersist(); }
-          toast('Saved to your projects!');
+          toast('Saved to your projects!'); try { window.reviewWin(); } catch {}
         } catch { toast('This browser won’t let the app save projects'); }
         renderWall();
       };
@@ -4891,6 +4891,7 @@
   if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (!document.activeElement || !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) resetScroll(); });
   addEventListener('scroll', () => { if (!document.activeElement || !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) resetScroll(); }, { passive: true });
   function grantUnlock(fromPaywall){
+    if (fromPaywall) try { window.reviewWin(); } catch {}
     const was = unlocked;
     unlocked = framesUnlocked = true;
     try { localStorage.setItem(UNLOCK_KEY, '1'); localStorage.setItem(FRAMES_KEY, '1'); } catch {}
@@ -5938,6 +5939,39 @@
   }
 
 
+
+  // ---------- asking for an App Store rating, at a good moment ----------
+  // Apple shows its own small "Enjoying Doodle Clubhouse?" stars box (and at most 3 times a year, it decides). We only ask:
+  //  - once someone clearly likes the app: used on 3+ different days, 20+ minutes of drawing, 150+ strokes, and not on day one
+  //  - right after a happy moment (saved / shared / downloaded their art, or just unlocked the Brush Pack), never mid-drawing
+  //  - at most once every 4 months
+  // Nothing leaves the device: these counts live only in this app on this iPad / iPhone.
+  const REVIEW_KEY = 'doodle-clubhouse-review';
+  const rv = (() => { try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || {}; } catch { return {}; } })();
+  rv.first = rv.first || Date.now(); rv.days = rv.days || []; rv.ms = rv.ms || 0; rv.strokes = rv.strokes || 0; rv.asked = rv.asked || [];
+  const rvSave = () => { try { localStorage.setItem(REVIEW_KEY, JSON.stringify(rv)); } catch {} };
+  const rvToday = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  if (!rv.days.includes(rvToday())){ rv.days.push(rvToday()); if (rv.days.length > 60) rv.days.shift(); rvSave(); }
+  let rvInputAt = performance.now();
+  ['pointerdown', 'keydown'].forEach(t => window.addEventListener(t, () => { rvInputAt = performance.now(); }, true));
+  setInterval(() => { if (!document.hidden && performance.now() - rvInputAt < 60000){ rv.ms += 30000; if (!rv.days.includes(rvToday())) rv.days.push(rvToday()); rvSave(); } }, 30000);   // active time only
+  c.addEventListener('pointerup', () => { rv.strokes++; if (rv.strokes % 10 === 0) rvSave(); });
+  function rvReady(){
+    const now = Date.now(), DAY = 864e5;
+    if (rv.days.length < 3 || rv.ms < 20 * 60000 || rv.strokes < 150 || now - rv.first < 2 * DAY) return false;
+    const last = rv.asked.length ? rv.asked[rv.asked.length - 1] : 0;
+    if (now - last < 120 * DAY) return false;
+    if (rv.asked.filter(t => now - t < 365 * DAY).length >= 3) return false;
+    return true;
+  }
+  function rvAsk(){
+    const p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.InAppReview;
+    if (!NATIVE || !p || !p.requestReview || !rvReady()) return;
+    rv.asked.push(Date.now()); rvSave();
+    try { Promise.resolve(p.requestReview()).catch(() => {}); } catch {}
+  }
+  // a happy moment: wait until the share sheet / download has finished and nothing is being drawn, then maybe ask
+  window.reviewWin = () => { setTimeout(function tryAsk(n = 0){ if (drawing || document.hidden || !$('payOverlay').hidden){ if (n < 10) setTimeout(() => tryAsk(n + 1), 1500); return; } rvAsk(); }, 1800); };
   // ---------- grown-up gate for anything that leaves the app ----------
   let gateNext = null, gAns = 0;
   function askGrownUp(next){
@@ -5985,6 +6019,7 @@
     const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
     const { uri } = await Filesystem.writeFile({ path: filename, data: b64, directory: 'CACHE' });
     await Share.share({ title: 'My Doodle Clubhouse art', files: [uri] });
+    try { window.reviewWin(); } catch {}
   }
   // Share: the phone's share menu (YouTube, Messages, Photos…). Where that isn't possible, save the file instead.
   let exShare = false;
