@@ -770,8 +770,9 @@
     .film .free-note{display:none}
   }
   /* Brush Pack window: compact tiles (picture + name), and it always fits the screen with no scrolling */
-  #payOverlay{padding:10px; overflow:hidden; display:flex; align-items:center; justify-content:center}
+  #payOverlay{padding:calc(10px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px)); overflow:hidden; display:flex; align-items:center; justify-content:center}   /* keeps the shop clear of the iPhone clock / notch, so 'Not now' is easy to tap */
   #payOverlay .sheet.pay{flex:none}
+  #closePay{min-height:48px; min-width:110px; touch-action:manipulation}
   #payOverlay .sheet.pay{max-height:none; overflow:visible; padding:14px; transform-origin:50% 50%}
   .pay .sheet-head h2{font-size:22px; margin:0 0 2px}
   .pay #payDesc{font-size:13px; margin:0 0 10px; color:var(--muted)}
@@ -4850,7 +4851,8 @@
   function fitPay(){
     const sh = document.querySelector('#payOverlay .sheet'); if (!sh || $('payOverlay').hidden) return;
     sh.style.transform = '';
-    const k = Math.min(1, (innerHeight - 20) / sh.offsetHeight, (innerWidth - 20) / sh.offsetWidth);
+    const ov = $('payOverlay'), cs = getComputedStyle(ov), availH = ov.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), availW = ov.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const k = Math.min(1, availH / sh.offsetHeight, availW / sh.offsetWidth);
     if (k < 1) sh.style.transform = `scale(${k.toFixed(3)})`;
   }
   addEventListener('resize', () => fitPay());
