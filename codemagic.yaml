@@ -43,6 +43,14 @@ workflows:
           grep -m1 "IPHONEOS_DEPLOYMENT_TARGET" ios/App/App.xcodeproj/project.pbxproj; grep -m1 "platform :ios" ios/App/Podfile
           npx capacitor-assets generate --ios --iconBackgroundColor '#1C2B6B' --splashBackgroundColor '#1C2B6B'
           npx cap sync ios
+      - name: Apple Pencil fix (fast taps and quick writing never get dropped)
+        script: |
+          AD=ios/App/App/AppDelegate.swift
+          if grep -q "DoodleTouchFix" "$AD"; then echo "already added"; else
+            cat native/DoodleTouchFix.swift >> "$AD"
+            perl -0pi -e 's/(didFinishLaunchingWithOptions[^{]*\{)/$1\n        DoodleTouchFix.install()/' "$AD"
+          fi
+          grep -n "DoodleTouchFix.install()" "$AD" || echo "WARNING: could not hook the Pencil fix into AppDelegate"
       - name: App name and permissions
         script: |
           PLIST=ios/App/App/Info.plist
