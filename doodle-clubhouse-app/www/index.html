@@ -111,8 +111,8 @@
   .custom-row .btn.sm.ico{padding:6px 7px}
   .custom-row > .btn + .btn{margin-left:-2px}
   .tool.eyetool[aria-pressed="true"], .tool.movetool[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
-  .custom-row .eye-mini{flex:none; width:30px; height:28px; padding:0!important; display:grid; place-items:center; border-radius:8px}
-  .custom-row .eye-mini svg{width:17px; height:17px}
+  .custom-row .eye-mini{flex:none; width:36px; height:34px; padding:0!important; display:grid; place-items:center; border-radius:9px}
+  .custom-row .eye-mini svg{width:22px; height:22px}
   .custom input[type=color]{width:34px;height:28px;border:2px solid var(--ink);border-radius:8px;padding:0;background:none;cursor:pointer}
   .size-row{display:flex; align-items:center; gap:8px}
   .size-row input{flex:1; accent-color:var(--ink)}
@@ -367,6 +367,12 @@
   body.bg-edit .paper{outline:3px dashed #3d7bd9; outline-offset:3px}
   .mic-pop{position:fixed; z-index:60; background:var(--plank); border:2px solid var(--ink); border-radius:12px; padding:6px; display:flex; flex-direction:column; gap:5px; box-shadow:0 8px 20px rgba(0,0,0,.3)}
   .mic-pop .btn{justify-content:flex-start; white-space:nowrap}
+  .ghost-pop{padding:10px; gap:6px; max-width:calc(100vw - 16px)}
+  .ghost-pop .gp-lab{font:800 12px/1.2 var(--body); color:var(--ink)}
+  .ghost-pop .gp-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px}
+  .ghost-pop .gp-sw{width:30px; height:30px; border:2px solid var(--ink); border-radius:50%; padding:0; cursor:pointer}
+  .ghost-pop .gp-sw.own{background:conic-gradient(#ff3b3b, #ffb000, #2fb84b, #2b6fff, #8a3cff, #ff3b3b)}
+  .ghost-pop .gp-sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px var(--ink)}
   @media (max-width:760px){ .film-side{flex-wrap:wrap} }
   .seg button[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
 
@@ -1050,7 +1056,7 @@
     html body[data-panel="frames"] .film .film-side{display:grid!important; grid-template-columns:1fr 1fr; gap:4px!important; justify-items:center}
     html body[data-panel="frames"] .film .film-row{display:contents!important}
     html body[data-panel="frames"] .film #dupFrame{order:1} html body[data-panel="frames"] .film #delFrame{order:2}
-    html body[data-panel="frames"] .film #exportAnimBtn{order:3} html body[data-panel="frames"] .film #ghostBtn{order:4}
+    html body[data-panel="frames"] .film #filmSettings{order:3} html body[data-panel="frames"] .film #ghostBtn{order:4}
     html body[data-panel="frames"] .film .seg{order:5; grid-column:1 / -1; display:flex!important; width:100%}
     html body[data-panel="frames"] .film .seg button{flex:1 1 0; min-width:0!important; padding:5px 0!important; display:flex!important; justify-content:center; align-items:center; overflow:hidden}
     html body[data-panel="frames"] .film .seg button svg{height:9px!important; width:auto!important; flex:none}
@@ -1533,13 +1539,13 @@
           
           
           <button class="btn sm ico" id="micBtn" title="Sound: record your voice while your cartoon plays" aria-label="Record a sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span class="mic-dot" aria-hidden="true"></span></button>
-          <button class="btn sm ico" id="exportAnimBtn" title="Export animation" aria-label="Export" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
+          <button class="btn sm ico" id="filmSettings" title="Settings: ghost colours" aria-label="Frame settings" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
         </div>
         <div class="film-row">
           <div class="seg" role="group" aria-label="Speed">
             <button data-speed="medium" aria-pressed="true" title="Medium" aria-label="Medium"><svg viewBox="0 0 19 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/></svg></button><button data-speed="fast" aria-pressed="false" title="Fast" aria-label="Fast"><svg viewBox="0 0 28 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/><path d="M19 2l8 6-8 6z"/></svg></button><button data-speed="turbo" aria-pressed="false" title="Super fast (15 a second)" aria-label="Super fast"><svg viewBox="0 0 26 16" height="14" fill="currentColor" aria-hidden="true"><path d="M13.5 1 6 9h5l-1.5 6L17 7h-5z"/><path d="M1 3l5 5-5 5zM20 3l5 5-5 5z" opacity=".7"/></svg></button>
           </div>
-          <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: see the frame before (and the next one in blue) faintly, to line things up" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
+          <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: see the frames before and after faintly, to line things up (colours in Settings)" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
           <button class="btn sm toggle ico" id="bounceBtn" aria-pressed="false" title="Bounce: play forwards, then backwards" aria-label="Bounce (play forwards then backwards)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h14l-3-3M20 15H6l3 3"/></svg></button>
         </div>
       </div>
@@ -5956,6 +5962,16 @@
   }
 
   let ghostSeq = 0;
+  // ghost colours (Settings in the frames bar): 'own' = the frame's real colours
+  const GHOST_KEY = 'doodle-clubhouse-ghost-colours';
+  let ghostCols = { prev: 'own', next: '#2b6fff' };
+  try { const g = JSON.parse(localStorage.getItem(GHOST_KEY)); if (g && g.prev && g.next) ghostCols = g; } catch {}
+  function ghostPaint(bmp, col, alpha){
+    if (col === 'own'){ gctx.globalAlpha = alpha; gctx.drawImage(bmp, 0, 0, MW, MH); gctx.globalAlpha = 1; return; }
+    const t = mk(MW, MH), tg = t.getContext('2d');
+    tg.drawImage(bmp, 0, 0, MW, MH); tg.globalCompositeOperation = 'source-in'; tg.fillStyle = col; tg.fillRect(0, 0, MW, MH);
+    gctx.globalAlpha = alpha; gctx.drawImage(t, 0, 0); gctx.globalAlpha = 1;
+  }
   async function drawGhost(){
     const tok = ++ghostSeq;
     const prev = bgEdit ? frames[cur] : frames[cur - 1], next = bgEdit ? null : frames[cur + 1];
@@ -5965,12 +5981,8 @@
     const bp = hasP ? await bmpOf(prev.blob, MW, MH) : null, bn = hasN ? await bmpOf(next.blob, MW, MH) : null;
     if (tok !== ghostSeq || playing) return;
     gctx.clearRect(0, 0, MW, MH);
-    if (bn){   // the next frame, in blue
-      const t = mk(MW, MH), tg = t.getContext('2d');
-      tg.drawImage(bn, 0, 0, MW, MH); tg.globalCompositeOperation = 'source-in'; tg.fillStyle = '#2b6fff'; tg.fillRect(0, 0, MW, MH);
-      gctx.globalAlpha = .75; gctx.drawImage(t, 0, 0); gctx.globalAlpha = 1;
-    }
-    if (bp) gctx.drawImage(bp, 0, 0, MW, MH);   // the frame before, in its own colours
+    if (bn) ghostPaint(bn, ghostCols.next, .75);   // the frame after
+    if (bp) ghostPaint(bp, bgEdit ? 'own' : ghostCols.prev, 1);   // the frame before
     ghost.hidden = false;
   }
 
@@ -6000,7 +6012,7 @@
     if (!copy) blank();
     drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
-    toast(copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the one before${cur < frames.length - 1 ? ' (and the next in blue)' : ''}.`);
+    toast(copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the one before${cur < frames.length - 1 ? ' (and the next one)' : ''}.`);
   }
   async function deleteFrame(){
     if (busy) return;
@@ -6066,6 +6078,43 @@
   const ghostBtn = $('ghostBtn');
   ghostBtn.onclick = () => { ghostOn = !ghostOn; ghostBtn.setAttribute('aria-pressed', ghostOn); drawGhost(); };
   $('insFrame').onclick = () => addFrame(false);
+  // ---------- frames settings: pick the colour of the "before" and "after" ghosts ----------
+  {
+    const btn = $('filmSettings');
+    const CHOICES = ['own', '#ff3b3b', '#ff8a00', '#e6b800', '#2fb84b', '#2b6fff', '#8a3cff', '#ff4fb0', '#1a1f3a'];
+    let pop = null;
+    const close = () => { if (pop){ pop.remove(); pop = null; btn.setAttribute('aria-expanded', 'false'); } };
+    const open = () => {
+      close();
+      pop = document.createElement('div'); pop.className = 'mic-pop ghost-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Ghost colours');
+      const row = (key, label) => {
+        const h = document.createElement('div'); h.className = 'gp-lab'; h.textContent = label; pop.appendChild(h);
+        const r = document.createElement('div'); r.className = 'gp-row';
+        CHOICES.forEach(col => {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'gp-sw' + (col === 'own' ? ' own' : '');
+          if (col !== 'own') b.style.background = col;
+          b.title = col === 'own' ? 'The drawing\u2019s own colours' : col; b.setAttribute('aria-label', col === 'own' ? 'Own colours' : col);
+          b.setAttribute('aria-pressed', ghostCols[key] === col);
+          b.onclick = () => {
+            ghostCols[key] = col; try { localStorage.setItem(GHOST_KEY, JSON.stringify(ghostCols)); } catch {}
+            r.querySelectorAll('.gp-sw').forEach(x => x.setAttribute('aria-pressed', x === b));
+            if (!ghostOn){ ghostOn = true; ghostBtn.setAttribute('aria-pressed', true); }
+            drawGhost();
+          };
+          r.appendChild(b);
+        });
+        pop.appendChild(r);
+      };
+      row('prev', 'Ghost before (last frame)'); row('next', 'Ghost after (next frame)');
+      document.body.appendChild(pop); btn.setAttribute('aria-expanded', 'true');
+      const r = btn.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+      pop.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.left + r.width / 2 - pw / 2)) + 'px';
+      pop.style.top = (r.top - ph - 8 > 8 ? r.top - ph - 8 : Math.min(innerHeight - ph - 8, r.bottom + 8)) + 'px';
+      if (r.left < innerWidth * .25 && r.top > innerHeight * .4 && innerHeight < 520){ pop.style.left = (r.right + 8) + 'px'; pop.style.top = Math.max(8, r.bottom - ph) + 'px'; }   // sideways phone: beside the frames column
+    };
+    btn.onclick = () => pop ? close() : open();
+    document.addEventListener('pointerdown', e => { if (pop && !pop.contains(e.target) && !btn.contains(e.target)) close(); }, true);
+  }
 
   function syncHold(){}
   // bounce: forwards, then backwards
@@ -6378,7 +6427,7 @@
     if (NATIVE){ downloads = { native: true }; }
     else if (window.claude && window.claude.use){ try { downloads = await window.claude.use('downloads'); } catch { downloads = null; } }
     else downloads = { browser: true };   // plain website (e.g. GitHub Pages): a normal browser download
-    if (downloads){ $('exportBtn').hidden = false; $('exportAnimBtn').hidden = false; $('moreExport').hidden = false; }
+    if (downloads){ $('exportBtn').hidden = false; $('moreExport').hidden = false; }
   })();
   const fileStamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`; };
@@ -6396,7 +6445,6 @@
     setExMode(exShare); exStatus(''); $('exportOverlay').hidden = false; $('closeExport').focus();
   }
   $('exportBtn').onclick = () => askGrownUp(openExport);
-  $('exportAnimBtn').onclick = () => askGrownUp(openExport);
   $('closeExport').onclick = () => { if (!exporting) $('exportOverlay').hidden = true; };
 
   // inside the app: write the file, then open the iPhone/iPad share sheet ("Save Image", "Save Video", Messages…)
