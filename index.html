@@ -1055,7 +1055,7 @@
     html body[data-panel="frames"] .film .strip .frame{width:70px!important; max-height:70px}
     html body[data-panel="frames"] .film .film-side{display:grid!important; grid-template-columns:1fr 1fr; gap:4px!important; justify-items:center}
     html body[data-panel="frames"] .film .film-row{display:contents!important}
-    html body[data-panel="frames"] .film #dupFrame{order:1} html body[data-panel="frames"] .film #delFrame{order:2}
+    html body[data-panel="frames"] .film #dupFrame{order:1} html body[data-panel="frames"] .film #pasteFrame{order:1} html body[data-panel="frames"] .film #delFrame{order:2}
     html body[data-panel="frames"] .film #filmSettings{order:3} html body[data-panel="frames"] .film #ghostBtn{order:4}
     html body[data-panel="frames"] .film .seg{order:5; grid-column:1 / -1; display:flex!important; width:100%}
     html body[data-panel="frames"] .film .seg button{flex:1 1 0; min-width:0!important; padding:5px 0!important; display:flex!important; justify-content:center; align-items:center; overflow:hidden}
@@ -1534,7 +1534,8 @@
       <div class="film-side">
         <div class="film-row">
           <button class="btn sm ico" id="insFrame" title="Add a blank frame right after this one" aria-label="Add a frame after this one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="6" height="12" rx="1.5"/><rect x="15.5" y="6" width="6" height="12" rx="1.5"/><path d="M12 8.5v7M8.5 12h7"/></svg></button>
-          <button class="btn sm ico" id="dupFrame" title="Copy frame: make a copy to change a little" aria-label="Copy frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+          <button class="btn sm ico" id="dupFrame" title="Copy this frame (then Paste it anywhere)" aria-label="Copy frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+          <button class="btn sm ico" id="pasteFrame" title="Paste: put the copied frame right after this one" aria-label="Paste frame" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 2.5h6v3H9z"/><path d="M12 10v6M9 13h6"/></svg></button>
           <button class="btn sm ico" id="delFrame" title="Delete frame" aria-label="Delete frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
           
           
@@ -6025,14 +6026,15 @@
     busy = true;
     await commit();
     const f = newFrame();
-    if (copy){ f.blob = frames[cur].blob; f.dirty = false; }
+    if (copy === 'paste'){ f.blob = frameClip; f.dirty = false; await paintBlob(frameClip); }
+    else if (copy){ f.blob = frames[cur].blob; f.dirty = false; }
     projDirty = true;
     const pos = at === undefined ? cur + 1 : Math.max(0, Math.min(at, frames.length));
     frames.splice(pos, 0, f); cur = pos;
     if (!copy) blank();
     drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
-    toast(copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the one before${cur < frames.length - 1 ? ' (and the next one)' : ''}.`);
+    toast(copy === 'paste' ? `Pasted as frame ${cur+1}` : copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the one before${cur < frames.length - 1 ? ' (and the next one)' : ''}.`);
   }
   async function deleteFrame(){
     if (busy) return;
@@ -6088,7 +6090,19 @@
   }
   playBtn.onclick = () => playing ? stopPlay() : play();
   player.onclick = stopPlay;
-  $('dupFrame').onclick = () => addFrame(true);
+  // copy a frame, then paste it after any frame (great for long timelines)
+  let frameClip = null;
+  const pasteBtn = $('pasteFrame');
+  $('dupFrame').onclick = async () => {
+    if (busy) return;
+    if (bgEdit) await leaveBg(cur);
+    if (playing) stopPlay();
+    await commit();
+    frameClip = frames[cur].blob || await canvasBlob();
+    pasteBtn.disabled = false;
+    toast(`Frame ${cur + 1} copied. Tap any frame, then Paste to put it after that one`);
+  };
+  pasteBtn.onclick = () => { if (frameClip) addFrame('paste'); };
 
   $('delFrame').onclick = () => deleteFrame();
 
