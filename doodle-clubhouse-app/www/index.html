@@ -6184,7 +6184,7 @@
     await commit();
     frameClip = frames[cur].blob || await canvasBlob();
     pasteBtn.disabled = false;
-    toast(`Frame ${cur + 1} copied. Tap any frame, then Paste to put it after that one`);
+    toast(`COPY: Frame ${cur + 1}. Tap any frame, then Paste to put it after that one`);
   };
   pasteBtn.onclick = () => { if (frameClip) addFrame('paste'); };
 
