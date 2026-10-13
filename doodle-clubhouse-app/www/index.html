@@ -348,8 +348,10 @@
   .strip.has-bg .frame[data-i]{background-image:var(--bg-thumb), var(--paper-thumb, none); background-size:100% 100%, cover; background-position:center}
   .frame .hold{position:absolute; right:3px; top:3px; background:#ffb400; color:var(--ink); font:900 10px/1 var(--body); padding:3px 5px; border-radius:999px; border:1.5px solid var(--ink)}
   .frame{-webkit-touch-callout:none; -webkit-user-select:none; user-select:none}
-  .frame.lifted{transform:scale(1.12) rotate(-3deg); box-shadow:0 8px 16px rgba(0,0,0,.35); z-index:3; opacity:.9}
-  .frame.drop-l{box-shadow:-5px 0 0 var(--pop)} .frame.drop-r{box-shadow:5px 0 0 var(--pop)}
+  .frame.lifted{opacity:.3}
+  .frame-float{position:fixed; z-index:90; pointer-events:none; border:2px solid var(--pop); border-radius:6px; overflow:hidden; background:var(--paper) center / 100% 100% no-repeat; transform:scale(1.12) rotate(-4deg); box-shadow:0 10px 22px rgba(0,0,0,.4)}
+  .frame-float canvas{width:100%; height:100%; display:block}
+  .frame.drop-l{box-shadow:-6px 0 0 var(--pop)} .frame.drop-r{box-shadow:6px 0 0 var(--pop)}
   .strip.reordering{overflow:hidden; touch-action:none}
   .btn.sm.hold{display:inline-flex; align-items:center; gap:2px; padding:6px 7px; font:900 12px/1 var(--body)}
   .btn.sm.hold svg{width:16px; height:16px}
@@ -1055,11 +1057,9 @@
     html body[data-panel="frames"] .film .film-side{grid-template-columns:1fr 1fr 1fr; gap:2px!important}
     html body[data-panel="frames"] .film .film-side .btn.sm{padding:3px 2px!important; min-width:0; width:100%; justify-content:center; border-radius:8px}
     html body[data-panel="frames"] .film .film-side .btn.sm svg{width:15px!important; height:15px!important; min-width:15px; flex:none}
-    html body[data-panel="frames"] .film #insFrame{order:0} html body[data-panel="frames"] .film #holdBtn{order:2}
+    html body[data-panel="frames"] .film #insFrame{order:0}
     html body[data-panel="frames"] .film #moveBtn{order:3} html body[data-panel="frames"] .film #micBtn{order:3}
     html body[data-panel="frames"] .film #bounceBtn{order:4}
-    html body[data-panel="frames"] .film #holdBtn svg{display:none}
-    html body[data-panel="frames"] .film #holdBtn{font-size:11px; letter-spacing:-.5px}
   }
   /* phone sideways: skinnier menu bar with the logo centred over it; pop-outs reach near the top and their buttons fill them */
   @media (max-height:500px) and (orientation:landscape){
@@ -1522,7 +1522,7 @@
           <button class="btn sm ico" id="insFrame" title="Add a blank frame right after this one" aria-label="Add a frame after this one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="6" height="12" rx="1.5"/><rect x="15.5" y="6" width="6" height="12" rx="1.5"/><path d="M12 8.5v7M8.5 12h7"/></svg></button>
           <button class="btn sm ico" id="dupFrame" title="Copy frame: make a copy to change a little" aria-label="Copy frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
           <button class="btn sm ico" id="delFrame" title="Delete frame" aria-label="Delete frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
-          <button class="btn sm hold" id="holdBtn" title="Hold: keep this frame on screen longer (tap for 2, 3 or 4 beats)" aria-label="Hold this frame longer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg><span id="holdLbl">×1</span></button>
+          
           <button class="btn sm ico toggle" id="moveBtn" aria-pressed="false" title="Move: drag the whole drawing on this frame" aria-label="Move the whole drawing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
           <button class="btn sm ico" id="micBtn" title="Sound: record your voice while your cartoon plays" aria-label="Record a sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span class="mic-dot" aria-hidden="true"></span></button>
           <button class="btn sm ico" id="exportAnimBtn" title="Export animation" aria-label="Export" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
@@ -5651,8 +5651,7 @@
   function playOrder(){
     const n = frames.length; let idx = frames.map((_, i) => i);
     if (bounce && n > 2) idx = idx.concat(idx.slice(1, -1).reverse());
-    const out = []; idx.forEach(i => { for (let k = 0; k < (frames[i].hold || 1); k++) out.push(i); });
-    return out;
+    return idx;
   }
   let frameSeq = 0;
   const pageId = f => f ? (f.id || (f.id = ++frameSeq)) : 0;   // which page a speed-art picture belongs to
@@ -5838,11 +5837,10 @@
     strip.appendChild(bt);
     frames.forEach((f, i) => {
       const b = document.createElement('button');
-      b.className = 'frame'; b.dataset.i = i; b.setAttribute('aria-label', `Frame ${i+1} of ${frames.length}${(f.hold || 1) > 1 ? `, held ${f.hold} beats` : ''}. Press and hold to drag it to a new place.`);
+      b.className = 'frame'; b.dataset.i = i; b.title = 'Tap to open. Press and hold, then drag to move it.'; b.setAttribute('aria-label', `Frame ${i+1} of ${frames.length}. Press and hold, then drag to move it.`);
       b.setAttribute('aria-current', !bgEdit && i === cur);
       b.appendChild(f.thumb);
       const n = document.createElement('span'); n.className = 'num'; n.textContent = i + 1; b.appendChild(n);
-      if ((f.hold || 1) > 1){ const hb = document.createElement('span'); hb.className = 'hold'; hb.textContent = '×' + f.hold; b.appendChild(hb); }
       b.onclick = () => { if (performance.now() - dragDone < 450) return; goTo(i); };
       b.addEventListener('pointerdown', e => dragStart(e, i, b));
       strip.appendChild(b);
@@ -5878,7 +5876,17 @@
   function dragStart(e, i, b){
     if (playing || busy || frames.length < 2 || (e.pointerType === 'mouse' && e.button !== 0)) return;
     const d = { i, b, id: e.pointerId, x: e.clientX, y: e.clientY, live: false, to: i };
-    d.t = setTimeout(() => { if (drag !== d) return; d.live = true; b.classList.add('lifted'); strip.classList.add('reordering'); try { navigator.vibrate && navigator.vibrate(12); } catch {} }, 380);
+    d.t = setTimeout(() => {
+      if (drag !== d) return;
+      d.live = true; b.classList.add('lifted'); strip.classList.add('reordering'); try { navigator.vibrate && navigator.vibrate(12); } catch {}
+      // a copy of the frame follows your finger / Pencil
+      const r = b.getBoundingClientRect(), fl = document.createElement('div'); fl.className = 'frame-float';
+      fl.style.width = r.width + 'px'; fl.style.height = r.height + 'px';
+      const k = document.createElement('canvas'); k.width = frames[i].thumb.width; k.height = frames[i].thumb.height; k.getContext('2d').drawImage(frames[i].thumb, 0, 0); fl.appendChild(k);
+      fl.style.backgroundImage = getComputedStyle(b).backgroundImage;
+      document.body.appendChild(fl); d.fl = fl; d.ox = d.x - r.left; d.oy = d.y - r.top;
+      fl.style.left = r.left + 'px'; fl.style.top = r.top + 'px';
+    }, 300);
     drag = d;
   }
   const dropMarks = () => strip.querySelectorAll('.drop-l, .drop-r').forEach(x => x.classList.remove('drop-l', 'drop-r'));
@@ -5886,6 +5894,7 @@
     const d = drag; if (!d || e.pointerId !== d.id) return;
     if (!d.live){ if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10){ clearTimeout(d.t); drag = null; } return; }
     e.preventDefault();
+    if (d.fl){ d.fl.style.left = (e.clientX - d.ox) + 'px'; d.fl.style.top = (e.clientY - d.oy) + 'px'; }
     const tiles = [...strip.querySelectorAll('.frame[data-i]')], col = getComputedStyle(strip).flexDirection.startsWith('column');
     const p = col ? e.clientY : e.clientX;
     let slot = tiles.length;
@@ -5902,7 +5911,7 @@
     const d = drag; if (!d || e.pointerId !== d.id) return;
     clearTimeout(d.t); drag = null;
     if (!d.live) return;
-    d.b.classList.remove('lifted'); strip.classList.remove('reordering'); dropMarks();
+    d.b.classList.remove('lifted'); strip.classList.remove('reordering'); dropMarks(); if (d.fl) d.fl.remove();
     dragDone = performance.now();
     if (e.type === 'pointercancel' || d.to === d.i) return;
     const curF = frames[cur], [f] = frames.splice(d.i, 1);
@@ -6047,16 +6056,7 @@
   ghostBtn.onclick = () => { ghostOn = !ghostOn; ghostBtn.setAttribute('aria-pressed', ghostOn); drawGhost(); };
   $('insFrame').onclick = () => addFrame(false);
 
-  // hold: this frame stays on screen for 1, 2, 3 or 4 beats
-  const holdBtn = $('holdBtn');
-  function syncHold(){ const h = (frames[cur] && frames[cur].hold) || 1; $('holdLbl').textContent = '×' + h; holdBtn.classList.toggle('on', h > 1); holdBtn.disabled = bgEdit; }
-  holdBtn.onclick = () => {
-    if (bgEdit || !frames[cur]) return;
-    if (playing) stopPlay();
-    const f = frames[cur]; f.hold = ((f.hold || 1) % 4) + 1;
-    renderStrip(); projDirty = true; schedulePersist();
-    toast(f.hold > 1 ? `Frame ${cur + 1} stays on screen ${f.hold}× as long` : `Frame ${cur + 1}: normal length`);
-  };
+  function syncHold(){}
   // bounce: forwards, then backwards
   const bounceBtn = $('bounceBtn');
   function syncBounce(){ bounceBtn.setAttribute('aria-pressed', bounce); }
@@ -6472,10 +6472,10 @@
     const tmp = mk(w, h), g = tmp.getContext('2d', { willReadFrequently: true });
     const datas = [];
     for (const b of bmps){ exportPaint(g, b, w, h); datas.push(g.getImageData(0, 0, w, h).data); b.close && b.close(); }
-    // holds become longer frames; bounce plays back the other way
+    // bounce plays back the other way
     const beat = Math.max(2, Math.round(100 / FPS[speed])), idx = frames.map((_, i) => i);
     if (bounce && frames.length > 2) idx.push(...idx.slice(1, -1).reverse());
-    const imgs = idx.map(i => datas[i]), delays = idx.map(i => beat * (frames[i].hold || 1));
+    const imgs = idx.map(i => datas[i]), delays = idx.map(() => beat);
     const bytes = await encodeGif(imgs, w, h, delays, n => exStatus(`Making your GIF… frame ${n} of ${imgs.length}`));
     await offer(`doodle-animation-${fileStamp()}.gif`, new Blob([bytes], { type:'image/gif' }));
   });

@@ -37,7 +37,7 @@ MAKE CARTOONS
 • Frame-by-frame flipbook animation
 • Draw a background once and it stays behind every frame
 • Ghosts of the frame before and after help you line things up
-• Hold a frame longer, bounce back and forth, drag frames into a new order
+• Bounce back and forth, drag frames into a new order
 • Move a whole drawing, add frames anywhere
 • Record your voice and it plays with your cartoon (and goes into the video)
 • Play your cartoon medium, fast or super fast
