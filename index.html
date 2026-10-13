@@ -4408,7 +4408,19 @@
       if (eraserSnd.dist > 38 && now - eraserSnd.last > 70){ eraserSnd.dist = 0; eraserSnd.last = now; try { eraserBubble(); } catch {} }
     }
   });
-  const end = e => { if (e && activePointer !== null && e.pointerId !== activePointer) return; activePointer = null; if (softS) softEnd(); txEnd(); if (pencilS) pencilEnd(); if (trainS) trainEnd(); if (plS) plungerEnd(); if (eraserSnd){ try { eraserBubble(1.6, .03); eraserBubble(2, .1); } catch {} eraserSnd = null; /* pop-pop: all clean! */ } if (spraySnd){ try { spraySnd.stop(.18); } catch {} spraySnd = null; } brushSoundStop(); clearTimeout(sprayPlipT); sprayPlipT = 0; drawing = false; stampTrail = null; clearInterval(sprayTimer); sprayTimer = null; sprayPt = null; lineBase = null; };
+  const end = e => { if (e && activePointer !== null && e.pointerId !== activePointer) return;
+    // a tap (no drag) with the shape tool puts down a standard-size line / square / circle / triangle right there
+    if (tool === 'line' && drawing && start && lineBase && (!last || Math.hypot(last.x - start.x, last.y - start.y) < 8)){
+      try {
+        ctx.putImageData(lineBase, 0, 0); strokeStyle(); ctx.lineWidth = size; ctx.lineJoin = 'round';
+        const k = Math.max(1, (W / (c.getBoundingClientRect().width || W))), s = Math.max(60, Math.min(Math.min(W, H) * .3, 150 * k));
+        const a = { x: start.x - s / 2, y: start.y - s / 2 }, b = { x: start.x + s / 2, y: start.y + s / 2 };
+        if (lineShape === 'line'){ a.y = b.y = start.y; }
+        else if (lineShape === 'tri'){ const h = s * .866; a.y = start.y - h * 2 / 3; b.y = start.y + h / 3; }
+        drawShape(ctx, a, b);
+      } catch {}
+    }
+    activePointer = null; if (softS) softEnd(); txEnd(); if (pencilS) pencilEnd(); if (trainS) trainEnd(); if (plS) plungerEnd(); if (eraserSnd){ try { eraserBubble(1.6, .03); eraserBubble(2, .1); } catch {} eraserSnd = null; /* pop-pop: all clean! */ } if (spraySnd){ try { spraySnd.stop(.18); } catch {} spraySnd = null; } brushSoundStop(); clearTimeout(sprayPlipT); sprayPlipT = 0; drawing = false; stampTrail = null; clearInterval(sprayTimer); sprayTimer = null; sprayPt = null; lineBase = null; };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   // a stylus with an eraser end (flip it over): that stroke rubs out, then the tool you had comes straight back
   let eraserTipWas = null;
