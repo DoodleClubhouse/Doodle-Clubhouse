@@ -370,6 +370,16 @@
   body.bg-edit .paper{outline:3px dashed #3d7bd9; outline-offset:3px}
   .mic-pop{position:fixed; z-index:60; background:var(--plank); border:2px solid var(--ink); border-radius:12px; padding:6px; display:flex; flex-direction:column; gap:5px; box-shadow:0 8px 20px rgba(0,0,0,.3)}
   .mic-pop .btn{justify-content:flex-start; white-space:nowrap}
+  /* iPad / computer frames bar: the buttons sit in a neat grid (6 across, 2 rows), about 15% bigger, filling their corner */
+  @media (min-width:761px) and (min-height:501px){
+    html body .film .film-side{display:grid!important; grid-template-columns:repeat(6, 46px); grid-auto-rows:40px; gap:6px!important; align-content:center}
+    html body .film .film-row{display:contents!important}
+    html body .film .film-side .btn.sm{width:100%; height:100%; min-width:0; padding:0!important; display:grid; place-items:center; border-radius:11px}
+    html body .film .film-side .btn.sm svg{width:22px!important; height:22px!important}
+    html body .film .film-side .seg{grid-column:span 4; height:100%}
+    html body .film .film-side .seg button{flex:1 1 0; min-width:0!important; padding:0!important}
+    html body .film .film-side .seg button svg{height:15px!important; width:auto!important}
+  }
   html body.dock-bottom .tools, html body.dock-bottom .film, html body.dock-bottom .extras, html body.dock-bottom .more-sheet,
   html body.dock-bottom[data-panel] .tools, html body.dock-bottom[data-panel] .film{bottom:var(--trayBottom, 84px)!important}
   .ghost-pop{padding:10px; gap:6px; max-width:calc(100vw - 16px)}
