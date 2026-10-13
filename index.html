@@ -4402,47 +4402,62 @@
     for (let i = 0; i < n; i++){ const p = pts[i], q = mid(p, pts[(i + 1) % n]); g.quadraticCurveTo(p[0], p[1], q[0], q[1]); }
     g.closePath();
   }
-  function splatAt(x, y, R){
-    const g = ctx, rnd = Math.random, TAU = Math.PI * 2;
+  // 7 splat designs (each one is built from its own number, so it always comes out the same), turned and sized a little
+  // differently every time. Lumpy middle, fat arms with round drops, pointed splash spikes and stretched teardrop drops.
+  const SPLAT_SEEDS = [11, 23, 37, 58, 71, 94, 129];
+  let lastSplat = -1;
+  const seeded = n => () => { n |= 0; n = n + 0x6D2B79F5 | 0; let t = Math.imul(n ^ n >>> 15, 1 | n); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  function splatAt(x, y, R, which){
+    if (which === undefined){ do { which = Math.random() * SPLAT_SEEDS.length | 0; } while (which === lastSplat && SPLAT_SEEDS.length > 1); lastSplat = which; }
+    const rnd = seeded(SPLAT_SEEDS[which % SPLAT_SEEDS.length] * 7919), g = ctx, TAU = Math.PI * 2;
     g.save(); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.fillStyle = color;
-    // the middle: a round, wobbly puddle
-    const n = 20 + (rnd() * 10 | 0), ph = [rnd() * TAU, rnd() * TAU, rnd() * TAU], pts = [];
+    g.translate(x, y); g.rotate(Math.random() * TAU); if (Math.random() < .5) g.scale(-1, 1);
+    // the middle: an uneven, lumpy puddle (a bit stretched one way)
+    const stretch = 1 + rnd() * .22, n = 26, ph = [rnd() * TAU, rnd() * TAU, rnd() * TAU], amp = [.07 + rnd() * .05, .05 + rnd() * .04, .03 + rnd() * .03], pts = [];
     for (let i = 0; i < n; i++){
-      const a = i / n * TAU;
-      const r = R * (.84 + .08 * Math.sin(a * 3 + ph[0]) + .06 * Math.sin(a * 5 + ph[1]) + .05 * Math.sin(a * 8 + ph[2]) + (rnd() - .5) * .14);
-      pts.push([x + Math.cos(a) * r, y + Math.sin(a) * r]);
+      const a = i / n * TAU, r = R * (.8 + amp[0] * Math.sin(a * 3 + ph[0]) + amp[1] * Math.sin(a * 5 + ph[1]) + amp[2] * Math.sin(a * 9 + ph[2]) + (rnd() - .5) * .12);
+      pts.push([Math.cos(a) * r * stretch, Math.sin(a) * r]);
     }
     g.beginPath(); blobPath(g, pts); g.fill();
-    // arms: a thick root, a thin neck, a round drop on the end
-    const arms = 6 + (rnd() * 5 | 0), turn = rnd() * TAU;
-    for (let k = 0; k < arms; k++){
-      const a = turn + k / arms * TAU + (rnd() - .5) * (TAU / arms) * .8;
-      const ux = Math.cos(a), uy = Math.sin(a), px = -uy, py = ux;
-      const len = R * (.18 + rnd() * .62), w0 = R * (.3 + rnd() * .26), neck = w0 * (.34 + rnd() * .24);
-      const bulb = Math.max(neck * 1.15, R * (.11 + rnd() * .16));
-      const s0 = R * .6, s1 = R * .78 + len, e0 = s1 - bulb * .5;
-      const sx = x + ux * s0, sy = y + uy * s0, ex = x + ux * e0, ey = y + uy * e0, mx = (sx + ex) / 2, my = (sy + ey) / 2;
+    const arm = (a, len, w0, tip) => {   // tip: 'drop' (round end), 'spike' (pointed), 'fork' (splits in two)
+      const ux = Math.cos(a), uy = Math.sin(a), px = -uy, py = ux, s0 = R * .62, s1 = R * .74 + len;
+      const neck = tip === 'spike' ? w0 * .14 : w0 * (.32 + rnd() * .22), bulb = Math.max(neck * 1.2, R * (.1 + rnd() * .15));
+      const e0 = tip === 'spike' ? s1 : s1 - bulb * .45, bend = (rnd() - .5) * w0 * .9;
+      const sx = ux * s0 * stretch, sy = uy * s0, ex = ux * e0, ey = uy * e0, mx = (sx + ex) / 2 + px * bend, my = (sy + ey) / 2 + py * bend;
       g.beginPath();
       g.moveTo(sx + px * w0 / 2, sy + py * w0 / 2);
-      g.quadraticCurveTo(mx + px * neck * .55, my + py * neck * .55, ex + px * neck / 2, ey + py * neck / 2);
+      g.quadraticCurveTo(mx + px * (neck * .5 + w0 * .1), my + py * (neck * .5 + w0 * .1), ex + px * neck / 2, ey + py * neck / 2);
       g.lineTo(ex - px * neck / 2, ey - py * neck / 2);
-      g.quadraticCurveTo(mx - px * neck * .55, my - py * neck * .55, sx - px * w0 / 2, sy - py * w0 / 2);
+      g.quadraticCurveTo(mx - px * (neck * .5 + w0 * .1), my - py * (neck * .5 + w0 * .1), sx - px * w0 / 2, sy - py * w0 / 2);
       g.closePath(); g.fill();
-      g.beginPath(); g.arc(x + ux * s1, y + uy * s1, bulb, 0, TAU); g.fill();
-      // sometimes a short bump instead of a long arm right next to it
-      if (rnd() < .6){ const b = a + (rnd() < .5 ? -1 : 1) * TAU / arms * .5, rr = R * (.14 + rnd() * .14), d = R * (.8 + rnd() * .1);
-        g.beginPath(); g.arc(x + Math.cos(b) * d, y + Math.sin(b) * d, rr, 0, TAU); g.fill(); }
-    }
-    // flying drops all around (some teardrops pointing back at the middle)
-    const drops = 2 + (rnd() * 5 | 0);
-    for (let k = 0; k < drops; k++){
-      const a = rnd() * TAU, d = R * (1.12 + rnd() * .75), r = R * (.05 + rnd() * .1);
-      const cx = x + Math.cos(a) * d, cy = y + Math.sin(a) * d;
-      g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill();
-      if (rnd() < .5){   // teardrop tail
-        const tx = cx - Math.cos(a) * r * 2.4, ty = cy - Math.sin(a) * r * 2.4, px = -Math.sin(a) * r * .9, py = Math.cos(a) * r * .9;
-        g.beginPath(); g.moveTo(cx + px, cy + py); g.lineTo(tx, ty); g.lineTo(cx - px, cy - py); g.closePath(); g.fill();
+      if (tip === 'drop' || tip === 'fork'){ g.beginPath(); g.arc(ux * s1, uy * s1, bulb, 0, TAU); g.fill(); }
+      else { g.beginPath(); g.arc(ex, ey, neck * .5, 0, TAU); g.fill(); }   // a soft rounded point
+      if (tip === 'fork'){   // a little side branch near the end
+        const b = a + (rnd() < .5 ? -1 : 1) * (.35 + rnd() * .3), l2 = len * (.35 + rnd() * .3), bx = ux * (s0 + (s1 - s0) * .55), by = uy * (s0 + (s1 - s0) * .55);
+        const ex2 = bx + Math.cos(b) * l2, ey2 = by + Math.sin(b) * l2, w2 = neck * .9;
+        g.beginPath(); g.moveTo(bx - uy * w2, by + ux * w2); g.lineTo(ex2, ey2); g.lineTo(bx + uy * w2, by - ux * w2); g.closePath(); g.fill();
+        g.beginPath(); g.arc(ex2, ey2, bulb * .55, 0, TAU); g.fill();
       }
+    };
+    const arms = 7 + (rnd() * 5 | 0), turn = rnd() * TAU;
+    for (let k = 0; k < arms; k++){
+      const a = turn + k / arms * TAU + (rnd() - .5) * (TAU / arms) * .75, roll = rnd();
+      const tip = roll < .5 ? 'drop' : roll < .82 ? 'spike' : 'fork';
+      const len = tip === 'spike' ? R * (.3 + rnd() * .7) : R * (.15 + rnd() * .6);
+      arm(a, len, R * (.22 + rnd() * .28), tip);
+      if (rnd() < .5){ const b = a + (rnd() < .5 ? -1 : 1) * TAU / arms * .5;   // a round lump on the edge between arms
+        g.beginPath(); g.arc(Math.cos(b) * R * .8 * stretch, Math.sin(b) * R * .8, R * (.12 + rnd() * .15), 0, TAU); g.fill(); }
+    }
+    // flying drops: round ones and stretched teardrops pointing away from the middle
+    const drops = 4 + (rnd() * 6 | 0);
+    for (let k = 0; k < drops; k++){
+      const a = rnd() * TAU, d = R * (1.15 + rnd() * .85), r = R * (.03 + rnd() * .08), cx = Math.cos(a) * d * stretch, cy = Math.sin(a) * d;
+      g.beginPath();
+      if (rnd() < .55){ g.ellipse(cx, cy, r * (1.5 + rnd()), r, a, 0, TAU); g.fill();
+        const tx = cx - Math.cos(a) * r * 3.2, ty = cy - Math.sin(a) * r * 3.2;   // its thin tail back toward the splat
+        g.beginPath(); g.moveTo(cx - Math.sin(a) * r * .8, cy + Math.cos(a) * r * .8); g.lineTo(tx, ty); g.lineTo(cx + Math.sin(a) * r * .8, cy - Math.cos(a) * r * .8); g.closePath(); }
+      else g.arc(cx, cy, r, 0, TAU);
+      g.fill();
     }
     g.restore();
   }
