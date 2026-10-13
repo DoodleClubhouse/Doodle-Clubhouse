@@ -2590,12 +2590,12 @@
       tone(2350 * k, 2200 * k, .07, .035 * vol, 'triangle', delay);
       tone(520 * k, 380 * k, .05, .06 * vol, 'sine', delay); },
     rattle:  () => { let t = 0; for (let i = 0; i < 4; i++){ SFX.clack(1 - i * .15, t); t += .062 + Math.random() * .03; } },
-    // the splat sound, a touch higher and bouncier so it's cute, a little different every time
+    // the splat sound: only the recording that was given for it
     splatBig: (vol = 1) => {
       const a = ac(); if (!a) return;
       const go = buf => {
-        const src = a.createBufferSource(), g = a.createGain(), rate = 1.12 + Math.random() * .22;
-        src.buffer = buf; src.playbackRate.value = rate; g.gain.value = .9 * vol;
+        const src = a.createBufferSource(), g = a.createGain();
+        src.buffer = buf; g.gain.value = .9 * vol;   // exactly the recording, as it is
         src.connect(g).connect(a.destination); src.start();
       };
       if (SFX._splatBuf) return go(SFX._splatBuf);
