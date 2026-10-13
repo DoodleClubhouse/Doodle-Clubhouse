@@ -1365,6 +1365,12 @@
   .mb-spec .sv{height:120px}
   .mb-spec .hue{height:22px}
   .mb-spec-wrap{position:relative}
+  .mix-pop{position:fixed; z-index:80; width:min(260px, calc(100vw - 16px)); background:var(--plank); border:2px solid var(--ink); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:10px; box-shadow:0 10px 24px rgba(0,0,0,.3)}
+  .mix-pop[hidden]{display:none}
+  .mix-pop canvas{display:block; width:100%; border:2px solid var(--ink); border-radius:8px; touch-action:none; cursor:crosshair}
+  .mix-pop .sv{height:170px} .mix-pop .hue{height:26px}
+  .mix-pop .knob{position:absolute; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px var(--ink); pointer-events:none}
+  label.custom.open input[type=color]{outline:3px solid var(--ink); outline-offset:2px}
   .mb-spec .knob{position:absolute; width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px var(--ink); pointer-events:none}
   /* Projects: last session's work that was never saved */
   .pin.unsaved{border-color:#E8A317; border-style:dashed; background:#FFF8E6}
@@ -1905,6 +1911,54 @@
   });
   const custom = document.getElementById('customColor');
   custom.addEventListener('input', e => setColor(e.target.value));
+  // Mix: a colour spectrum right away (big colour square + rainbow strip), not the system's grid
+  {
+    const lab = custom.closest('label');
+    const pop = document.createElement('div'); pop.className = 'mix-pop'; pop.hidden = true;
+    pop.innerHTML = '<div class="mb-spec-wrap"><canvas class="sv" width="400" height="300"></canvas><i class="knob sv-k"></i></div><div class="mb-spec-wrap"><canvas class="hue" width="400" height="44"></canvas><i class="knob hue-k"></i></div>';
+    document.body.appendChild(pop);
+    const sv = pop.querySelector('.sv'), hueC = pop.querySelector('.hue'), svK = pop.querySelector('.sv-k'), hueK = pop.querySelector('.hue-k');
+    let Hh = 0, Ss = 1, Vv = 1;
+    const hsv2hex = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+      return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
+    const hex2hsv = hex => { const [r, g, b] = hexToRgb(hex).map(x => x / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+      let h = 0; if (d){ h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+      return [h, mx ? d / mx : 0, mx]; };
+    { const g = hueC.getContext('2d'), gr = g.createLinearGradient(0, 0, 400, 0);
+      for (let i = 0; i <= 6; i++) gr.addColorStop(i / 6, `hsl(${i * 60} 100% 50%)`); g.fillStyle = gr; g.fillRect(0, 0, 400, 44); }
+    const drawSV = () => {
+      const g = sv.getContext('2d'); g.fillStyle = `hsl(${Hh} 100% 50%)`; g.fillRect(0, 0, 400, 300);
+      let gr = g.createLinearGradient(0, 0, 400, 0); gr.addColorStop(0, '#fff'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 400, 300);
+      gr = g.createLinearGradient(0, 0, 0, 300); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, '#000'); g.fillStyle = gr; g.fillRect(0, 0, 400, 300);
+    };
+    const knobs = () => {
+      svK.style.left = (Ss * 100) + '%'; svK.style.top = ((1 - Vv) * 100) + '%'; svK.style.background = hsv2hex(Hh, Ss, Vv);
+      hueK.style.left = (Hh / 360 * 100) + '%'; hueK.style.top = '50%'; hueK.style.background = `hsl(${Hh} 100% 50%)`;
+    };
+    const pick = () => { const col = hsv2hex(Hh, Ss, Vv); custom.value = col; setColor(col); knobs(); };
+    const place = () => {
+      const r = lab.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight, m = 8;
+      const side = (lab.closest('.tools') || lab).getBoundingClientRect();
+      let x = side.right + m, y = r.top + r.height / 2 - ph / 2;               // beside the tool bar, level with Mix
+      if (x + pw > innerWidth - m || side.width > innerWidth * .6){ x = r.left + r.width / 2 - pw / 2; y = Math.min(r.top, side.top) - ph - m; if (y < m) y = r.bottom + m; }   // above the colour pop-out (phones)
+      pop.style.left = Math.max(m, Math.min(innerWidth - pw - m, x)) + 'px'; pop.style.top = Math.max(m, Math.min(innerHeight - ph - m, y)) + 'px';
+    };
+    const open = () => { [Hh, Ss, Vv] = hex2hsv(custom.value || '#8a5cf6'); if (Ss < .02) Ss = .02; pop.hidden = false; drawSV(); knobs(); place(); lab.classList.add('open'); };
+    const close = () => { pop.hidden = true; lab.classList.remove('open'); };
+    lab.addEventListener('click', e => { e.preventDefault(); pop.hidden ? open() : close(); });
+    custom.addEventListener('click', e => e.preventDefault());
+    document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !lab.contains(e.target)) close(); }, true);
+    addEventListener('resize', () => { if (!pop.hidden) place(); });
+    const drag = (el, fn) => {
+      let on = false;
+      const at = e => { const r = el.getBoundingClientRect(); fn(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), Math.max(0, Math.min(1, (e.clientY - r.top) / r.height))); };
+      el.addEventListener('pointerdown', e => { on = true; try { el.setPointerCapture(e.pointerId); } catch {} at(e); e.preventDefault(); });
+      el.addEventListener('pointermove', e => { if (on) at(e); });
+      const off = () => { on = false; }; el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off);
+    };
+    drag(sv, (x, y) => { Ss = x; Vv = 1 - y; pick(); });
+    drag(hueC, x => { Hh = Math.min(359.9, x * 360); drawSV(); pick(); });
+  }
   function setColor(col){
     color = col;
     swWrap.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', s.dataset.color.toLowerCase() === col.toLowerCase()));
@@ -3241,7 +3295,7 @@
   board.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
     if (e.pointerType === 'pen'){ touches.clear(); gesture = null; return; }
-    if (e.pointerType === 'touch' && penRecent()){ e.stopImmediatePropagation(); return; }   // the hand resting while you write with the Pencil   // the Pencil never starts a pinch
+    if (e.pointerType === 'touch' && penRecent()){ touches.delete(e.pointerId); e.stopImmediatePropagation(); return; }   // the hand resting while you write with the Pencil   // the Pencil never starts a pinch
     if (drawing && activeType === 'pen'){ e.stopImmediatePropagation(); return; }   // a palm resting while the Pencil draws: ignore it
     if (e.isPrimary){ touches.clear(); gesture = null; }
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -3274,6 +3328,23 @@
   window.addEventListener('pointerup', e => { if (!board.contains(e.target)) liftTouch(e); }, true);
   window.addEventListener('pointercancel', e => { if (!board.contains(e.target)) liftTouch(e); }, true);
 
+
+  // ---------- start a line a little off the paper (Pencil or mouse): the stroke is handed to the paper ----------
+  window.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch' || e.target === c || !e.isTrusted) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (!e.target.closest || e.target.closest('button, input, select, textarea, label, a, [contenteditable], [role="dialog"], [role="menu"], nav, header, .menubar, .tools, .film, .dock, .extras, .more-sheet, .overlay, #typeBar, .mix-pop, .mic-pop, .mb-drop, .toast')) return;
+    if (document.querySelector('[id$="Overlay"]:not([hidden])')) return;   // a window is open
+    if (playing || (typeof moveOn !== 'undefined' && moveOn)) return;
+    const r = c.getBoundingClientRect(), pad = 70;
+    if (!r.width || e.clientX < r.left - pad || e.clientX > r.right + pad || e.clientY < r.top - pad || e.clientY > r.bottom + pad) return;
+    e.stopPropagation(); e.preventDefault();
+    const ev = new PointerEvent('pointerdown', { pointerId: e.pointerId, pointerType: e.pointerType, isPrimary: e.isPrimary, bubbles: true, cancelable: true, composed: true,
+      clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY, pressure: e.pressure, tiltX: e.tiltX, tiltY: e.tiltY,
+      width: e.width, height: e.height, button: e.button, buttons: e.buttons || 1 });
+    c.dispatchEvent(ev);
+    try { c.setPointerCapture(e.pointerId); } catch {}   // the rest of the line goes to the paper too
+  }, true);
 
   // ---------- Apple Pencil: catch quick taps / short strokes that iPad sometimes doesn't pass on ----------
   // Tapping or writing very fast with the Pencil, iPad can drop the 'pointer' events of a touch in the middle (three quick
@@ -5012,12 +5083,17 @@
   // ---------- finger taps on the paper: 2 fingers = undo, 3 fingers = redo ----------
   {
     let tapStart = 0, tapMax = 0, tapMoved = false, tapPen = false; const tapPts = new Map();
+    // is the Pencil on the glass right now? (a missed Pencil "lift" must never swallow the next undo tap)
+    let penDownNow = false, penUpAt = -1e9;
+    window.addEventListener('pointerdown', e => { if (e.pointerType === 'pen') penDownNow = true; }, true);
+    const penLift = e => { if (e.pointerType === 'pen'){ penDownNow = false; penUpAt = performance.now(); } };
+    window.addEventListener('pointerup', penLift, true); window.addEventListener('pointercancel', penLift, true);
     window.addEventListener('pointerdown', e => {
       if (e.target !== c) return;
       if (e.pointerType === 'pen') tapPen = true;
       if (e.pointerType !== 'touch') return;
-      if (penRecent()) return;   // a resting hand while writing is never an undo tap
-      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = activeType === 'pen' && drawing; }
+      if (penDownNow || performance.now() - penUpAt < 200) return;   // a hand resting while the Pencil writes is never an undo tap
+      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = false; }
       tapPts.set(e.pointerId, { x: e.clientX, y: e.clientY }); tapMax = Math.max(tapMax, tapPts.size);
     }, true);
     window.addEventListener('pointermove', e => { const q = tapPts.get(e.pointerId); if (q && Math.hypot(e.clientX - q.x, e.clientY - q.y) > 18) tapMoved = true; }, true);
@@ -5025,7 +5101,7 @@
       if (!tapPts.delete(e.pointerId) || tapPts.size) return;
       const quick = performance.now() - tapStart < 400;
       if (tapMax >= 2 && quick && !tapMoved && !tapPen){
-        setTimeout(() => { try { if (tapMax === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 0);
+        setTimeout(() => { try { if (drawing && activeType === 'pen' && !penDownNow) end(); } catch {} try { if (tapMax === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 0);
       }
       tapPen = false;
     };
