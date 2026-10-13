@@ -35,8 +35,12 @@ Plant a stick of cartoon dynamite, watch the fuse fizz… and poof! A clean page
 
 MAKE CARTOONS
 • Frame-by-frame flipbook animation
-• A "ghost" of the last frame helps you line things up
-• Play your cartoon slow, medium or fast
+• Draw a background once and it stays behind every frame
+• Ghosts of the frame before and after help you line things up
+• Hold a frame longer, bounce back and forth, drag frames into a new order
+• Move a whole drawing, add frames anywhere
+• Record your voice and it plays with your cartoon (and goes into the video)
+• Play your cartoon medium, fast or super fast
 
 SPEED ART
 Every stroke is recorded. Watch your whole drawing come together in a fast video, and save it to share.

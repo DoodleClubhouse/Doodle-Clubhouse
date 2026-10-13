@@ -338,6 +338,32 @@
   .btn.sm.ico svg{width:18px; height:18px}
   #ghostBtn[aria-pressed="true"] svg circle{fill:var(--ink)}
   #delFrame.armed{background:var(--pop); color:#fff}
+
+  /* animation extras: background tile, holds, reorder, move, sound */
+  .frame.bgtile.none{background:repeating-linear-gradient(45deg, rgba(255,253,247,.7) 0 6px, rgba(255,253,247,.4) 6px 12px)}
+  .frame.bgtile canvas{position:absolute; inset:0}
+  .frame.bgtile .bgico{position:absolute; inset:0; display:grid; place-items:center; color:var(--ink); opacity:.7}
+  .frame.bgtile .num{left:50%; right:auto; transform:translateX(-50%); background:#3d7bd9; color:#fff; padding:2px 4px; font-size:9px}
+  .frame.bgtile .bgico svg{width:22px; height:22px; max-width:70%; max-height:70%}
+  .strip.has-bg .frame[data-i]{background-image:var(--bg-thumb), var(--paper-thumb, none); background-size:100% 100%, cover; background-position:center}
+  .frame .hold{position:absolute; right:3px; top:3px; background:#ffb400; color:var(--ink); font:900 10px/1 var(--body); padding:3px 5px; border-radius:999px; border:1.5px solid var(--ink)}
+  .frame{-webkit-touch-callout:none; -webkit-user-select:none; user-select:none}
+  .frame.lifted{transform:scale(1.12) rotate(-3deg); box-shadow:0 8px 16px rgba(0,0,0,.35); z-index:3; opacity:.9}
+  .frame.drop-l{box-shadow:-5px 0 0 var(--pop)} .frame.drop-r{box-shadow:5px 0 0 var(--pop)}
+  .strip.reordering{overflow:hidden; touch-action:none}
+  .btn.sm.hold{display:inline-flex; align-items:center; gap:2px; padding:6px 7px; font:900 12px/1 var(--body)}
+  .btn.sm.hold svg{width:16px; height:16px}
+  .btn.sm.hold.on{background:#ffb400}
+  #micBtn{position:relative}
+  #micBtn .mic-dot{position:absolute; right:3px; top:3px; width:7px; height:7px; border-radius:50%; background:#2fb86e; display:none}
+  #micBtn.has .mic-dot{display:block}
+  #micBtn.rec{background:var(--pop); color:#fff; animation:micPulse 1s ease-in-out infinite}
+  @keyframes micPulse{50%{box-shadow:0 0 0 5px rgba(255,90,95,.35)}}
+  body.move-on #c{cursor:move!important}
+  body.bg-edit .paper{outline:3px dashed #3d7bd9; outline-offset:3px}
+  .mic-pop{position:fixed; z-index:60; background:var(--plank); border:2px solid var(--ink); border-radius:12px; padding:6px; display:flex; flex-direction:column; gap:5px; box-shadow:0 8px 20px rgba(0,0,0,.3)}
+  .mic-pop .btn{justify-content:flex-start; white-space:nowrap}
+  @media (max-width:760px){ .film-side{flex-wrap:wrap} }
   .seg button[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
 
   /* Phone dock (hidden on bigger screens) */
@@ -1025,6 +1051,15 @@
     html body[data-panel="frames"] .film .seg button{flex:1 1 0; min-width:0!important; padding:5px 0!important; display:flex!important; justify-content:center; align-items:center; overflow:hidden}
     html body[data-panel="frames"] .film .seg button svg{height:9px!important; width:auto!important; flex:none}
     html body[data-panel="frames"] .film .film-side .btn.sm.ico{padding:4px 7px!important}
+    /* more frame buttons: three across, a little smaller */
+    html body[data-panel="frames"] .film .film-side{grid-template-columns:1fr 1fr 1fr; gap:2px!important}
+    html body[data-panel="frames"] .film .film-side .btn.sm{padding:3px 2px!important; min-width:0; width:100%; justify-content:center; border-radius:8px}
+    html body[data-panel="frames"] .film .film-side .btn.sm svg{width:15px!important; height:15px!important; min-width:15px; flex:none}
+    html body[data-panel="frames"] .film #insFrame{order:0} html body[data-panel="frames"] .film #holdBtn{order:2}
+    html body[data-panel="frames"] .film #moveBtn{order:3} html body[data-panel="frames"] .film #micBtn{order:3}
+    html body[data-panel="frames"] .film #bounceBtn{order:4}
+    html body[data-panel="frames"] .film #holdBtn svg{display:none}
+    html body[data-panel="frames"] .film #holdBtn{font-size:11px; letter-spacing:-.5px}
   }
   /* phone sideways: skinnier menu bar with the logo centred over it; pop-outs reach near the top and their buttons fill them */
   @media (max-height:500px) and (orientation:landscape){
@@ -1462,6 +1497,7 @@
 
       <div class="paper" id="paper">
         <canvas id="paperBg" class="layer" aria-hidden="true"></canvas>
+        <canvas id="bgLayer" class="layer" aria-hidden="true" hidden></canvas>
         <canvas id="c" width="1280" height="720" aria-label="Drawing paper"></canvas>
         <canvas id="live" class="layer" width="1280" height="720" aria-hidden="true"></canvas>
         <canvas id="ghost" class="layer ghost" width="640" height="360" aria-hidden="true" hidden></canvas>
@@ -1477,15 +1513,20 @@
       <div class="strip" id="strip"></div>
       <div class="film-side">
         <div class="film-row">
+          <button class="btn sm ico" id="insFrame" title="Add a blank frame right after this one" aria-label="Add a frame after this one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="6" height="12" rx="1.5"/><rect x="15.5" y="6" width="6" height="12" rx="1.5"/><path d="M12 8.5v7M8.5 12h7"/></svg></button>
           <button class="btn sm ico" id="dupFrame" title="Copy frame: make a copy to change a little" aria-label="Copy frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
           <button class="btn sm ico" id="delFrame" title="Delete frame" aria-label="Delete frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+          <button class="btn sm hold" id="holdBtn" title="Hold: keep this frame on screen longer (tap for 2, 3 or 4 beats)" aria-label="Hold this frame longer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg><span id="holdLbl">×1</span></button>
+          <button class="btn sm ico toggle" id="moveBtn" aria-pressed="false" title="Move: drag the whole drawing on this frame" aria-label="Move the whole drawing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
+          <button class="btn sm ico" id="micBtn" title="Sound: record your voice while your cartoon plays" aria-label="Record a sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span class="mic-dot" aria-hidden="true"></span></button>
           <button class="btn sm ico" id="exportAnimBtn" title="Export animation" aria-label="Export" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
         </div>
         <div class="film-row">
           <div class="seg" role="group" aria-label="Speed">
             <button data-speed="medium" aria-pressed="true" title="Medium" aria-label="Medium"><svg viewBox="0 0 19 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/></svg></button><button data-speed="fast" aria-pressed="false" title="Fast" aria-label="Fast"><svg viewBox="0 0 28 16" height="14" fill="currentColor" aria-hidden="true"><path d="M1 2l8 6-8 6z"/><path d="M10 2l8 6-8 6z"/><path d="M19 2l8 6-8 6z"/></svg></button><button data-speed="turbo" aria-pressed="false" title="Super fast (15 a second)" aria-label="Super fast"><svg viewBox="0 0 26 16" height="14" fill="currentColor" aria-hidden="true"><path d="M13.5 1 6 9h5l-1.5 6L17 7h-5z"/><path d="M1 3l5 5-5 5zM20 3l5 5-5 5z" opacity=".7"/></svg></button>
           </div>
-          <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: show the last frame faintly so you can line things up" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
+          <button class="btn sm toggle ico" id="ghostBtn" aria-pressed="true" title="Ghost: see the frame before (and the next one in blue) faintly, to line things up" aria-label="Ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z" fill="currentColor" opacity=".9"/><circle cx="9.5" cy="11" r="1.4" fill="var(--paper)"/><circle cx="14.5" cy="11" r="1.4" fill="var(--paper)"/></svg></button>
+          <button class="btn sm toggle ico" id="bounceBtn" aria-pressed="false" title="Bounce: play forwards, then backwards" aria-label="Bounce (play forwards then backwards)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h14l-3-3M20 15H6l3 3"/></svg></button>
         </div>
       </div>
     </section>
@@ -1920,6 +1961,7 @@
   }
 
   function setTool(t, s){
+    try { window.__moveOff && window.__moveOff(); } catch {}
     if (t !== 'stamp') try { stampPop.hidden = true; } catch {}
     if (t === 'train' && tool === 'train' && lastTrack && lastTrack.page === cur){ trainGo(lastTrack.T, lastTrack.hg); return; }   // tap again: all aboard, one more ride!
     if (t !== 'text') try { typeFinish(); } catch {}
@@ -4656,10 +4698,10 @@
       await refitP; await commit();
       const k = Math.min(1, 360 / Math.max(W, H)), tw = Math.round(W * k), th = Math.round(H * k);
       const tmp = mk(tw, th), tg = tmp.getContext('2d');
-      if (frames[0] && frames[0].blob){ const b = await createImageBitmap(frames[0].blob); tg.drawImage(paperCanvas(tw, th), 0, 0); tg.drawImage(b, 0, 0, tw, th); b.close && b.close(); }
+      if (frames[0] && frames[0].blob){ const b = await createImageBitmap(frames[0].blob); tg.drawImage(paperCanvas(tw, th), 0, 0); if (bgBlob){ const bb = await createImageBitmap(bgBlob); bgDraw(tg, bb, tw, th); bb.close && bb.close(); } tg.drawImage(b, 0, 0, tw, th); b.close && b.close(); }
       else withPaper(tg, c, tw, th);
       const id = curProject || Date.now();
-      await projPut({ id, updated: Date.now(), W, H, speed, paperType, cur, blobs: frames.map(f => f.blob), speedLog: (await speedChain, speedLog.slice()), thumb: tmp.toDataURL('image/jpeg', 0.8), pages: frames.length });
+      await projPut({ id, updated: Date.now(), W, H, speed, paperType, cur, blobs: frames.map(f => f.blob), holds: frames.map(f => f.hold || 1), bg: bgBlob, bounce, audio: audioClip, speedLog: (await speedChain, speedLog.slice()), thumb: tmp.toDataURL('image/jpeg', 0.8), pages: frames.length });
       const was = curProject; setCurProject(id);
       projDirty = false;
       if (openSession){ const sid = openSession; openSession = 0; try { await sessDel(sid); } catch {} }
@@ -4697,7 +4739,10 @@
     await refitP;
     paperSetDims(p.W, p.H);
     if (p.paperType) setPaper(p.paperType);
-    frames = p.blobs.map(b => ({ thumb: mk(TW, TH), blob: b || null, dirty: !b }));
+    frames = p.blobs.map((b, i) => ({ thumb: mk(TW, TH), blob: b || null, dirty: !b, hold: Math.max(1, Math.min(4, (p.holds && p.holds[i]) || 1)) }));
+    bgEdit = false; bgDirty = false; document.body.classList.remove('bg-edit'); bgBlob = p.bg instanceof Blob ? p.bg : null;
+    bounce = !!p.bounce; syncBounce(); setAudio(p.audio && p.audio.blob instanceof Blob ? p.audio : null);
+    await drawBgLayer();
     await Promise.all(frames.map(async f => { if (f.blob){ const b = await bmpOf(f.blob, TW, TH); f.thumb.getContext('2d').drawImage(b, 0, 0, TW, TH); } }));
     cur = Math.min(p.cur || 0, frames.length - 1);
     speed = FPS[p.speed] && p.speed !== 'slow' ? p.speed : 'medium'; syncSpeed();
@@ -5502,7 +5547,37 @@
   ghost.width = player.width = MW; ghost.height = player.height = MH;
   const gctx = ghost.getContext('2d'), pctx = player.getContext('2d');
 
-  const newFrame = () => ({ thumb: mk(TW, TH), blob: null, dirty: true });
+  const newFrame = () => ({ thumb: mk(TW, TH), blob: null, dirty: true, hold: 1 });
+  // a background drawn once that shows behind every frame; 'bounce' plays forwards then backwards; 'moveOn' drags the whole drawing
+  let bgBlob = null, bgEdit = false, bgDirty = false, bounce = false, moveOn = false, bgThumbC = mk(TW, TH);
+  const bgLayer = $('bgLayer');
+  // a background picture fitted to the paper (same as frames are), without clearing what's underneath
+  function bgDraw(g, img, w, h){ const s = Math.min(w / img.width, h / img.height); g.drawImage(img, (w - img.width * s) / 2, (h - img.height * s) / 2, img.width * s, img.height * s); }
+  let bgSeq = 0;
+  async function drawBgLayer(){
+    const tok = ++bgSeq;
+    const bmp = bgBlob ? await createImageBitmap(bgBlob).catch(() => null) : null;
+    if (tok !== bgSeq){ bmp && bmp.close && bmp.close(); return; }
+    if (bgLayer.width !== W || bgLayer.height !== H){ bgLayer.width = W; bgLayer.height = H; }
+    const g = bgLayer.getContext('2d'); g.clearRect(0, 0, W, H);
+    let url = '';
+    if (bmp){ bgDraw(g, bmp, W, H); bmp.close && bmp.close(); const t = mk(TW, TH); t.getContext('2d').drawImage(bgLayer, 0, 0, TW, TH); url = t.toDataURL(); }
+    bgLayer.hidden = !bmp || bgEdit;
+    strip.classList.toggle('has-bg', !!url); strip.style.setProperty('--bg-thumb', url ? `url(${url})` : 'none');
+    paintBgThumb();
+  }
+  function paintBgThumb(){
+    if (bgThumbC.width !== TW || bgThumbC.height !== TH) bgThumbC = mk(TW, TH);
+    const g = bgThumbC.getContext('2d'); g.clearRect(0, 0, TW, TH);
+    if (bgEdit) g.drawImage(c, 0, 0, TW, TH); else if (bgBlob && !bgLayer.hidden) g.drawImage(bgLayer, 0, 0, TW, TH);
+  }
+  // the order frames play in: holds repeat a frame, bounce comes back the other way
+  function playOrder(){
+    const n = frames.length; let idx = frames.map((_, i) => i);
+    if (bounce && n > 2) idx = idx.concat(idx.slice(1, -1).reverse());
+    const out = []; idx.forEach(i => { for (let k = 0; k < (frames[i].hold || 1); k++) out.push(i); });
+    return out;
+  }
   let frameSeq = 0;
   const pageId = f => f ? (f.id || (f.id = ++frameSeq)) : 0;   // which page a speed-art picture belongs to
   // after a paper-size change, other frames are refitted to the new paper one at a time, off the critical path
@@ -5579,6 +5654,7 @@
   const drawThumb = f => { const g = f.thumb.getContext('2d'); g.clearRect(0, 0, TW, TH); g.drawImage(c, 0, 0, TW, TH); };
   function onCanvasChanged(){
     if (!frames.length) return;
+    if (bgEdit){ bgDirty = true; paintBgThumb(); projDirty = true; canvasVer++; speedUndo = false; speedStroke = null; schedulePersist(); return; }
     const f = frames[cur]; f.dirty = true; f.edited = true; drawThumb(f); projDirty = true; canvasVer++; schedulePersist(); speedRecord();
   }
   // ---------- speed art recorder: a small picture of the page after each change ----------
@@ -5586,7 +5662,7 @@
   const SPEED_MAX = 700, SPEED_SIDE = 560;
   function speedShot(){
     const k = Math.min(1, SPEED_SIDE / Math.max(W, H)), w = Math.round(W * k), h = Math.round(H * k);
-    const t = mk(w, h); withPaper(t.getContext('2d'), c, w, h);
+    const t = mk(w, h), tg = t.getContext('2d'); tg.drawImage(paperCanvas(w, h), 0, 0); if (!bgLayer.hidden) tg.drawImage(bgLayer, 0, 0, w, h); tg.drawImage(c, 0, 0, w, h);
     return new Promise(r => t.toBlob(r, 'image/jpeg', 0.72));
   }
   // entries: { b: picture after the change, paths: [strokes that made it] } — a stroke is { pts:[[x,y],...] (0..1 of the paper), w: width (0..1 of the long side), mir }
@@ -5657,7 +5733,9 @@
   }
   function speedReset(){ clearTimeout(speedT); speedPending = false; speedLog = []; speedStroke = null; speedRecord.paths = null; }
   const canvasBlob = () => new Promise(r => c.toBlob(b => r(b), 'image/png'));
+  function canvasEmpty(){ const d = ctx.getImageData(0, 0, W, H).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return false; return true; }
   async function commit(){
+    if (bgEdit){ if (bgDirty){ bgDirty = false; bgBlob = canvasEmpty() ? null : await canvasBlob(); } return; }
     const f = frames[cur];
     if (f && (f.dirty || !f.blob)){ f.dirty = false; f.blob = await canvasBlob(); }
   }
@@ -5673,13 +5751,24 @@
 
   function renderStrip(){
     strip.innerHTML = '';
+    // the background tile: draw once, it shows behind every frame
+    const bt = document.createElement('button');
+    bt.className = 'frame bgtile' + (!bgBlob && !bgEdit ? ' none' : ''); bt.title = 'Background: draw it once and it shows behind every frame'; bt.setAttribute('aria-label', 'Background (shows behind every frame)');
+    bt.setAttribute('aria-current', bgEdit);
+    paintBgThumb(); bt.appendChild(bgThumbC);
+    if (!bgBlob && !bgEdit) bt.insertAdjacentHTML('beforeend', '<span class="bgico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 19l6-8 4 5 3-3 7 6z"/><circle cx="16.5" cy="7" r="2.5"/></svg></span>');
+    bt.insertAdjacentHTML('beforeend', '<span class="num">BG</span>');
+    bt.onclick = () => { if (!bgEdit) enterBg(); };
+    strip.appendChild(bt);
     frames.forEach((f, i) => {
       const b = document.createElement('button');
-      b.className = 'frame'; b.setAttribute('aria-label', `Frame ${i+1} of ${frames.length}`);
-      b.setAttribute('aria-current', i === cur);
+      b.className = 'frame'; b.dataset.i = i; b.setAttribute('aria-label', `Frame ${i+1} of ${frames.length}${(f.hold || 1) > 1 ? `, held ${f.hold} beats` : ''}. Press and hold to drag it to a new place.`);
+      b.setAttribute('aria-current', !bgEdit && i === cur);
       b.appendChild(f.thumb);
       const n = document.createElement('span'); n.className = 'num'; n.textContent = i + 1; b.appendChild(n);
-      b.onclick = () => goTo(i);
+      if ((f.hold || 1) > 1){ const hb = document.createElement('span'); hb.className = 'hold'; hb.textContent = '×' + f.hold; b.appendChild(hb); }
+      b.onclick = () => { if (performance.now() - dragDone < 450) return; goTo(i); };
+      b.addEventListener('pointerdown', e => dragStart(e, i, b));
       strip.appendChild(b);
     });
     const add = document.createElement('button');
@@ -5688,13 +5777,14 @@
     const locked = !framesUnlocked && frames.length >= FREE_FRAMES;
     add.classList.toggle('locked', locked);
     if (locked){ add.insertAdjacentHTML('beforeend', '<span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span>'); add.title = 'Unlock unlimited frames'; add.setAttribute('aria-label', 'Unlock unlimited frames'); }
-    add.onclick = () => addFrame(false);
+    add.title = locked ? add.title : 'Add a blank frame at the end'; if (!locked) add.setAttribute('aria-label', 'Add a blank frame at the end');
+    add.onclick = () => addFrame(false, frames.length);
     strip.appendChild(add);
     for (let k = frames.length + 1; k < FREE_FRAMES; k++){
       const e = document.createElement('button');
       e.className = 'frame empty'; e.title = 'Add a frame'; e.setAttribute('aria-label', `Empty frame ${k + 1}`);
       e.innerHTML = `<span class="num">${k + 1}</span>`;
-      e.onclick = () => addFrame(false);
+      e.onclick = () => addFrame(false, frames.length);
       strip.appendChild(e);
     }
     if (!framesUnlocked){
@@ -5702,22 +5792,94 @@
       note.textContent = `${Math.min(frames.length, FREE_FRAMES)} of ${FREE_FRAMES} free frames`;
       strip.appendChild(note);
     }
-    const el = strip.children[cur]; el && el.scrollIntoView({ block:'nearest', inline:'nearest' });
-    syncDock();
+    const el = bgEdit ? bt : strip.querySelector(`[data-i="${cur}"]`); el && el.scrollIntoView({ block:'nearest', inline:'nearest' });
+    syncDock(); syncHold();
   }
-  function highlight(i){ [...strip.querySelectorAll('.frame:not(.add)')].forEach((b, k) => b.setAttribute('aria-current', k === i)); }
+  function highlight(i){ strip.querySelectorAll('.frame[data-i]').forEach((b, k) => b.setAttribute('aria-current', k === i)); }
 
+  // ---------- press and hold a frame, then drag it to a new place ----------
+  let drag = null, dragDone = 0;
+  function dragStart(e, i, b){
+    if (playing || busy || frames.length < 2 || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const d = { i, b, id: e.pointerId, x: e.clientX, y: e.clientY, live: false, to: i };
+    d.t = setTimeout(() => { if (drag !== d) return; d.live = true; b.classList.add('lifted'); strip.classList.add('reordering'); try { navigator.vibrate && navigator.vibrate(12); } catch {} }, 380);
+    drag = d;
+  }
+  const dropMarks = () => strip.querySelectorAll('.drop-l, .drop-r').forEach(x => x.classList.remove('drop-l', 'drop-r'));
+  window.addEventListener('pointermove', e => {
+    const d = drag; if (!d || e.pointerId !== d.id) return;
+    if (!d.live){ if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10){ clearTimeout(d.t); drag = null; } return; }
+    e.preventDefault();
+    const tiles = [...strip.querySelectorAll('.frame[data-i]')], col = getComputedStyle(strip).flexDirection.startsWith('column');
+    const p = col ? e.clientY : e.clientX;
+    let slot = tiles.length;
+    for (let k = 0; k < tiles.length; k++){ const r = tiles[k].getBoundingClientRect(); if (p < (col ? r.top + r.height / 2 : r.left + r.width / 2)){ slot = k; break; } }
+    d.to = slot > d.i ? slot - 1 : slot;
+    dropMarks();
+    if (d.to !== d.i){ if (slot < tiles.length) tiles[slot].classList.add('drop-l'); else tiles[tiles.length - 1].classList.add('drop-r'); }
+    // near the ends of the strip: scroll along
+    const sr = strip.getBoundingClientRect(), edge = 36;
+    if (col){ if (e.clientY < sr.top + edge) strip.scrollTop -= 14; else if (e.clientY > sr.bottom - edge) strip.scrollTop += 14; }
+    else { if (e.clientX < sr.left + edge) strip.scrollLeft -= 14; else if (e.clientX > sr.right - edge) strip.scrollLeft += 14; }
+  }, { passive: false });
+  const dragEnd = e => {
+    const d = drag; if (!d || e.pointerId !== d.id) return;
+    clearTimeout(d.t); drag = null;
+    if (!d.live) return;
+    d.b.classList.remove('lifted'); strip.classList.remove('reordering'); dropMarks();
+    dragDone = performance.now();
+    if (e.type === 'pointercancel' || d.to === d.i) return;
+    const curF = frames[cur], [f] = frames.splice(d.i, 1);
+    frames.splice(d.to, 0, f); cur = frames.indexOf(curF);
+    projDirty = true; renderStrip(); drawGhost(); schedulePersist();
+    toast(`Moved to frame ${d.to + 1}`);
+  };
+  window.addEventListener('pointerup', dragEnd); window.addEventListener('pointercancel', dragEnd);
+  strip.addEventListener('touchmove', e => { if (drag && drag.live) e.preventDefault(); }, { passive: false });
+  strip.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('.frame')) e.preventDefault(); });
+
+  // ---------- the background ----------
+  async function enterBg(){
+    if (frames.some(f => f.refit)) await refitP;
+    if (busy) return;
+    if (playing) stopPlay();
+    busy = true;
+    await commit(); bgEdit = true; bgDirty = false; document.body.classList.add('bg-edit');
+    await paintBlob(bgBlob);
+    resetHistory(); await drawBgLayer(); renderStrip(); await drawGhost();
+    busy = false;
+    toast('Drawing the background: it shows behind every frame. Tap a frame to go back.');
+  }
+  async function leaveBg(i){
+    if (busy || !bgEdit) return;
+    busy = true;
+    await commit(); bgEdit = false; document.body.classList.remove('bg-edit');
+    cur = Math.max(0, Math.min(i, frames.length - 1)); await paintBlob(frames[cur].blob);
+    resetHistory(); await drawBgLayer(); renderStrip(); await drawGhost(); speedPageCut();
+    busy = false; schedulePersist();
+  }
+
+  let ghostSeq = 0;
   async function drawGhost(){
-    if (frames[cur - 1] && frames[cur - 1].refit) await refitP;
+    const tok = ++ghostSeq;
+    const prev = bgEdit ? frames[cur] : frames[cur - 1], next = bgEdit ? null : frames[cur + 1];
+    if ((prev && prev.refit) || (next && next.refit)) await refitP;
+    const hasP = !!(prev && prev.blob), hasN = !!(next && next.blob);
+    if (!(ghostOn && (hasP || hasN) && !playing)){ if (tok === ghostSeq){ gctx.clearRect(0, 0, MW, MH); ghost.hidden = true; } return; }
+    const bp = hasP ? await bmpOf(prev.blob, MW, MH) : null, bn = hasN ? await bmpOf(next.blob, MW, MH) : null;
+    if (tok !== ghostSeq || playing) return;
     gctx.clearRect(0, 0, MW, MH);
-    const prev = frames[cur - 1];
-    ghost.hidden = !(ghostOn && prev && prev.blob && !playing);
-    if (ghost.hidden) return;
-    const bmp = await bmpOf(prev.blob, MW, MH);
-    gctx.drawImage(bmp, 0, 0, MW, MH);
+    if (bn){   // the next frame, in blue
+      const t = mk(MW, MH), tg = t.getContext('2d');
+      tg.drawImage(bn, 0, 0, MW, MH); tg.globalCompositeOperation = 'source-in'; tg.fillStyle = '#2b6fff'; tg.fillRect(0, 0, MW, MH);
+      gctx.globalAlpha = .75; gctx.drawImage(t, 0, 0); gctx.globalAlpha = 1;
+    }
+    if (bp) gctx.drawImage(bp, 0, 0, MW, MH);   // the frame before, in its own colours
+    ghost.hidden = false;
   }
 
   async function goTo(i){
+    if (bgEdit) return leaveBg(i);
     if (frames.some(f => f.refit)) await refitP;
     if (busy || i < 0 || i >= frames.length) return;
     if (playing) stopPlay();
@@ -5727,7 +5889,8 @@
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
   }
-  async function addFrame(copy){
+  async function addFrame(copy, at){
+    if (bgEdit) await leaveBg(cur);
     if (busy) return;
     if (playing) stopPlay();
     if (!framesUnlocked && frames.length >= FREE_FRAMES){ openFramePaywall(copy); return; }
@@ -5736,15 +5899,17 @@
     const f = newFrame();
     if (copy){ f.blob = frames[cur].blob; f.dirty = false; }
     projDirty = true;
-    frames.splice(cur + 1, 0, f); cur++;
+    const pos = at === undefined ? cur + 1 : Math.max(0, Math.min(at, frames.length));
+    frames.splice(pos, 0, f); cur = pos;
     if (!copy) blank();
     drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
-    toast(copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the last one.`);
+    toast(copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the one before${cur < frames.length - 1 ? ' (and the next in blue)' : ''}.`);
   }
   async function deleteFrame(){
     if (busy) return;
     if (playing) stopPlay();
+    if (bgEdit){ pushUndo(); blank(); onCanvasChanged(); toast('Background cleared'); return; }
     if (frames.length === 1){ pushUndo(); blank(); onCanvasChanged(); toast('Frame cleared'); return; }
     busy = true;
     frames.splice(cur, 1); cur = Math.min(cur, frames.length - 1);
@@ -5754,6 +5919,7 @@
   }
   function startOver(){
     if (playing) stopPlay();
+    bgEdit = false; bgBlob = null; bgDirty = false; document.body.classList.remove('bg-edit'); bounce = false; syncBounce(); setAudio(null); drawBgLayer();
     frames = [newFrame()]; cur = 0; blank(); drawThumb(frames[0]); speedReset();
     projDirty = false; openSession = 0;
     resetHistory(); renderStrip(); drawGhost(); schedulePersist(); toast('New animation ready');
@@ -5763,6 +5929,7 @@
   const PLAY_ICON = playBtn.querySelector('svg').outerHTML;
   const STOP_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
   async function play(){
+    if (bgEdit) await leaveBg(cur);
     await refitP;
     if (busy) return;
     if (frames.length < 2){ toast('Add a second frame to make it move'); return; }
@@ -5776,7 +5943,8 @@
     playBtn.querySelector('svg').outerHTML = STOP_ICON; playLbl.textContent = 'Stop';
     let i = 0;
     c.style.visibility = 'hidden';
-    const tick = () => { pctx.clearRect(0, 0, MW, MH); pctx.drawImage(playBmps[i], 0, 0, MW, MH); highlight(i); i = (i + 1) % playBmps.length; };
+    const order = playOrder();
+    const tick = () => { const fi = order[i]; pctx.clearRect(0, 0, MW, MH); pctx.drawImage(playBmps[fi], 0, 0, MW, MH); highlight(fi); if (i === 0) audioLoop(); i = (i + 1) % order.length; };
     tick(); playTimer = setInterval(tick, 1000 / FPS[speed]);
     playTimer.tick = tick;
     restartTimer = () => { clearInterval(playTimer); playTimer = setInterval(tick, 1000 / FPS[speed]); };
@@ -5784,6 +5952,8 @@
   let restartTimer = () => {};
   function stopPlay(){
     clearInterval(playTimer); playing = false; player.hidden = true; c.style.visibility = '';
+    if (audioEl) try { audioEl.pause(); } catch {}
+    if (recActive) stopRec();
     playBmps.forEach(b => b.close && b.close()); playBmps = [];
     playBtn.querySelector('svg').outerHTML = PLAY_ICON; playLbl.textContent = 'Play';
     highlight(cur); drawGhost();
@@ -5799,6 +5969,127 @@
   segBtns.forEach(b => b.onclick = () => { speed = b.dataset.speed; syncSpeed(); if (playing) restartTimer(); schedulePersist(); });
   const ghostBtn = $('ghostBtn');
   ghostBtn.onclick = () => { ghostOn = !ghostOn; ghostBtn.setAttribute('aria-pressed', ghostOn); drawGhost(); };
+  $('insFrame').onclick = () => addFrame(false);
+
+  // hold: this frame stays on screen for 1, 2, 3 or 4 beats
+  const holdBtn = $('holdBtn');
+  function syncHold(){ const h = (frames[cur] && frames[cur].hold) || 1; $('holdLbl').textContent = '×' + h; holdBtn.classList.toggle('on', h > 1); holdBtn.disabled = bgEdit; }
+  holdBtn.onclick = () => {
+    if (bgEdit || !frames[cur]) return;
+    if (playing) stopPlay();
+    const f = frames[cur]; f.hold = ((f.hold || 1) % 4) + 1;
+    renderStrip(); projDirty = true; schedulePersist();
+    toast(f.hold > 1 ? `Frame ${cur + 1} stays on screen ${f.hold}× as long` : `Frame ${cur + 1}: normal length`);
+  };
+  // bounce: forwards, then backwards
+  const bounceBtn = $('bounceBtn');
+  function syncBounce(){ bounceBtn.setAttribute('aria-pressed', bounce); }
+  bounceBtn.onclick = () => {
+    bounce = !bounce; syncBounce(); projDirty = true; schedulePersist();
+    if (playing){ stopPlay(); play(); }
+    toast(bounce ? 'Bounce: forwards, then backwards' : 'Loop: starts again from frame 1');
+  };
+
+  // move: drag the whole drawing on this frame (or the background)
+  const moveBtn = $('moveBtn');
+  function setMove(on){ moveOn = on; moveBtn.setAttribute('aria-pressed', on); document.body.classList.toggle('move-on', on); if (on) toast('Drag the page to move the whole drawing. Tap Move again when done.'); }
+  window.__moveOff = () => { if (moveOn) setMove(false); };
+  moveBtn.onclick = () => setMove(!moveOn);
+  let mv = null;
+  $('paper').addEventListener('pointerdown', e => {
+    if (!moveOn || e.target !== c) return;
+    e.stopPropagation(); e.preventDefault();
+    if (e.pointerType === 'touch' && typeof penRecent === 'function' && penRecent()) return;
+    if (mv) return;
+    if (playing){ stopPlay(); return; }
+    if (busy) return;
+    const q = pt(e), snap = mk(W, H); snap.getContext('2d').drawImage(c, 0, 0);
+    pushUndo();
+    mv = { id: e.pointerId, x: q.x, y: q.y, snap, moved: false };
+    try { c.setPointerCapture(e.pointerId); } catch {}
+  }, true);
+  window.addEventListener('pointermove', e => {
+    if (!mv || e.pointerId !== mv.id) return;
+    e.stopPropagation();
+    const q = pt(e), dx = Math.round(q.x - mv.x), dy = Math.round(q.y - mv.y);
+    if (dx || dy) mv.moved = true;
+    ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H); ctx.drawImage(mv.snap, dx, dy); ctx.restore();
+  }, true);
+  const mvEnd = e => {
+    if (!mv || e.pointerId !== mv.id) return;
+    e.stopPropagation();
+    const m = mv; mv = null;
+    if (m.moved) onCanvasChanged(); else { undoStack.pop(); syncHist(); }
+  };
+  window.addEventListener('pointerup', mvEnd, true); window.addEventListener('pointercancel', mvEnd, true);
+
+  // ---------- sound: record your voice while the cartoon plays; it plays along and goes into the video ----------
+  const micBtn = $('micBtn');
+  let audioClip = null, audioEl = null, recActive = null;
+  function setAudio(clip){
+    if (audioEl){ try { audioEl.pause(); URL.revokeObjectURL(audioEl.src); } catch {} }
+    audioClip = clip && clip.blob ? clip : null;
+    audioEl = audioClip ? new Audio(URL.createObjectURL(audioClip.blob)) : null;
+    if (audioEl) audioEl.preload = 'auto';
+    micBtn.classList.toggle('has', !!audioClip);
+    micBtn.title = audioClip ? `Sound (${Math.max(1, Math.round(audioClip.dur))}s): listen, record again or delete` : 'Sound: record your voice while your cartoon plays';
+  }
+  function audioLoop(){
+    if (!audioEl || recActive) return;
+    if (audioEl.paused || audioEl.ended){ try { audioEl.currentTime = 0; } catch {} const pr = audioEl.play(); pr && pr.catch && pr.catch(() => {}); }
+  }
+  async function startRec(){
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){ toast('Recording sound isn’t available here'); return; }
+    if (bgEdit) await leaveBg(cur);
+    if (playing) stopPlay();
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch { toast('To record a sound, allow the microphone'); return; }
+    const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+    let rec;
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); }
+    catch { stream.getTracks().forEach(t => t.stop()); toast('Recording sound isn’t available here'); return; }
+    const chunks = [], r = recActive = { rec, stream, t0: 0, stopT: 0 };
+    rec.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+    rec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const dur = (performance.now() - r.t0) / 1000;
+      if (recActive === r) recActive = null;
+      micBtn.classList.remove('rec'); micBtn.setAttribute('aria-label', 'Record a sound');
+      if (chunks.length && dur > 0.4){
+        setAudio({ blob: new Blob(chunks, { type: rec.mimeType || mime || 'audio/mp4' }), dur });
+        projDirty = true; schedulePersist(); toast('Sound saved! Press Play to hear it with your cartoon');
+      } else toast('No sound was recorded');
+    };
+    micBtn.classList.add('rec'); micBtn.setAttribute('aria-label', 'Stop recording');
+    if (frames.length >= 2) await play();   // the cartoon plays while you talk, so the sound lines up
+    if (recActive !== r){ stream.getTracks().forEach(t => t.stop()); return; }
+    r.t0 = performance.now(); rec.start(); r.stopT = setTimeout(stopRec, 60000);
+    toast('Recording… tap the red mic to stop');
+  }
+  function stopRec(){
+    const r = recActive; if (!r) return;
+    clearTimeout(r.stopT);
+    try { if (r.rec.state !== 'inactive') r.rec.stop(); else { recActive = null; r.stream.getTracks().forEach(t => t.stop()); micBtn.classList.remove('rec'); } } catch {}
+    if (playing) stopPlay();
+  }
+  let micPop = null;
+  const closeMicPop = () => { if (micPop){ micPop.remove(); micPop = null; } };
+  function openMicPop(){
+    closeMicPop();
+    const p = micPop = document.createElement('div'); p.className = 'mic-pop'; p.setAttribute('role', 'menu');
+    const item = (label, fn) => { const b = document.createElement('button'); b.className = 'btn sm'; b.textContent = label; b.onclick = () => { closeMicPop(); fn(); }; p.appendChild(b); };
+    item('▶ Listen', () => { if (frames.length >= 2) play(); else audioLoop(); });
+    item('🎙 Record again', startRec);
+    item('🗑 Delete sound', () => { setAudio(null); projDirty = true; schedulePersist(); toast('Sound deleted'); });
+    document.body.appendChild(p);
+    const r = micBtn.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
+    p.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.left + r.width / 2 - pw / 2)) + 'px';
+    p.style.top = (r.top - ph - 8 > 8 ? r.top - ph - 8 : Math.min(innerHeight - ph - 8, r.bottom + 8)) + 'px';
+  }
+  document.addEventListener('pointerdown', e => { if (micPop && !micPop.contains(e.target) && !micBtn.contains(e.target)) closeMicPop(); }, true);
+  micBtn.onclick = () => { if (recActive) return stopRec(); if (micPop) return closeMicPop(); if (!audioClip) return startRec(); openMicPop(); };
 
   // ---------- keep the animation in this browser (IndexedDB holds the frames) ----------
   const DB_NAME = 'doodle-clubhouse', STORE = 'anim';
@@ -5821,7 +6112,7 @@
   }
   let persistT = 0;
   // what's on the go right now; "unsaved" means there are changes that never went into Projects
-  const curRecord = () => ({ v: 2, cur, speed, W, H, paperType, blobs: frames.map(f => f.blob), speedLog, unsaved: projDirty, project: curProject, session: openSession, ts: Date.now() });
+  const curRecord = () => ({ v: 2, cur, speed, W, H, paperType, blobs: frames.map(f => f.blob), holds: frames.map(f => f.hold || 1), bg: bgBlob, bounce, audio: audioClip, speedLog, unsaved: projDirty, project: curProject, session: openSession, ts: Date.now() });
   function schedulePersist(){
     clearTimeout(persistT);
     persistT = setTimeout(async () => {
@@ -5922,12 +6213,13 @@
       clearTimeout(persistT);
       // keep what is on the page right now as a plain canvas copy (fast)
       const snap = mk(W, H); snap.getContext('2d').drawImage(c, 0, 0);
-      const curF = frames[cur];
+      const curF = bgEdit ? null : frames[cur];
+      if (bgEdit) bgDirty = true;
       setDims(w, h);
       reframePage(curF, snap, snap.width, snap.height, W, H, ctx);   // art keeps its size, or shrinks just enough never to be cut off
       frames.forEach(f => { const t = mk(TW, TH); t.getContext('2d').drawImage(f.thumb, 0, 0, TW, TH); f.thumb = t; if (f !== curF && f.blob) f.refit = true; });
       if (curF){ curF.dirty = true; drawThumb(curF); }
-      syncHist(); renderStrip(); drawGhost();   // undo still works after a size change
+      syncHist(); renderStrip(); drawGhost(); drawBgLayer();   // undo still works after a size change
       if (announce) toast(NAMES[sizeMode] || 'New paper size', true);
       refitP = refitP.then(refitFrames);
     }
@@ -6078,15 +6370,22 @@
     const k = Math.min(1, maxSide / Math.max(W, H));
     let w = Math.round(W * k), h = Math.round(H * k);
     if (even){ w -= w % 2; h -= h % 2; }
-    const bmps = [];
-    for (const f of frames) bmps.push(await bmpOf(f.blob, w, h));
+    const bmps = [], bgB = bgBlob ? await createImageBitmap(bgBlob).catch(() => null) : null;
+    for (const f of frames){
+      const b = await bmpOf(f.blob, w, h);
+      if (!bgB){ bmps.push(b); continue; }
+      const t = mk(w, h), g = t.getContext('2d'); bgDraw(g, bgB, w, h); g.drawImage(b, 0, 0, w, h); b.close && b.close(); bmps.push(t);
+    }
+    bgB && bgB.close && bgB.close();
     return { w, h, bmps };
   }
 
   $('exJpg').onclick = () => runExport(async () => {
     exStatus('Getting your picture ready…');
     if (logoImg && logoImg.decode) await logoImg.decode().catch(() => {});
-    const out = mk(W, H); exportPaint(out.getContext('2d'), c, W, H);
+    let src = c;
+    if (bgBlob && !bgEdit && !bgLayer.hidden){ src = mk(W, H); const sg = src.getContext('2d'); sg.drawImage(bgLayer, 0, 0); sg.drawImage(c, 0, 0); }
+    const out = mk(W, H); exportPaint(out.getContext('2d'), src, W, H);
     const blob = await new Promise(r => out.toBlob(r, 'image/jpeg', 0.92));
     await offer(`doodle-${fileStamp()}.jpg`, blob);
   });
@@ -6095,15 +6394,20 @@
     exStatus('Making your GIF…');
     const { w, h, bmps } = await exportFrames(600, false);
     const tmp = mk(w, h), g = tmp.getContext('2d', { willReadFrequently: true });
-    const imgs = [];
-    for (const b of bmps){ exportPaint(g, b, w, h); imgs.push(g.getImageData(0, 0, w, h).data); b.close && b.close(); }
-    const bytes = await encodeGif(imgs, w, h, Math.max(2, Math.round(100 / FPS[speed])), n => exStatus(`Making your GIF… frame ${n} of ${imgs.length}`));
+    const datas = [];
+    for (const b of bmps){ exportPaint(g, b, w, h); datas.push(g.getImageData(0, 0, w, h).data); b.close && b.close(); }
+    // holds become longer frames; bounce plays back the other way
+    const beat = Math.max(2, Math.round(100 / FPS[speed])), idx = frames.map((_, i) => i);
+    if (bounce && frames.length > 2) idx.push(...idx.slice(1, -1).reverse());
+    const imgs = idx.map(i => datas[i]), delays = idx.map(i => beat * (frames[i].hold || 1));
+    const bytes = await encodeGif(imgs, w, h, delays, n => exStatus(`Making your GIF… frame ${n} of ${imgs.length}`));
     await offer(`doodle-animation-${fileStamp()}.gif`, new Blob([bytes], { type:'image/gif' }));
   });
 
   $('exMp4').onclick = () => runExport(async () => {
     // H.264 only: it plays everywhere (iPhone, Windows, Android). Other codecs in an .mp4 often won't open.
     const types = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1.4D401F', 'video/mp4;codecs=avc1'];
+    if (audioClip) types.unshift('video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2');   // with your sound
     if (NATIVE) types.push('video/mp4');   // iPhone/iPad always record MP4 as H.264
     const mime = window.MediaRecorder && types.find(t => MediaRecorder.isTypeSupported(t));
     if (!mime || !HTMLCanvasElement.prototype.captureStream){
@@ -6114,14 +6418,25 @@
     const rc = mk(w, h), g = rc.getContext('2d');
     exportPaint(g, bmps[0], w, h);
     const stream = rc.captureStream(0), track = stream.getVideoTracks()[0];
+    // your recorded sound goes into the video
+    let actx = null, abuf = null, adest = null;
+    if (audioClip){
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext; actx = new AC();
+        abuf = await actx.decodeAudioData(await audioClip.blob.arrayBuffer());
+        adest = actx.createMediaStreamDestination(); stream.addTrack(adest.stream.getAudioTracks()[0]);
+      } catch { try { actx && actx.close(); } catch {} actx = null; }
+    }
     const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
     const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
     const done = new Promise(r => rec.onstop = r);
     // short animations repeat so the video lasts at least 3 seconds
-    const loops = Math.max(1, Math.ceil(3 * fps / bmps.length)), total = loops * bmps.length;
+    const order = playOrder(), secs = Math.max(3, actx && abuf ? abuf.duration + 0.2 : 0);
+    const loops = Math.max(1, Math.ceil(secs * fps / order.length)), total = loops * order.length;
     rec.start();
+    if (actx && abuf){ try { await actx.resume(); const src = actx.createBufferSource(); src.buffer = abuf; src.connect(adest); src.start(); } catch {} }
     for (let i = 0; i < total; i++){
-      const b = bmps[i % bmps.length];
+      const b = bmps[order[i % order.length]];
       exportPaint(g, b, w, h);
       track.requestFrame ? track.requestFrame() : null;
       exStatus(`Recording your video… ${Math.ceil((total - i) / fps)}s`);
@@ -6129,6 +6444,7 @@
     }
     rec.stop(); await done; track.stop();
     bmps.forEach(b => b.close && b.close());
+    if (actx) try { stream.getAudioTracks().forEach(t => t.stop()); actx.close(); } catch {}
     await offer(`doodle-animation-${fileStamp()}.mp4`, new Blob(chunks, { type: 'video/mp4' }));
   });
 
@@ -6447,7 +6763,7 @@
         let m = map[key]; if (m < 0) m = map[key] = nearest(key);
         idx[p] = m;
       }
-      put([0x21,0xF9,0x04, 0x04, ...u16(delayCs), 0, 0]);
+      put([0x21,0xF9,0x04, 0x04, ...u16(Array.isArray(delayCs) ? delayCs[f] : delayCs), 0, 0]);
       put([0x2C, 0,0, 0,0, ...u16(w), ...u16(h), 0]);
       put(lzw(idx, dict));
       progress(f + 1); await pause();

@@ -56,6 +56,7 @@ workflows:
           PLIST=ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Doodle Clubhouse" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'Doodle Clubhouse saves your drawings and animations to Photos when you tap Save.'" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'Doodle Clubhouse uses the microphone only when you tap the mic to record a sound for your cartoon.'" "$PLIST" || true
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" || true
       - name: Code signing
         script: xcode-project use-profiles
