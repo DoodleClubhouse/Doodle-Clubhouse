@@ -774,11 +774,10 @@
   .stamp-pop button[aria-pressed="true"]{color:var(--paper)}
   /* phones: no separate shape button; the Stamps pop-out has the stickers, then the shapes, and its buttons fill each row */
   html body.phone-ui .tool[data-tool="stamp"]{position:relative}
-  html body.phone-ui .tool[data-tool="stamp"]::after{content:""; position:absolute; right:3px; bottom:3px; width:0; height:0; border-left:9px solid transparent; border-bottom:9px solid currentColor; opacity:.8; border-radius:0 0 3px 0; pointer-events:none}
   html body.phone-ui .tool[data-tool="line"], html body.phone-ui[data-panel][data-tset] .tools .sec-tools .tool-grid > .tool[data-tool="line"], html body.phone-ui[data-panel] .tools .tool-grid > .tool[data-tool="line"]{display:none!important}
   html body.phone-ui .stamp-pop{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:6px; max-width:none}
   html body.phone-ui .stamp-pop .sp-stamps, html body.phone-ui .stamp-pop .sp-shapes{display:flex; flex-wrap:wrap; gap:6px}
-  html body.phone-ui .stamp-pop[data-mode="stamps"] .sp-shapes, html body.phone-ui .stamp-pop[data-mode="shapes"] .sp-stamps{display:none}
+  html body.phone-ui .stamp-pop .sp-shapes{display:none!important}   /* phones: no shape tools at all */
   html body.phone-ui .stamp-pop[data-mode="shapes"] .sp-shapes > button{height:52px}
   html body.phone-ui .stamp-pop .sp-stamps > button{flex:1 1 calc(20% - 6px); width:auto; height:52px; padding:4px}
   html body.phone-ui .stamp-pop .sp-shapes > button{flex:1 1 0; width:auto; height:46px; padding:4px; border-color:var(--ink)}
@@ -4715,9 +4714,7 @@
   let stampWasOpen = false, stampHeld = false, stampHoldT = 0;
   stampBtn.addEventListener('pointerdown', () => {
     stampWasOpen = !stampPop.hidden && stampPop.dataset.mode === 'stamps' && tool === 'stamp'; stampHeld = false; clearTimeout(stampHoldT);
-    // press and hold (phones): the shapes pop out instead of the stickers
-    if (!document.body.classList.contains('phone-ui')) return;
-    stampHoldT = setTimeout(() => { stampHeld = true; openStampPop(true, 'shapes'); try { SFX.paper(); } catch {} }, 380);
+    // (phones don't have the shape tools: no press-and-hold menu here)
   }, true);
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => stampBtn.addEventListener(t, () => clearTimeout(stampHoldT)));
   stampBtn.addEventListener('contextmenu', e => e.preventDefault());
