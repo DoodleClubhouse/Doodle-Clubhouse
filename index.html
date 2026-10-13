@@ -734,10 +734,14 @@
   #pagesBtn{display:none}
   @media (min-width:761px) and (min-height:501px){
     .tools > #pagesBtn{display:flex}
-    .film{display:none; position:fixed; z-index:7; left:206px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); padding-right:44px}
+    .film{display:none; position:fixed; z-index:7; left:206px; right:16px; top:calc(var(--boardTop, 48px) + 6px); bottom:auto; padding-right:44px}   /* along the top of the page */
     body[data-panel="frames"] .film{display:flex}
     .film .tray-min{display:grid!important}
-    .film .tray-min svg{transform:rotate(-90deg)}
+    .film .tray-min svg{transform:rotate(90deg)}
+    /* buttons on the left, the frames in the middle, Play on the right */
+    .film .film-side{order:-3}
+    .film .strip{order:0}
+    .film .btn.play{order:3}
   }
   /* fill-screen paper: no tape, so it can go right to the edges */
   body[data-paper-mode="fit"] .paper::before, body[data-paper-mode="fit"] .paper::after{display:none}
@@ -1950,9 +1954,14 @@
     // an open pop-out along the bottom (tools strip, colours, extra, pages) shouldn't cover the paper: fit above it
     let availH = board.clientHeight || board.clientWidth;
     const pan = document.body.dataset.panel, trayEl = pan === 'tools' || pan === 'colors' ? document.querySelector('.tools') : pan === 'extras' ? document.getElementById('extras') : pan === 'frames' ? document.querySelector('.film') : null;
+    let topOff = 0;
+    try { document.documentElement.style.setProperty('--boardTop', Math.round(board.getBoundingClientRect().top) + 'px'); } catch {}
     if ((!filling || pan === 'frames') && trayEl && getComputedStyle(trayEl).position === 'fixed' && getComputedStyle(trayEl).display !== 'none'){
       const br = board.getBoundingClientRect(), tr = trayEl.getBoundingClientRect();
-      if (tr.height && tr.right > br.left + 8 && tr.top < br.bottom && tr.top > br.top) availH = Math.max(140, tr.top - br.top - 4);
+      if (tr.height && tr.right > br.left + 8 && tr.top < br.top + br.height * .3 && tr.bottom > br.top){   // a pop-out along the TOP (iPad frames): the paper sits under it
+        topOff = tr.bottom - br.top + 4; availH = Math.max(140, (board.clientHeight || br.height) - topOff);
+      }
+      else if (tr.height && tr.right > br.left + 8 && tr.top < br.bottom && tr.top > br.top) availH = Math.max(140, tr.top - br.top - 4);
     }
     const bh = Math.max(40, availH - m * 2);
     let w = bw, h = w * H / W;
@@ -1960,7 +1969,7 @@
     paper.style.width = w + 'px'; paper.style.height = h + 'px';
     // when there's spare room above and below, sit the paper higher (about a third of the way down, not dead centre)
     const spare = Math.max(0, availH - h - m * 2);
-    paper.style.alignSelf = 'start'; paper.style.marginTop = (m + spare * 0.3) + 'px';
+    paper.style.alignSelf = 'start'; paper.style.marginTop = (topOff + m + spare * 0.3) + 'px';
     if (typeof applyZoom === 'function') applyZoom();
   }
   new ResizeObserver(fit).observe(board); fit();
