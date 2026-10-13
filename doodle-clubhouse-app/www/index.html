@@ -1951,7 +1951,9 @@
       hueK.style.left = '50%'; hueK.style.top = (Hh / 360 * 100) + '%'; hueK.style.background = `hsl(${Hh} 100% 50%)`;
     };
     const nowSw = pop.querySelector('.mix-now');
-    pop.querySelector('.mix-eye').onclick = () => { close(); const eb = document.getElementById('eyedrop'); if (eb && !document.body.classList.contains('picking')) eb.click(); toast('Tap the page to pick a colour'); };
+    // the eyedropper keeps the spectrum open: the colour you pick shows up in it
+    pop.querySelector('.mix-eye').onclick = () => { const eb = document.getElementById('eyedrop'); if (eb && !document.body.classList.contains('picking')) eb.click(); toast('Tap the page to pick a colour'); };
+    window.__mixSync = () => { if (pop.hidden) return; [Hh, Ss, Vv] = hex2hsv(custom.value || '#8a5cf6'); if (Ss < .02) Ss = .02; nowSw.style.background = custom.value; drawSV(); knobs(); };
     const pick = () => { const col = hsv2hex(Hh, Ss, Vv); custom.value = col; nowSw.style.background = col; setColor(col); knobs(); };
     const place = () => {
       const r = lab.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight, m = 8;
@@ -1964,7 +1966,12 @@
     const close = () => { pop.hidden = true; lab.classList.remove('open'); };
     lab.addEventListener('click', e => { e.preventDefault(); pop.hidden ? open() : close(); });
     custom.addEventListener('click', e => e.preventDefault());
-    document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !lab.contains(e.target)) close(); }, true);
+    document.addEventListener('pointerdown', e => {
+      if (pop.hidden || pop.contains(e.target) || lab.contains(e.target)) return;
+      if (document.body.classList.contains('picking') || performance.now() - (window.__pickEnd || 0) < 400) return;   // picking a colour with the eyedropper: stay open
+      const eb = document.getElementById('eyedrop'); if (eb && eb.contains(e.target)) return;
+      close();
+    }, true);
     addEventListener('resize', () => { if (!pop.hidden) place(); });
     const drag = (el, fn) => {
       let on = false;
@@ -3414,6 +3421,7 @@
     document.body.classList.toggle('picking', on);
     try { if (on){ pickBefore = custom.value; pickedNow = false; } else { if (!pickedNow && pickBefore !== null) custom.value = pickBefore; pickBefore = null; pickedNow = false; } } catch {}
     c.style.cursor = on ? '' : cursorFor(tool);
+    if (!on){ window.__pickEnd = performance.now(); try { window.__mixSync && window.__mixSync(); } catch {} }
   }
   // ---------- brush-size ring on the mouse pointer (computers): shows exactly how big the line will be ----------
   const ring = document.createElement('div'); ring.id = 'brushRing'; ring.hidden = true; document.body.appendChild(ring);
