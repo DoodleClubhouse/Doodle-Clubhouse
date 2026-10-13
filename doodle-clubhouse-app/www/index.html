@@ -7178,6 +7178,17 @@
     return Uint8Array.from(bytes);
   }
 
+  // ---------- get the drawing sounds ready while the app opens, so the very first stroke isn't slowed down building them ----------
+  function warmUp(){
+    try {
+      const snd = pencilSound(); if (snd) snd.stop(0);          // builds the pencil-on-paper sound (the biggest one) once
+      ['eraser', 'pencil'].forEach(k => { const l = loopSound(k); if (l) l.stop(0); });
+    } catch {}
+    try { SFX.splatLoad(); } catch {}
+    // a tiny invisible stroke so the drawing code is warmed up too
+    try { const t = mk(8, 8).getContext('2d'); t.lineCap = 'round'; t.beginPath(); t.moveTo(1, 1); t.lineTo(6, 6); t.stroke(); } catch {}
+  }
+  setTimeout(warmUp, 700);
   // ---------- boot ----------
   async function boot(){
     blank();
