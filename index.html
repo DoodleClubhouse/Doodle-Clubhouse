@@ -110,7 +110,9 @@
   body.picking, body.picking *{cursor:none !important}
   .custom-row .btn.sm.ico{padding:6px 7px}
   .custom-row > .btn + .btn{margin-left:-2px}
-  .tool.eyetool[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  .tool.eyetool[aria-pressed="true"], .tool.movetool[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
+  .custom-row .eye-mini{flex:none; width:30px; height:28px; padding:0!important; display:grid; place-items:center; border-radius:8px}
+  .custom-row .eye-mini svg{width:17px; height:17px}
   .custom input[type=color]{width:34px;height:28px;border:2px solid var(--ink);border-radius:8px;padding:0;background:none;cursor:pointer}
   .size-row{display:flex; align-items:center; gap:8px}
   .size-row input{flex:1; accent-color:var(--ink)}
@@ -1446,7 +1448,7 @@
         <button class="tool" data-tool="fill" title="Paint bucket (K)" aria-pressed="false"><svg viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-38 13 12)"><ellipse cx="13" cy="5.5" rx="6.2" ry="2.3"/><path d="M6.8 5.5l1.4 11.7c.2 1.1 2.2 2 4.8 2s4.6-.9 4.8-2l1.4-11.7"/><path d="M19.2 5.5c3.2.3 3.4 5.3.3 6.6"/><path d="M9.8 7.4c1.8 1.4 4.6 1.4 6.4 0" /><path d="M9.7 11l.3 2.6M10.3 15.4l.1.8"/></g><path d="M5 14.8s-2.7 3.1-2.7 4.8a2.7 2.7 0 0 0 5.4 0c0-1.7-2.7-4.8-2.7-4.8z" fill="#6EC6FF"/></svg></button>
         <button class="tool" data-tool="spray" title="Splatter spray (S): hold still for drips!" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.3 22.2h6.4c.8 0 1.4-.6 1.4-1.4v-9.4c0-1.6-1.3-2.9-2.9-2.9H6.8c-1.6 0-2.9 1.3-2.9 2.9v9.4c0 .8.6 1.4 1.4 1.4z"/><path d="M3.9 12.2h9.2M3.9 19.6h9.2"/><path d="M6.4 8.5V6.6h4.2v1.9"/><path d="M7.3 6.6V3.9h1.6l.8.8v1.9"/><path d="M6.2 14.4v3.2"/><path d="M12.6 4.5l8.6-2.4M12.6 5.4h8.4M12.6 6.3l8.6 1.9" stroke-width="1.5"/></svg></button>
         <button class="tool" data-tool="line" title="Straight line (L)" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19L19 5"/></svg></button>
-        <button class="tool eyetool" id="eyedrop" title="Eyedropper: tap the page to pick a color from it" aria-label="Eyedropper" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L18 8l-2-2z"/><path d="M15.5 7.5L6 17l-1 3 3-1 9.5-9.5"/></svg></button>
+        <button class="tool movetool" id="moveBtn" title="Move: drag the whole drawing on the page" aria-label="Move the whole drawing" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
         <button class="tool" data-tool="eraser" title="Eraser (E)" aria-pressed="false"><svg viewBox="0 0 20 25" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linejoin="round" aria-hidden="true"><path d="M1.0 15.3L13.0 3.3 18.8 9.1 6.8 21.1z" fill="#FF9EC0"/><path d="M6.8 21.1L18.8 9.1L18.8 12.3L6.8 24.3z" fill="#F0628F"/><path d="M1.0 15.3L6.8 21.1L6.8 24.3L1.0 18.5z" fill="#E04B7B"/><path d="M9.5 6.8L13.0 3.3 18.8 9.1 15.3 12.6z" fill="#FFFDF7"/><path d="M15.3 12.6L18.8 9.1L18.8 12.3L15.3 15.8z" fill="#D5DDEB"/></svg></button>
         <button class="tool" data-tool="text" title="Type (T): tap the page and type words" aria-label="Type" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7V4.5h15V7"/><path d="M12 4.5v15"/><path d="M8.5 19.5h7"/></svg></button>
         <button class="tool dyn" data-tool="dynamite" title="Dynamite: tap the page to blow it all away (Y)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(14 11 15)" stroke="#111" stroke-width="1.27" stroke-linejoin="round"><rect x="4.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="8.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="12.5" y="9" width="4" height="12.5" rx="1.6" fill="#EE2A24"/><rect x="4" y="12.5" width="13" height="2" fill="#5C5C66"/><rect x="4" y="17" width="13" height="2" fill="#5C5C66"/><ellipse cx="6.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="10.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><ellipse cx="14.5" cy="9" rx="2" ry=".8" fill="#F7D23E"/><path d="M10.5 9c0-3 3-4 6-5" fill="none" stroke-linecap="round"/></g><path d="M20.5 1.2l.8 2 2-.4-1.2 1.6 1.4 1.4-2-.2-.4 2-1-1.8-1.8 1 .6-2-1.9-.8 2-.6z" fill="#FFA21F" stroke="#D7263D" stroke-width=".6"/></svg><span>Dynamite</span></button>
@@ -1485,7 +1487,7 @@
     <section class="sec-colors">
       <div class="group-label" id="crayonsLabel">Crayons</div>
       <div class="swatches" id="swatches"></div>
-      <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label></div>
+      <div class="custom-row"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5cf6"> Mix</label><button class="btn sm ico eye-mini" id="eyedrop" title="Eyedropper: tap the page to pick a color from it" aria-label="Eyedropper" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5"/><path d="M17.5 2.5a2.1 2.1 0 0 1 3 3L18 8l-2-2z"/><path d="M15.5 7.5L6 17l-1 3 3-1 9.5-9.5"/></svg></button></div>
     </section>
     <section class="sec-colors">
       <div class="group-label" id="sizeLabel">Brush size</div>
@@ -1529,7 +1531,7 @@
           <button class="btn sm ico" id="dupFrame" title="Copy frame: make a copy to change a little" aria-label="Copy frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
           <button class="btn sm ico" id="delFrame" title="Delete frame" aria-label="Delete frame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
           
-          <button class="btn sm ico toggle" id="moveBtn" aria-pressed="false" title="Move: drag the whole drawing on this frame" aria-label="Move the whole drawing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
+          
           <button class="btn sm ico" id="micBtn" title="Sound: record your voice while your cartoon plays" aria-label="Record a sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span class="mic-dot" aria-hidden="true"></span></button>
           <button class="btn sm ico" id="exportAnimBtn" title="Export animation" aria-label="Export" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
         </div>
@@ -1978,7 +1980,7 @@
   }
 
   // ---------- tools ----------
-  const toolBtns = document.querySelectorAll('.tool:not(#eyedrop)');
+  const toolBtns = document.querySelectorAll('.tool:not(#eyedrop):not(#moveBtn)');
   toolBtns.forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool, b.dataset.stamp)));
   { const fb = document.querySelector('.tool[data-tool="flush"]'); if (fb) fb.addEventListener('click', () => { try { loadFlush(); } catch {} }); }
   // the mouse pointer shows a little bundle of dynamite while that tool is picked
@@ -3445,7 +3447,7 @@
     sizeIn.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
   }
   addEventListener('keyup', syncRing);
-  eyeBtn.addEventListener('click', () => { setPicking(!picking); if (picking) toast('Tap anything to pick its color'); });
+  eyeBtn.addEventListener('click', () => { try { if (!picking) window.__moveOff && window.__moveOff(); } catch {} setPicking(!picking); if (picking) toast('Tap anything to pick its color'); });
   // the colour of whatever is drawn at that spot on screen (buttons, icons, panels, the background…)
   function colourAtElement(el, x, y){
     const parse = v => { const m = v && v.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return (p.length > 3 && p[3] === 0) ? null : p; };
@@ -6077,7 +6079,12 @@
 
   // move: drag the whole drawing on this frame (or the background)
   const moveBtn = $('moveBtn');
-  function setMove(on){ moveOn = on; moveBtn.setAttribute('aria-pressed', on); document.body.classList.toggle('move-on', on); if (on) toast('Drag the page to move the whole drawing. Tap Move again when done.'); }
+  function setMove(on){
+    if (on && picking) setPicking(false);
+    moveOn = on; moveBtn.setAttribute('aria-pressed', on); document.body.classList.toggle('move-on', on);
+    toolBtns.forEach(b => b.setAttribute('aria-pressed', !on && b.dataset.tool === tool && (b.dataset.stamp || null) === stamp));
+    if (on) toast('Drag the page to move the whole drawing. Pick a tool to draw again.');
+  }
   window.__moveOff = () => { if (moveOn) setMove(false); };
   moveBtn.onclick = () => setMove(!moveOn);
   let mv = null;
