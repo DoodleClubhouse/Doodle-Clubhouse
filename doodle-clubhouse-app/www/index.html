@@ -372,7 +372,8 @@
   .mic-pop .btn{justify-content:flex-start; white-space:nowrap}
   /* iPad / computer frames bar: the buttons sit in a neat grid (6 across, 2 rows), about 15% bigger, filling their corner */
   @media (min-width:761px) and (min-height:501px){
-    html body .film .film-side{display:grid!important; grid-template-columns:repeat(6, var(--fb, 40px)); grid-auto-rows:var(--fb, 40px); gap:6px!important; align-content:center}
+    html body .film .film-side{display:grid!important; grid-template-columns:repeat(6, var(--fb, 40px)); grid-auto-rows:var(--fb, 40px); gap:4px 6px!important; align-content:center}
+    html body .film{padding:5px 44px 5px 8px!important; gap:8px!important; align-items:center!important}   /* room on the right for the hide button */
     html body .film .film-row{display:contents!important}
     html body .film .film-side .btn.sm{width:100%; height:100%; min-width:0; padding:0!important; display:grid; place-items:center; border-radius:10px}
     html body .film .film-side .btn.sm svg{width:calc(var(--fb, 40px) * .55)!important; height:calc(var(--fb, 40px) * .55)!important}
@@ -384,8 +385,9 @@
     html body .film .btn.play #playLbl{display:none}
     html body .film .btn.play svg{width:18px!important; height:18px!important}
     /* the frames themselves a little bigger, and every button rounded like the tool buttons */
-    html body .film .strip .frame{height:66px!important; border-radius:10px!important}
-    html body .film .strip{min-height:80px!important}
+    html body .film .strip .frame{height:calc(var(--fb, 40px) * 2 - 6px)!important; border-radius:10px!important}
+    html body .film .strip{min-height:0!important; padding:4px 4px!important; align-items:center}
+    html body .film .btn.play{align-self:stretch!important; height:auto!important}
     html body .film .film-side .seg{border-radius:10px!important}
   }
   html body.dock-bottom .tools, html body.dock-bottom .film, html body.dock-bottom .extras, html body.dock-bottom .more-sheet,
