@@ -373,7 +373,14 @@
   /* iPad / computer frames bar: the buttons sit in a neat grid (6 across, 2 rows), about 15% bigger, filling their corner */
   @media (min-width:761px) and (min-height:501px){
     html body .film .film-side{display:grid!important; grid-template-columns:repeat(6, var(--fb, 40px)); grid-auto-rows:var(--fb, 40px); gap:4px 6px!important; align-content:center}
-    html body .film{padding:5px 44px 5px 8px!important; gap:8px!important; align-items:center!important}   /* room on the right for the hide button */
+    html body .film{padding:4px 22px 4px 8px!important; gap:16px!important; align-items:center!important}   /* a bit more room between the buttons and the frames */
+    /* the hide button: a little x in the corner */
+    html body .film .tray-min{top:3px!important; right:3px!important; width:14px!important; height:14px!important; border-radius:4px!important; box-shadow:0 1px 0 var(--ink)!important; border-width:1.5px!important}
+    html body .film .tray-min svg{display:none!important}
+    html body .film .tray-min svg.tm-x{display:block!important; width:8px!important; height:8px!important; transform:none!important}
+    /* frames sized so the background tile and 5 frames all fit */
+    html body .film .strip .frame{height:var(--tileH, 60px)!important; width:calc(var(--tileH, 60px) * var(--arn, 1.5))!important; min-width:0!important}
+    html body .film .free-note{display:none!important}
     html body .film .film-row{display:contents!important}
     html body .film .film-side .btn.sm{width:100%; height:100%; min-width:0; padding:0!important; display:grid; place-items:center; border-radius:10px}
     html body .film .film-side .btn.sm svg{width:calc(var(--fb, 40px) * .55)!important; height:calc(var(--fb, 40px) * .55)!important}
@@ -385,7 +392,7 @@
     html body .film .btn.play #playLbl{display:none}
     html body .film .btn.play svg{width:18px!important; height:18px!important}
     /* the frames themselves a little bigger, and every button rounded like the tool buttons */
-    html body .film .strip .frame{height:calc(var(--fb, 40px) * 2 - 6px)!important; border-radius:10px!important}
+    html body .film .strip .frame{border-radius:min(10px, calc(var(--tileH, 60px) * var(--arn, 1.5) / 4))!important}
     html body .film .strip{min-height:0!important; padding:4px 4px!important; align-items:center}
     html body .film .btn.play{align-self:stretch!important; height:auto!important}
     html body .film .film-side .seg{border-radius:10px!important}
@@ -526,6 +533,7 @@
     place-items:center; border-radius:8px; background:var(--paper); box-shadow:0 2px 0 var(--ink); flex:none!important; order:0!important;
   }
   .tray-min span{display:none}
+  .tray-min svg.tm-x{display:none}
   .tray-min svg{width:14px; height:14px}
   .extras .tray-min{display:grid}
   .extras{padding-top:36px}
@@ -1582,7 +1590,7 @@
       </div>
     </div>
     <section class="film" aria-label="Animation frames">
-      <button class="tray-min" title="Hide frames" aria-label="Hide frames"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
+      <button class="tray-min" title="Hide frames" aria-label="Hide frames"><svg class="tm-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg><span>Hide</span></button>
       <button class="btn primary play" id="play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg><span id="playLbl">Play</span></button>
       <div class="strip" id="strip"></div>
       <div class="film-side">
@@ -6068,7 +6076,7 @@
       strip.appendChild(note);
     }
     const el = bgEdit ? bt : strip.querySelector(`[data-i="${cur}"]`); el && el.scrollIntoView({ block:'nearest', inline:'nearest' });
-    syncDock(); syncHold();
+    syncDock(); syncHold(); try { sizeFilmTiles(); } catch {}
   }
   function highlight(i){ strip.querySelectorAll('.frame[data-i]').forEach((b, k) => b.setAttribute('aria-current', k === i)); }
 
@@ -7282,6 +7290,18 @@
     }   // 12 crayons + Mix + (+, -)   // 9 crayons + Mix + (+, -), filling the column
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
+  // iPad frames bar: the frame tiles are sized so the background tile + 5 frames fit in the strip (never taller than the buttons)
+  function sizeFilmTiles(){
+    if (!matchMedia('(min-width:761px) and (min-height:501px)').matches || document.body.dataset.panel !== 'frames') return;
+    const st = document.getElementById('strip'), side = document.querySelector('.film .film-side');
+    if (!st || !st.clientWidth) return;
+    const cs = getComputedStyle(st), gap = parseFloat(cs.columnGap || cs.gap) || 8, pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    const n = 6, ar = W / H, w = (st.clientWidth - pad - gap * (n - 1) - 8) / n - 4;   // (a little spare for the outlines)
+    const maxH = Math.max(30, (side ? side.getBoundingClientRect().height : 80) - 10);
+    document.body.style.setProperty('--tileH', Math.max(24, Math.min(maxH, w / ar)) + 'px');
+  }
+  addEventListener('resize', () => requestAnimationFrame(sizeFilmTiles));
+  document.querySelectorAll('[data-panel="frames"]').forEach(b => b.addEventListener('click', () => setTimeout(sizeFilmTiles, 30)));
   // the frames bar buttons are exactly as big as the tool bar's buttons
   function syncFrameBtnSize(){
     const t = document.querySelector('#toolGrid .tool[data-tool="pencil"]'), r = t && t.getBoundingClientRect();
