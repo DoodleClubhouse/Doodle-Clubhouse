@@ -379,6 +379,14 @@
     html body .film .film-side .seg{grid-column:span 4; height:100%}
     html body .film .film-side .seg button{flex:1 1 0; min-width:0!important; padding:0!important}
     html body .film .film-side .seg button svg{height:15px!important; width:auto!important}
+    /* a slim Play button (a third of the width, just the triangle), so the frames get the room */
+    html body .film .btn.play{min-width:0!important; width:31px!important; padding:0!important; justify-content:center; border-radius:10px!important}
+    html body .film .btn.play #playLbl{display:none}
+    html body .film .btn.play svg{width:18px!important; height:18px!important}
+    /* the frames themselves a little bigger, and every button rounded like the tool buttons */
+    html body .film .strip .frame{height:66px!important; border-radius:10px!important}
+    html body .film .strip{min-height:80px!important}
+    html body .film .film-side .seg{border-radius:10px!important}
   }
   html body.dock-bottom .tools, html body.dock-bottom .film, html body.dock-bottom .extras, html body.dock-bottom .more-sheet,
   html body.dock-bottom[data-panel] .tools, html body.dock-bottom[data-panel] .film{bottom:var(--trayBottom, 84px)!important}
