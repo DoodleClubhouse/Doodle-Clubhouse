@@ -769,6 +769,21 @@
   .stamp-pop button svg{width:34px; height:34px}
   .stamp-pop button[aria-pressed="true"]{background:var(--ink)}
   @media (max-width:600px){ .stamp-pop button{width:40px; height:40px; padding:4px} .stamp-pop button svg{width:28px; height:28px} }
+  .stamp-pop .sp-stamps{display:contents}
+  .stamp-pop .sp-shapes{display:none}
+  .stamp-pop button[aria-pressed="true"]{color:var(--paper)}
+  /* phones: no separate shape button; the Stamps pop-out has the stickers, then the shapes, and its buttons fill each row */
+  html body.phone-ui .tool[data-tool="line"]{display:none!important}
+  html body.phone-ui .stamp-pop{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:6px; max-width:none}
+  html body.phone-ui .stamp-pop .sp-stamps, html body.phone-ui .stamp-pop .sp-shapes{display:flex; flex-wrap:wrap; gap:6px}
+  html body.phone-ui .stamp-pop .sp-stamps > button{flex:1 1 calc(20% - 6px); width:auto; height:52px; padding:4px}
+  html body.phone-ui .stamp-pop .sp-shapes > button{flex:1 1 0; width:auto; height:46px; padding:4px; border-color:var(--ink)}
+  html body.phone-ui .stamp-pop button svg{width:auto; height:78%; max-width:100%}
+  html body.phone-ui .stamp-pop .sp-shapes > button svg{height:92%}
+  @media (max-height:500px) and (orientation:landscape){
+    html body.phone-ui .stamp-pop .sp-stamps > button{flex-basis:calc(11.1% - 6px); height:46px}
+    html body.phone-ui .stamp-pop .sp-shapes > button{height:40px}
+  }
   .tool[data-tool="stamp"] > svg{transform:scale(1.1)}
   .tool[data-tool="splat"] > svg{transform:scale(1.22)}
   .tool[data-tool="spray"] > svg{transform:scale(1.08)}
@@ -1163,6 +1178,8 @@
     html body[data-panel="colors"] .swatches > *{border-radius:6px!important}
     html body[data-panel="colors"] .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--plank), 0 0 0 4px var(--ink)}
     html body[data-panel="colors"] .tools > section.sec-colors > .group-label{display:none!important}
+    html body[data-panel="colors"] .swatches .sw[data-color="#A8A8A8"], html body[data-panel="colors"] .swatches .sw[data-color="#A539FE"]{display:none!important}
+    html body[data-panel="colors"] .custom input[type=color]{height:var(--sw, 22px)!important}
   }
   #dlPop{position:fixed; z-index:45; transform:translateX(-50%); background:var(--ink); color:#fff; border-radius:14px; padding:9px 14px 11px; display:flex; flex-direction:column; align-items:center; gap:7px; min-width:200px; pointer-events:none; box-shadow:0 6px 18px rgba(0,0,0,.25)}
   #dlPop b{font:800 14px/1 var(--body)}
@@ -4659,13 +4676,20 @@
   const STICKERS = new Proxy({}, { get: (_, k) => STICKER_OPS[k] ? stickerSVG(k, typeof color === 'string' ? color : '#FF5A5F') : undefined, ownKeys: () => Object.keys(STICKER_OPS), getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) });
   const stampBtn = document.getElementById('stampBtn');
   const stampPop = document.createElement('div'); stampPop.className = 'stamp-pop'; stampPop.hidden = true;
-  stampPop.innerHTML = Object.keys(STICKERS).map(k => `<button type="button" data-st="${k}" title="${STICKER_NAMES[k]}" aria-label="${STICKER_NAMES[k]}">${STICKERS[k]}</button>`).join('');
+  stampPop.innerHTML = '<div class="sp-stamps">' + Object.keys(STICKERS).map(k => `<button type="button" data-st="${k}" title="${STICKER_NAMES[k]}" aria-label="${STICKER_NAMES[k]}">${STICKERS[k]}</button>`).join('') + '</div>'
+    // on phones the shapes (line, rectangle, circle, triangle) live here too, as one row of big buttons
+    + '<div class="sp-shapes">' + Object.keys(SHAPE_ICONS).map(k => `<button type="button" data-shape="${k}" title="${SHAPE_NAMES[k]}" aria-label="${SHAPE_NAMES[k]}">${SHAPE_ICONS[k]}</button>`).join('') + '</div>';
+  const PHONE_Q = matchMedia('(max-width:760px), (max-height:500px)');
+  const syncPhoneUi = () => document.body.classList.toggle('phone-ui', PHONE_Q.matches);
+  try { PHONE_Q.addEventListener('change', syncPhoneUi); } catch { try { PHONE_Q.addListener(syncPhoneUi); } catch {} }
+  syncPhoneUi();
   document.body.appendChild(stampPop);
   function placeStampPop(){
     const b = document.getElementById('board').getBoundingClientRect();
     stampPop.style.left = ((Math.max(b.left, 0) + Math.min(b.right, innerWidth)) / 2) + 'px';
     // sit just above the bottom of the page, and above any tool bar that pops up over it (phones)
     let bottom = Math.min(innerHeight, b.bottom);
+    stampPop.style.width = document.body.classList.contains('phone-ui') ? Math.max(200, Math.min(b.right, innerWidth) - Math.max(b.left, 0) - 16) + 'px' : '';   // phones: as wide as the page
     document.querySelectorAll('.tools, #dock').forEach(el => { const r = el.getBoundingClientRect(); if (r.width && r.height && getComputedStyle(el).display !== 'none' && r.top > b.top + b.height * .5 && r.top < bottom) bottom = r.top; });
     stampPop.style.top = Math.max(8, bottom - stampPop.offsetHeight - 10) + 'px';
   }
@@ -4674,7 +4698,10 @@
     const k = stampBtn.dataset.stamp, old = stampBtn.querySelector('svg'); if (old && STICKER_OPS[k]) old.outerHTML = stickerSVG(k, color, 1.75);
   }
   refreshStickers();
-  function syncStampPop(){ stampPop.querySelectorAll('[data-st]').forEach(b => b.setAttribute('aria-pressed', b.dataset.st === stampBtn.dataset.stamp)); }
+  function syncStampPop(){
+    stampPop.querySelectorAll('[data-st]').forEach(b => b.setAttribute('aria-pressed', tool === 'stamp' && b.dataset.st === stampBtn.dataset.stamp));
+    stampPop.querySelectorAll('[data-shape]').forEach(b => b.setAttribute('aria-pressed', tool === 'line' && b.dataset.shape === lineShape));
+  }
   function openStampPop(on){ stampPop.hidden = !on; if (on){ syncStampPop(); placeStampPop(); } }
   addEventListener('resize', () => { if (!stampPop.hidden) placeStampPop(); });
   // the Stamps button: the tray pops up; tap the button again to tuck it away
@@ -4682,6 +4709,12 @@
   stampBtn.addEventListener('pointerdown', () => { stampWasOpen = !stampPop.hidden && tool === 'stamp'; }, true);
   stampBtn.addEventListener('click', () => { openStampPop(!stampWasOpen); stampWasOpen = false; });
   stampPop.addEventListener('click', e => {
+    const sh = e.target.closest('[data-shape]');
+    if (sh){   // phones: a shape picked from the Stamps pop-out
+      lineShape = sh.dataset.shape; try { localStorage.setItem('doodle-clubhouse-shape-v2', lineShape); } catch {}
+      syncShapeBtn(); setTool('line'); stampBtn.setAttribute('aria-pressed', 'true'); try { SFX.paper(); } catch {}
+      return;
+    }
     const b = e.target.closest('[data-st]'); if (!b) return;
     const k = b.dataset.st; stampBtn.dataset.stamp = k;
     const old = stampBtn.querySelector('svg'); if (old) old.outerHTML = stickerSVG(k, color, 1.75);   // the button shows the sticker you picked
@@ -6070,8 +6103,8 @@
 
   let ghostSeq = 0;
   // ghost colours (Settings in the frames bar): 'own' = the frame's real colours
-  const GHOST_KEY = 'doodle-clubhouse-ghost-colours';
-  let ghostCols = { prev: 'own', next: '#2b6fff' };
+  const GHOST_KEY = 'doodle-clubhouse-ghost-colours-v2';
+  let ghostCols = { prev: '#ff3b3b', next: '#2fb84b' };   // before = red, after = green
   try { const g = JSON.parse(localStorage.getItem(GHOST_KEY)); if (g && g.prev && g.next) ghostCols = g; } catch {}
   function ghostPaint(bmp, col, alpha){
     if (col === 'own'){ gctx.globalAlpha = alpha; gctx.drawImage(bmp, 0, 0, MW, MH); gctx.globalAlpha = 1; return; }
@@ -7140,15 +7173,26 @@
     const tr = document.querySelector('.tools').getBoundingClientRect();
     const top = tr.height ? tr.top : 8, h = innerHeight - top - bot;
     const label = document.body.dataset.tset === 'pack' && !unlocked ? 6 : 0;   // the pack column has no title row (the locks say it all), so its brushes are as big as the tools
-    const nT = Math.max(9, document.querySelectorAll('#toolGrid > button').length, document.querySelectorAll('.premium-grid > button').length);   // the longest column (tools or the Brush Pack)
+    const nT = Math.max(9, document.querySelectorAll('#toolGrid > button').length - (document.body.classList.contains('phone-ui') ? 1 : 0), document.querySelectorAll('.premium-grid > button').length);   // the longest column (tools or the Brush Pack)
     const tb = Math.max(18, Math.min(48, Math.floor((h - 8 - label - 8 * 3) / nT)));
     bs.setProperty('--tb', tb + 'px');
     // Extra: 8 buttons, as big as fit (up to about 20% bigger than the tools)
     bs.setProperty('--te', Math.max(18, Math.min(Math.round(tb * 1.2), Math.floor((h - 8 - 10 - 7 * 3) / 8))) + 'px');
     // Color: the 10 crayons, Mix and the size slider all in one column
-    bs.setProperty('--sw', Math.max(16, Math.min(34, Math.floor((h - 8 - 22 - 14 * 4) / 15))) + 'px');   // 12 crayons + Mix + (+, -)   // 9 crayons + Mix + (+, -), filling the column
+    bs.setProperty('--sw', Math.max(16, Math.min(44, Math.floor((h - 26 - 15 * 4) / 15))) + 'px');   // 10 crayons, Mix, eyedropper, +, dot, - : filling the column
+    // the Color column open: make its buttons as big as fit (largest size whose last button still sits inside the column)
+    const ct = document.querySelector('.tools');
+    if (document.body.dataset.panel === 'colors' && ct && ct.getBoundingClientRect().height){
+      for (let sw = 44; sw >= 16; sw--){
+        bs.setProperty('--sw', sw + 'px');
+        const items = [...ct.querySelectorAll('.sw, #customColor, #eyedrop, .sz-btn, .sz-prev')].filter(e => e.offsetParent);
+        const bottom = Math.max(0, ...items.map(e => e.getBoundingClientRect().bottom));
+        if (bottom <= ct.getBoundingClientRect().bottom - 8) break;
+      }
+    }   // 12 crayons + Mix + (+, -)   // 9 crayons + Mix + (+, -), filling the column
   }
   addEventListener('resize', () => requestAnimationFrame(layoutSide));
+  document.querySelectorAll('[data-panel]').forEach(b => b.addEventListener('click', () => requestAnimationFrame(layoutSide)));
   function layoutTrayBottom(){
     const d = document.getElementById('dock'), r = d && d.getBoundingClientRect(), bs = document.body.style;
     const atBottom = r && r.width > r.height * 2 && r.top > innerHeight * .55 && getComputedStyle(d).display !== 'none';
