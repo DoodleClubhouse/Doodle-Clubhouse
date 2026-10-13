@@ -4382,9 +4382,9 @@
       return;
     }
     if (tool === 'splat'){
-      const R = splatR() * (.88 + Math.random() * .24);
+      const R = splatR();   // every splat the same size (set by the size slider)
       splatAt(p.x, p.y, R); try { SFX.splatBig(); } catch {}
-      drawing = true; last = p; start = p; splatTrail = { carry: 0, next: R * 2, sndT: performance.now() };
+      drawing = true; last = p; start = p; splatTrail = { carry: 0, next: R * 2.3, sndT: performance.now() };
       return;
     }
     drawing = true; last = p; start = p;
@@ -4434,9 +4434,9 @@
     let t = st.next - st.carry;
     while (t <= d){
       const x = a.x + dx * t / d, y = a.y + dy * t / d;
-      splatAt(x, y, R * (.55 + Math.random() * .4));
+      splatAt(x, y, R);
       const now = performance.now(); if (now - st.sndT > 110){ st.sndT = now; try { SFX.splatBig(.75); } catch {} }
-      st.next = R * (1.9 + Math.random() * .7); t += st.next;
+      st.next = R * 2.3; t += st.next;
     }
     st.carry = d - (t - st.next);
   }
