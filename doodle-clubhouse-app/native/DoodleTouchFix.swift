@@ -2,7 +2,8 @@
 // 1. The web view inside the app listens for "double tap" and "tap / long press" gestures of its own. When you write or poke
 //    very fast with the Apple Pencil, those gesture listeners can grab a touch, so a dot or letter never reaches the drawing.
 //    We tell those listeners to never hold back or cancel touches, and turn off the double-tap ones.
-// 2. A Pencil watcher (the same way Procreate gets its touches): it sees EVERY Apple Pencil touch straight from iPadOS and
+// 2. Scribble (handwriting into text boxes) is switched off on the page: it can grab quick Pencil taps.
+// 3. A Pencil watcher (the same way Procreate gets its touches): it sees EVERY Apple Pencil touch straight from iPadOS and
 //    tells the drawing about it. The drawing checks whether it already got that touch; if the web view dropped it, the
 //    drawing replays it, so three quick pokes are always three dots.
 import WebKit
@@ -37,6 +38,13 @@ enum DoodleTouchFix {
             }
         }
         web.scrollView.delaysContentTouches = false
+        // Scribble (iPad's "write with Apple Pencil into text") listens to every Pencil touch on a web page and can swallow
+        // quick taps while it decides whether you're handwriting. A drawing app never wants that: switch it off here.
+        for v in views {
+            for i in v.interactions where String(describing: type(of: i)).contains("Scribble") {
+                v.removeInteraction(i)
+            }
+        }
         if !(web.gestureRecognizers ?? []).contains(where: { $0 is DoodlePencilWatcher }) {
             web.addGestureRecognizer(DoodlePencilWatcher(web: web))
         }
