@@ -371,7 +371,7 @@
   .btn.sm.hold.on{background:#ffb400}
   #micBtn{position:relative}
   #micBtn .mic-dot{position:absolute; right:3px; top:3px; width:7px; height:7px; border-radius:50%; background:#2fb86e; display:none}
-  #micBtn.has .mic-dot{display:block}
+  #micBtn.has .mic-dot{display:none}
   #micBtn.rec{background:var(--pop); color:#fff; animation:micPulse 1s ease-in-out infinite}
   @keyframes micPulse{50%{box-shadow:0 0 0 5px rgba(255,90,95,.35)}}
   body.move-on #c{cursor:move!important}
@@ -1532,7 +1532,7 @@
   #filmWave{position:absolute; display:none; pointer-events:none}
   #waveHead{position:absolute; display:none; width:1.5px; margin-left:-.75px; background:#FF2D2D; border-radius:1px; pointer-events:none; z-index:2}
   @media (max-width:760px), (max-height:500px){ #filmWave{display:none!important} }
-  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 22px)!important} }
+  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 12px)!important} }
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6529,15 +6529,18 @@
   // the one drawing under your finger: every inked pixel joined to it (tiny gaps of a couple of pixels still count as joined)
   function pickObject(q){
     const img = ctx.getImageData(0, 0, W, H), d = img.data, N = W * H, INK = 12;
+    const U = window.__pickUnder || null; window.__pickUnder = null;   // drawing over a placed photo: the photo isn't part of it
+    const diff = n => { const i = n * 4; return d[i] !== U[i] || d[i + 1] !== U[i + 1] || d[i + 2] !== U[i + 2] || d[i + 3] !== U[i + 3]; };
+    const ink = n => d[n * 4 + 3] > INK && (!U || diff(n));
     let sx = Math.round(q.x), sy = Math.round(q.y), seed = -1;
-    const inked = (x, y) => x >= 0 && y >= 0 && x < W && y < H && d[(y * W + x) * 4 + 3] > INK;
+    const inked = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ink(y * W + x);
     if (inked(sx, sy)) seed = sy * W + sx;
     else {   // a little off the line: take the nearest bit of drawing close by
       const reach = Math.round(26 * W / (c.getBoundingClientRect().width || W));
       let best = Infinity;
       for (let y = Math.max(0, sy - reach); y <= Math.min(H - 1, sy + reach); y++)
         for (let x = Math.max(0, sx - reach); x <= Math.min(W - 1, sx + reach); x++){
-          if (d[(y * W + x) * 4 + 3] <= INK) continue;
+          if (!ink(y * W + x)) continue;
           const dd = (x - sx) * (x - sx) + (y - sy) * (y - sy); if (dd < best && dd <= reach * reach){ best = dd; seed = y * W + x; }
         }
     }
@@ -6551,7 +6554,7 @@
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
       for (const o of offs){
         const nx = x + o[0], ny = y + o[1]; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        const n = ny * W + nx; if (seen[n] || d[n * 4 + 3] <= INK) continue;
+        const n = ny * W + nx; if (seen[n] || !ink(n)) continue;
         seen[n] = 1; queue[tail++] = n;
       }
     }
@@ -6561,13 +6564,13 @@
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++){
       const n = y * W + x;
       let take = seen[n];
-      if (!take && d[n * 4 + 3]){   // the faint edge pixels right next to it
+      if (!take && d[n * 4 + 3] && (!U || diff(n))){   // the faint edge pixels right next to it
         for (let oy = -1; oy <= 1 && !take; oy++) for (let ox = -1; ox <= 1; ox++){ const m = (y + oy) * W + (x + ox); if (m >= 0 && m < N && seen[m]){ take = 2; break; } }
       }
       if (!take) continue;
       const i = n * 4, j = ((y - y0) * bw + (x - x0)) * 4;
       pd[j] = d[i]; pd[j + 1] = d[i + 1]; pd[j + 2] = d[i + 2]; pd[j + 3] = d[i + 3];
-      d[i + 3] = 0;
+      if (U){ d[i] = U[i]; d[i + 1] = U[i + 1]; d[i + 2] = U[i + 2]; d[i + 3] = U[i + 3]; } else d[i + 3] = 0;
     }
     const rest = mk(W, H); rest.getContext('2d').putImageData(img, 0, 0);
     const pc = mk(bw, bh); pc.getContext('2d').putImageData(piece, 0, 0);
@@ -6602,7 +6605,8 @@
     micBtn.title = audioClip ? `Sound (${Math.max(1, Math.round(audioClip.dur))}s): listen, record again or delete` : 'Sound: record your voice while your cartoon plays';
   }
   // ---------- import a sound file (music note button on the frames bar) ----------
-  $('sndImport').onclick = () => { const f = $('sndFile'); f.value = ''; f.click(); };
+  // music note: no sound yet = pick a file; with a sound = the same little menu as the mic (Listen / Delete)
+  $('sndImport').onclick = () => { if (micPop) return closeMicPop(); if (audioClip) return openMicPop($('sndImport'), false); const f = $('sndFile'); f.value = ''; f.click(); };
   $('sndFile').onchange = async () => {
     const file = $('sndFile').files && $('sndFile').files[0]; if (!file) return;
     if (file.size > 30 * 1024 * 1024){ toast('That sound file is too big (30 MB max)'); return; }
@@ -6686,6 +6690,14 @@
     if (pp.c0.width !== W || pp.c0.height !== H || pp.base.width !== W || pp.base.height !== H){ list.splice(idx, 1); return; }
     const now = snapshot();
     if (!phStillThere(pp, now)){ list.splice(idx, 1); return; }
+    { // touched a line drawn over the photo? then that line moves (the normal Move tool), not the photo
+      const r = c.getBoundingClientRect(), k = W / r.width, qx = Math.round((e.clientX - r.left) * k), qy = Math.round((e.clientY - r.top) * k);
+      const rad = Math.max(2, Math.round(6 * k)), d = now.data, c0 = pp.c0.data;
+      for (let y = Math.max(0, qy - rad); y <= Math.min(H - 1, qy + rad); y++) for (let x = Math.max(0, qx - rad); x <= Math.min(W - 1, qx + rad); x++){
+        const i = (y * W + x) * 4;
+        if (d[i + 3] > 12 && (d[i] !== c0[i] || d[i + 1] !== c0[i + 1] || d[i + 2] !== c0[i + 2] || d[i + 3] !== c0[i + 3])){ window.__pickUnder = c0; return; }
+      }
+    }
     e.preventDefault(); e.stopImmediatePropagation();
     pushUndo();
     // anything that changed since the photo went down is drawing on top of it: keep it in the top layer
@@ -6713,7 +6725,7 @@
       if (!photoT) return; e.preventDefault(); e.stopPropagation();
       try { phBox.setPointerCapture(e.pointerId); } catch {}
       if (!ptrs.size) mode = e.target.closest('.ph-rot') ? 'rot' : e.target.closest('.ph-size') ? 'size' : 'move';
-      ptrs.set(e.pointerId, toPage(e)); snap();
+      ptrs.set(e.pointerId, toPage(e)); snap(); phCan.style.opacity = '.5';
     });
     phBox.addEventListener('pointermove', e => {
       if (!photoT || !ptrs.has(e.pointerId) || !g0) return; e.preventDefault();
@@ -6731,7 +6743,7 @@
       }
       phLayout();
     });
-    const up = e => { if (ptrs.delete(e.pointerId)){ if (ptrs.size) snap(); else g0 = null; } };
+    const up = e => { if (ptrs.delete(e.pointerId)){ if (ptrs.size) snap(); else { g0 = null; phCan.style.opacity = ''; } } };
     phBox.addEventListener('pointerup', up); phBox.addEventListener('pointercancel', up);
   }
   $('photoFile').onchange = async () => {
@@ -6770,7 +6782,7 @@
     if (!wavePeaks || !fl || !st || getComputedStyle(fl).display === 'none' || !fl.getBoundingClientRect().width){ waveC.style.display = 'none'; return; }
     const tiles = [...st.querySelectorAll('.frame')]; if (!tiles.length){ waveC.style.display = 'none'; return; }
     const fr = fl.getBoundingClientRect(), a = tiles[0].getBoundingClientRect(), b = st.getBoundingClientRect();
-    const left = a.left - fr.left, width = Math.max(20, Math.min(b.right, fr.right) - a.left - 6), h = 9, top = fr.height - h - 5;   // along the very bottom of the frames bar, well below the frames' scroll bar
+    const left = b.left - fr.left + 4, width = Math.max(20, b.width - 8), h = 9, top = b.bottom - fr.top + 3;   // hugging the frames' scroll bar, just under it
     Object.assign(waveC.style, { display: 'block', left: left + 'px', top: top + 'px', width: width + 'px', height: h + 'px' });
     const dpr = window.devicePixelRatio || 1; waveC.width = Math.round(width * dpr); waveC.height = Math.round(h * dpr);
     const g = waveC.getContext('2d'), n = Math.max(10, Math.floor(width / 3)), bw = waveC.width / n;
@@ -6834,19 +6846,19 @@
   }
   let micPop = null;
   const closeMicPop = () => { if (micPop){ micPop.remove(); micPop = null; } };
-  function openMicPop(){
+  function openMicPop(anchor = micBtn, rec = true){
     closeMicPop();
     const p = micPop = document.createElement('div'); p.className = 'mic-pop'; p.setAttribute('role', 'menu');
     const item = (label, fn) => { const b = document.createElement('button'); b.className = 'btn sm'; b.textContent = label; b.onclick = () => { closeMicPop(); fn(); }; p.appendChild(b); };
     item('▶ Listen', () => { if (frames.length >= 2) play(); else audioLoop(); });
-    item('🎙 Record again', startRec);
+    if (rec) item('🎙 Record again', startRec);
     item('🗑 Delete sound', () => { setAudio(null); projDirty = true; schedulePersist(); toast('Sound deleted'); });
     document.body.appendChild(p);
-    const r = micBtn.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
+    const r = anchor.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
     p.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.left + r.width / 2 - pw / 2)) + 'px';
     p.style.top = (r.top - ph - 8 > 8 ? r.top - ph - 8 : Math.min(innerHeight - ph - 8, r.bottom + 8)) + 'px';
   }
-  document.addEventListener('pointerdown', e => { if (micPop && !micPop.contains(e.target) && !micBtn.contains(e.target)) closeMicPop(); }, true);
+  document.addEventListener('pointerdown', e => { if (micPop && !micPop.contains(e.target) && !micBtn.contains(e.target) && !$('sndImport').contains(e.target)) closeMicPop(); }, true);
   micBtn.onclick = () => { if (recActive) return stopRec(); if (micPop) return closeMicPop(); if (!audioClip) return startRec(); openMicPop(); };
 
   // ---------- keep the animation in this browser (IndexedDB holds the frames) ----------
