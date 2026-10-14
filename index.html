@@ -1541,7 +1541,7 @@
   #micBtn.snd-check::after, #sndImport.snd-check::after{content:""; position:absolute; top:-5px; right:-5px; width:13px; height:13px; border-radius:50%; background:#2FB84B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/9px no-repeat; border:1.5px solid #1A1F3A; pointer-events:none; z-index:2}
 
   /* Layers window: floats over the page; drag it by the bar, resize from either corner, minimize to the bar */
-  #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:64px; min-height:0}
+  #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:84px; min-height:0}
   #layersWin[hidden]{display:none!important}
   #layersWin .lw-head{display:flex; align-items:center; gap:6px; min-height:34px; padding:6px 52px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink); position:relative; flex:none}
   #layersWin .lw-frame{font:700 12px var(--body); color:var(--muted); white-space:nowrap}
@@ -1564,6 +1564,10 @@
   #layersWin .lw-foot{padding:6px 8px 10px; display:flex; gap:6px; flex:none}
   #layersWin .lw-foot .btn{flex:1; justify-content:center; min-width:0; padding-left:4px; padding-right:4px}
   #layersWin .lw-foot .btn em{font-style:normal}
+  #layersWin .lw-foot .lw-trash{flex:0 0 auto; width:40px; padding:0!important}
+  #layersWin .lw-foot .lw-trash svg{width:17px; height:17px}
+  #layersWin.lw-narrow .lw-foot{gap:4px; padding:6px 5px 10px}
+  #layersWin.lw-narrow .lw-foot .lw-trash{width:auto; flex:1}
   #layersWin .lw-note{font:700 12px var(--body); color:var(--ink); margin:6px 2px}
   /* skinnier and skinnier: the name goes first, then the arrows (drag instead), then the eye, then the menu */
   #layersWin.lw-noname .lw-name, #layersWin.lw-narrow .lw-frame, #layersWin.lw-narrow .lw-foot .btn em{display:none}
@@ -6529,13 +6533,13 @@
   lw.innerHTML = '<div class="lw-head"><b class="lw-title">Layers</b><span class="lw-frame"></span>'
     + '<button type="button" class="pop-x lw-min" aria-label="Minimize" title="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>'
     + '<button type="button" class="pop-x lw-x" aria-label="Close" title="Close">' + XSV + '</button></div>'
-    + '<div class="lw-list"></div><div class="lw-foot"><button type="button" class="btn sm lw-add" title="Add a layer"><span>+</span><em> Add layer</em></button></div>'
+    + '<div class="lw-list"></div><div class="lw-foot"><button type="button" class="btn sm lw-add" title="Add a layer"><span>+</span><em> Add layer</em></button><button type="button" class="btn sm lw-trash" title="Delete this layer" aria-label="Delete layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>'
     + '<i class="lw-size lw-br" title="Resize"></i><i class="lw-size lw-tl" title="Resize"></i>';
   document.body.appendChild(lw);
   const lwList = lw.querySelector('.lw-list');
   let lwState = {}; try { lwState = JSON.parse(localStorage.getItem(LW_KEY)) || {}; } catch {}
   function lwPlace(){
-    const st = lwState, w = Math.max(64, Math.min(innerWidth - 16, st.w || 320)), h = Math.max(120, Math.min(innerHeight - 16, st.h || 300));
+    const st = lwState, w = Math.max(84, Math.min(innerWidth - 16, st.w || 320)), h = Math.max(120, Math.min(innerHeight - 16, st.h || 300));
     const x = isFinite(st.x) ? st.x : innerWidth - w - 24, y = isFinite(st.y) ? st.y : 70;
     Object.assign(lw.style, { width: w + 'px', height: st.min ? '' : h + 'px', left: Math.max(0, Math.min(innerWidth - Math.min(w, 60), x)) + 'px', top: Math.max(0, Math.min(innerHeight - 40, y)) + 'px' });
     lw.classList.toggle('min', !!st.min); lwFit();
@@ -6645,6 +6649,7 @@
   lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; lwCloseMenu(); };
   lw.querySelector('.lw-min').onclick = () => { lwState.min = !lwState.min; lw.classList.toggle('min', lwState.min); lw.style.height = lwState.min ? '' : (lwState.h || 300) + 'px'; lwSave(); };
   lw.querySelector('.lw-add').onclick = () => { addLayer(); };
+  lw.querySelector('.lw-trash').onclick = () => { const f = curF(); if (!f) return; deleteLayer(f.layers ? f.active : 0); };
   { // drag by the bar (also when minimized)
     const head = lw.querySelector('.lw-head'); let d = null;
     head.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; const r = lw.getBoundingClientRect(); d = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top }; try { head.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); });
@@ -6659,9 +6664,9 @@
         if (!g || e.pointerId !== g.id) return;
         const dx = e.clientX - g.x, dy = e.clientY - g.y, r = g.r;
         if (tl){
-          const w = Math.max(64, Math.min(r.right - 4, r.width - dx)), h = Math.max(120, Math.min(r.bottom - 4, r.height - dy));
+          const w = Math.max(84, Math.min(r.right - 4, r.width - dx)), h = Math.max(120, Math.min(r.bottom - 4, r.height - dy));
           Object.assign(lw.style, { width: w + 'px', height: h + 'px', left: (r.right - w) + 'px', top: (r.bottom - h) + 'px' });
-        } else Object.assign(lw.style, { width: Math.max(64, Math.min(innerWidth - r.left - 4, r.width + dx)) + 'px', height: Math.max(120, Math.min(innerHeight - r.top - 4, r.height + dy)) + 'px' });
+        } else Object.assign(lw.style, { width: Math.max(84, Math.min(innerWidth - r.left - 4, r.width + dx)) + 'px', height: Math.max(120, Math.min(innerHeight - r.top - 4, r.height + dy)) + 'px' });
       });
       const gend = e => { if (g && e.pointerId === g.id){ g = null; lwSave(); } };
       grip.addEventListener('pointerup', gend); grip.addEventListener('pointercancel', gend);
