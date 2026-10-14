@@ -7349,8 +7349,11 @@
     const st = document.getElementById('strip'), side = document.querySelector('.film .film-side');
     if (!st || !st.clientWidth) return;
     const cs = getComputedStyle(st), gap = parseFloat(cs.columnGap || cs.gap) || 8, pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-    const n = 6, ar = W / H, w = (st.clientWidth - pad - gap * (n - 1) - 8) / n - 4;   // (a little spare for the outlines)
-    const maxH = Math.max(30, (side ? side.getBoundingClientRect().height : 80) - 10);
+    // room for the 6 tiles (background + 5 frames) AND the Play button (same size as a tile)
+    const fl = st.closest('.film'), fs = getComputedStyle(fl), fgap = parseFloat(fs.columnGap || fs.gap) || 16;
+    const inner = fl.clientWidth - parseFloat(fs.paddingLeft) - parseFloat(fs.paddingRight) - (side ? side.getBoundingClientRect().width : 0) - fgap * 2;
+    const n = 6, ar = W / H, w = (inner - pad - gap * (n - 1) - 6) / (n + 1) - 1;
+    const maxH = Math.max(30, (side ? side.getBoundingClientRect().height : 80) + 2);   // frames a touch taller than the button block
     document.body.style.setProperty('--tileH', Math.max(24, Math.min(maxH, w / ar)) + 'px');
   }
   addEventListener('resize', () => requestAnimationFrame(sizeFilmTiles));
