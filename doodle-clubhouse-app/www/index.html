@@ -1530,6 +1530,7 @@
 
   /* the sound's wave under the frames (iPad / computer frames bar only) */
   #filmWave{position:absolute; display:none; pointer-events:none}
+  #waveHead{position:absolute; display:none; width:1.5px; margin-left:-.75px; background:#FF2D2D; border-radius:1px; pointer-events:none; z-index:2}
   @media (max-width:760px), (max-height:500px){ #filmWave{display:none!important} }
   @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 10px)!important} }
 </style>
@@ -6724,6 +6725,20 @@
     for (let i = 0; i < n; i++){ const v = wavePeaks[Math.floor(i / n * wavePeaks.length)] || 0, bh = Math.max(dpr, v * waveC.height); g.fillRect(i * bw + bw * .2, (waveC.height - bh) / 2, bw * .6, bh); }
   }
   new ResizeObserver(() => requestAnimationFrame(drawWave)).observe(document.querySelector('.film'));
+  // a hair-thin red line over the wave shows where the sound is playing
+  const waveHead = document.createElement('i'); waveHead.id = 'waveHead'; document.querySelector('.film').appendChild(waveHead);
+  (function headLoop(){
+    try {
+      const on = audioEl && waveC.style.display === 'block' && !audioEl.paused && audioEl.currentTime > 0;
+      if (on){
+        const d = isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : (audioClip && audioClip.dur) || 1;
+        const f = Math.max(0, Math.min(1, audioEl.currentTime / d)), w = parseFloat(waveC.style.width) || 0;
+        waveHead.style.left = (parseFloat(waveC.style.left) + f * w) + 'px'; waveHead.style.top = (parseFloat(waveC.style.top) - 2) + 'px';
+        waveHead.style.height = ((parseFloat(waveC.style.height) || 8) + 4) + 'px'; waveHead.style.display = 'block';
+      } else waveHead.style.display = 'none';
+    } catch {}
+    requestAnimationFrame(headLoop);
+  })();
   document.querySelectorAll('[data-panel="frames"]').forEach(x => x.addEventListener('click', () => setTimeout(drawWave, 60)));
   function audioLoop(){
     if (!audioEl || recActive) return;
