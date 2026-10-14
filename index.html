@@ -3720,9 +3720,11 @@
     const t = mk(img.width, img.height); t.getContext('2d').putImageData(img, 0, 0);
     ctx.clearRect(0, 0, W, H); ctx.drawImage(t, -Math.floor((img.width - W) / 2), -Math.floor((img.height - H) / 2));
   }
-  function undo(){ if(!undoStack.length) return; try { lastTrack = null; } catch {} redoStack.push(snapshot()); restoreImg(undoStack.pop()); syncHist(); speedUndo = true; onCanvasChanged(); }
+  // deleted frames can come back: once a frame's own drawing undos run out, Undo brings back the last frame deleted (then the one before...)
+  const delFrames = [];
+  function undo(){ if(!undoStack.length){ while (delFrames.length && delFrames[delFrames.length - 1].arr !== frames) delFrames.pop(); if (delFrames.length && typeof undeleteFrame === 'function') undeleteFrame(); return; } try { lastTrack = null; } catch {} redoStack.push(snapshot()); restoreImg(undoStack.pop()); syncHist(); speedUndo = true; onCanvasChanged(); }
   function redo(){ if(!redoStack.length) return; undoStack.push(snapshot()); restoreImg(redoStack.pop()); syncHist(); onCanvasChanged(); }
-  function syncHist(){ undoBtn.disabled = !undoStack.length; redoBtn.disabled = !redoStack.length; }
+  function syncHist(){ undoBtn.disabled = !undoStack.length && !delFrames.some(d => d.arr === frames); redoBtn.disabled = !redoStack.length; }
   undoBtn.onclick = undo; redoBtn.onclick = redo;
 
   // ---------- drawing ----------
@@ -6329,10 +6331,27 @@
     if (bgEdit){ pushUndo(); blank(); onCanvasChanged(); toast('Background cleared'); return; }
     if (frames.length === 1){ pushUndo(); blank(); onCanvasChanged(); toast('Frame cleared'); return; }
     busy = true;
+    await commit(true);   // keep what's on the frame being deleted, so Undo can bring it back
+    delFrames.push({ f: frames[cur], at: cur, arr: frames }); if (delFrames.length > 60) delFrames.shift();
     frames.splice(cur, 1); cur = Math.min(cur, frames.length - 1);
     await paintBlob(frames[cur].blob);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     projDirty = true; busy = false; schedulePersist(); toast('Frame deleted');
+  }
+  async function undeleteFrame(){
+    if (busy || !delFrames.length) return;
+    if (playing) stopPlay();
+    if (bgEdit) await leaveBg(cur);
+    busy = true;
+    try {
+      const d = delFrames.pop();
+      await commit(true);
+      const at = Math.max(0, Math.min(d.at, frames.length));
+      frames.splice(at, 0, d.f); cur = at;
+      await paintBlob(d.f.blob); drawThumb(d.f);
+      resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
+      projDirty = true; schedulePersist(); toast(`Frame ${cur + 1} is back`);
+    } finally { busy = false; syncHist(); }
   }
   function startOver(){
     if (playing) stopPlay();
