@@ -1588,6 +1588,11 @@
   #lwRename input{font:800 15px var(--body); padding:7px 9px; border:2px solid var(--ink); border-radius:8px; width:100%; box-sizing:border-box}
   #lwRename .lwr-row{display:flex; gap:6px; justify-content:flex-end}
   #lwRename .lwr-row .btn{justify-content:center; min-width:70px}
+
+  /* a layer being dragged: the copy lifts up (bigger, tilted, shadow) and the spot it came from fades */
+  #layersWin .lw-row.lw-float{position:fixed; z-index:90; pointer-events:none; margin:0; transform:scale(1.08) rotate(-3deg); box-shadow:0 12px 24px rgba(0,0,0,.35); outline:3px solid #2E9CDB; animation:lwLift .14s ease-out}
+  @keyframes lwLift{from{transform:scale(1) rotate(0)} to{transform:scale(1.08) rotate(-3deg)}}
+  #layersWin .lw-row.lifted{opacity:.3}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6641,7 +6646,15 @@
   }
   { // tap a row = draw on that layer; swipe = scroll the list; press and hold a row (a moment), then drag = put the layer in a new spot
     let d = null;
-    const arm = () => { if (!d || d.armed) return; d.armed = true; d.row.classList.add('drag'); try { navigator.vibrate && navigator.vibrate(8); } catch {} };
+    // picked up: the layer lifts off the list (tilted, bigger, with a shadow) and follows your finger, like dragging a frame
+    const arm = () => {
+      if (!d || d.armed) return; d.armed = true;
+      const r = d.row.getBoundingClientRect(), fl = d.row.cloneNode(true); fl.className = 'lw-row lw-float';
+      const src = d.row.querySelector('canvas'), dst = fl.querySelector('canvas'); if (src && dst) dst.getContext('2d').drawImage(src, 0, 0);
+      Object.assign(fl.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+      lw.appendChild(fl); d.fl = fl; d.top0 = r.top;
+      d.row.classList.add('lifted'); try { navigator.vibrate && navigator.vibrate(12); } catch {}
+    };
     lwList.addEventListener('pointerdown', e => {
       const row = e.target.closest('.lw-row'); if (!row || e.target.closest('button, input')) return;
       const rows = [...lwList.querySelectorAll('.lw-row')];
@@ -6656,7 +6669,7 @@
         else if (Math.hypot(dx, dy) > 8){ clearTimeout(d.t); d = null; return; }   // a swipe: let the list scroll
         else return;
       }
-      e.preventDefault(); d.row.style.transform = `translateY(${dy}px)`;
+      e.preventDefault(); if (d.fl) d.fl.style.top = (d.top0 + dy) + 'px';
       let k = d.rects.length - 1; for (let j = 0; j < d.rects.length; j++){ if (e.clientY < d.rects[j].top + d.rects[j].height / 2){ k = j; break; } }
       d.k = k; d.rows.forEach((r, j) => r.classList.toggle('drop-at', j === k && r !== d.row));
     });
@@ -6666,7 +6679,7 @@
       if (!d || e.pointerId !== d.id) return;
       const dd = d; d = null; clearTimeout(dd.t);
       if (!dd.armed){ if (e.type === 'pointerup') selectLayer(dd.from); return; }
-      dd.row.style.transform = ''; dd.row.classList.remove('drag');
+      if (dd.fl) dd.fl.remove(); dd.row.classList.remove('lifted'); dd.rows.forEach(r => r.classList.remove('drop-at'));
       if (dd.k === undefined){ syncLayersWin(); return; }
       const n = dd.rects.length, to = n - 1 - dd.k;   // rows are listed top layer first
       if (to === dd.from) syncLayersWin(); else moveLayerTo(dd.from, Math.max(0, Math.min(n - 1, to)));
@@ -6680,7 +6693,7 @@
   lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; lwCloseMenu(); };
   // the minimize button shows – when open and an expand sign when it's tucked down to just the bar
   const MIN_SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>';
-  const EXP_SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6"/></svg>';
+  const EXP_SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
   function lwMinIcon(){ const b = lw.querySelector('.lw-min'), m = !!lwState.min; b.innerHTML = m ? EXP_SV : MIN_SV; b.title = m ? 'Expand' : 'Minimize'; b.setAttribute('aria-label', b.title); }
   lw.querySelector('.lw-min').onclick = () => { lwState.min = !lwState.min; lw.classList.toggle('min', lwState.min); lw.style.height = lwState.min ? '' : (lwState.h || 300) + 'px'; lwMinIcon(); lwSave(); };
   lw.querySelector('.lw-add').onclick = () => { addLayer(); };
