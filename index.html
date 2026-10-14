@@ -396,6 +396,17 @@
     html body .film .strip{min-height:0!important; padding:4px 4px!important; align-items:center}
     html body .film .btn.play{align-self:center!important; height:var(--fb, 40px)!important}
     html body .film .film-side .seg{border-radius:10px!important}
+    /* slimmer bar: row 1 = frame buttons + Ghost + Bounce, row 2 = speeds + Mic + Settings (shorter row) */
+    html body .film .film-side{grid-template-rows:var(--fb, 40px) calc(var(--fb, 40px) * .7)!important; grid-auto-rows:auto!important; gap:3px 6px!important}
+    html body .film{padding:2px 22px 2px 8px!important}
+    html body .film #insFrame{order:1} html body .film #dupFrame{order:2} html body .film #pasteFrame{order:3} html body .film #delFrame{order:4}
+    html body .film #ghostBtn{order:5} html body .film #bounceBtn{order:6}
+    html body .film .film-side .seg{order:7; height:100%!important}
+    html body .film #micBtn{order:8} html body .film #filmSettings{order:9}
+    html body .film #micBtn svg, html body .film #filmSettings svg{width:calc(var(--fb, 40px) * .45)!important; height:calc(var(--fb, 40px) * .45)!important}
+    /* Play 50% bigger */
+    html body .film .btn.play{width:47px!important; height:calc(var(--fb, 40px) * 1.5)!important}
+    html body .film .btn.play svg{width:26px!important; height:26px!important}
   }
   html body.dock-bottom .tools, html body.dock-bottom .film, html body.dock-bottom .extras, html body.dock-bottom .more-sheet,
   html body.dock-bottom[data-panel] .tools, html body.dock-bottom[data-panel] .film{bottom:var(--trayBottom, 84px)!important}
