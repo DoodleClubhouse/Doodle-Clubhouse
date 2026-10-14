@@ -1529,10 +1529,12 @@
   #photoBar{position:fixed; z-index:41; transform:translateX(-50%); display:flex; gap:8px}
 
   /* the sound's wave under the frames (iPad / computer frames bar only) */
-  #filmWave{position:absolute; display:none; pointer-events:none}
-  #waveHead{position:absolute; display:none; width:1.5px; margin-left:-.75px; background:#FF2D2D; border-radius:1px; pointer-events:none; z-index:2}
-  @media (max-width:760px), (max-height:500px){ #filmWave, #waveHead{display:none!important} }
+  #pageWave{position:fixed; z-index:6; display:none; pointer-events:none; opacity:.7}
+  #waveHead{position:fixed; z-index:7; display:none; width:1.5px; margin-left:-.75px; background:#FF2D2D; border-radius:1px; pointer-events:none}
+  @media (max-width:760px), (max-height:500px){ #pageWave, #waveHead{display:none!important} }
   
+
+  .ghost-pop .gp-waves .btn[aria-pressed="true"]{background:var(--ink); color:#fff}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6479,6 +6481,14 @@
         pop.appendChild(r);
       };
       row('prev', 'Ghost before (last frame)'); row('next', 'Ghost after (next frame)');
+      { const h = document.createElement('div'); h.className = 'gp-lab'; h.textContent = 'Sound wave (shows on the page while it plays)'; pop.appendChild(h);
+        const r = document.createElement('div'); r.className = 'gp-row gp-waves';
+        [['Show audio waves', true], ['Hide audio waves', false]].forEach(([t, on]) => {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm'; b.textContent = t; b.setAttribute('aria-pressed', window.__wavesOn === on);
+          b.onclick = () => { window.__setWaves(on); r.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); };
+          r.appendChild(b);
+        });
+        pop.appendChild(r); }
       const x = document.createElement('button'); x.type = 'button'; x.className = 'pop-x'; x.title = 'Close'; x.setAttribute('aria-label', 'Close');
       x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       x.onclick = close; pop.appendChild(x);
@@ -6758,12 +6768,17 @@
     phBox.hidden = phBar.hidden = false; phLoop();
     toast('Drag to move, pull the corner to resize, turn with the orange knob');
   };
-  // ---------- a little picture of the sound (its wave) along the bottom of the frames bar ----------
-  const waveC = document.createElement('canvas'); waveC.id = 'filmWave'; waveC.setAttribute('aria-hidden', 'true');
-  document.querySelector('.film').appendChild(waveC);
-  let wavePeaks = null, waveSeq = 0;
+  // ---------- the sound's wave: shown at the top-centre of the page only while the cartoon plays ----------
+  // (a thin red line runs along it to show where the sound is; on/off in the frames Settings)
+  const WAVES_KEY = 'doodle-clubhouse-show-waves';
+  window.__wavesOn = true; try { window.__wavesOn = localStorage.getItem(WAVES_KEY) !== '0'; } catch {}
+  window.__setWaves = on => { window.__wavesOn = on; try { localStorage.setItem(WAVES_KEY, on ? '1' : '0'); } catch {} };
+  const waveC = document.createElement('canvas'); waveC.id = 'pageWave'; waveC.setAttribute('aria-hidden', 'true');
+  const waveHead = document.createElement('i'); waveHead.id = 'waveHead';
+  document.body.append(waveC, waveHead);
+  let wavePeaks = null, waveSeq = 0, waveDrawnW = 0;
   async function waveFor(clip){
-    const my = ++waveSeq; wavePeaks = null; document.querySelector('.film').classList.toggle('has-audio', !!clip); drawWave();
+    const my = ++waveSeq; wavePeaks = null; waveDrawnW = 0;
     if (!clip) return;
     try {
       const buf = await clip.blob.arrayBuffer();
@@ -6774,55 +6789,29 @@
       const d = ab.getChannelData(0), N = 400, step = Math.max(1, Math.floor(d.length / N)), pk = new Float32Array(N);
       for (let i = 0; i < N; i++){ let m = 0; const o = i * step; for (let j = 0; j < step; j += 4){ const v = Math.abs(d[o + j] || 0); if (v > m) m = v; } pk[i] = m; }
       const top = Math.max(.05, ...pk); for (let i = 0; i < N; i++) pk[i] /= top;
-      wavePeaks = pk; drawWave();
+      wavePeaks = pk;
     } catch {}
   }
-  // iPad frames bar: the frames (and their scroll bar) are nudged up so their tops line up with the tops of the buttons
-  // (only drawn higher: the bar keeps exactly the same size)
-  function alignStrip(){
-    const st = document.getElementById('strip'), b = document.getElementById('insFrame');
-    if (!st || !b) return;
-    st.style.transform = '';
-    if (!matchMedia('(min-width:761px) and (min-height:501px)').matches || document.body.dataset.panel !== 'frames') return;
-    const t = st.querySelector('.frame'); if (!t) return;
-    const dy = b.getBoundingClientRect().top - t.getBoundingClientRect().top;
-    if (Math.abs(dy) > .5) st.style.transform = `translateY(${dy}px)`;
-  }
-  function drawWave(){
-    try { alignStrip(); } catch {}
-    const fl = document.querySelector('.film'), st = document.getElementById('strip');
-    if (!wavePeaks || !fl || !st || getComputedStyle(fl).display === 'none' || !fl.getBoundingClientRect().width || !matchMedia('(min-width:761px) and (min-height:501px)').matches){ waveC.style.display = 'none'; return; }
-    const tiles = [...st.querySelectorAll('.frame')]; if (!tiles.length){ waveC.style.display = 'none'; return; }
-    const fr = fl.getBoundingClientRect(), a = tiles[0].getBoundingClientRect(), b = st.getBoundingClientRect();
-    // under the frames' scroll bar: where the scroll bar takes its own room it sits just under it; where it floats over the
-    // frames (iPad, Mac) it would sit on the bottom edge, so the wave keeps a bigger gap and never touches it
-    // along the bottom of the frames bar, in the room under the frames' scroll bar (nothing moves or resizes for it)
-    const h = Math.max(3, Math.min(8, fr.bottom - b.bottom - 6)), top = fr.height - h - 3;
-    const left = b.left - fr.left + 4, width = Math.max(20, b.width - 8);
-    Object.assign(waveC.style, { display: 'block', left: left + 'px', top: top + 'px', width: width + 'px', height: h + 'px' });
-    const dpr = window.devicePixelRatio || 1; waveC.width = Math.round(width * dpr); waveC.height = Math.round(h * dpr);
-    const g = waveC.getContext('2d'), n = Math.max(10, Math.floor(width / 3)), bw = waveC.width / n;
-    g.clearRect(0, 0, waveC.width, waveC.height); g.fillStyle = 'rgba(26,31,58,.55)';
-    for (let i = 0; i < n; i++){ const v = wavePeaks[Math.floor(i / n * wavePeaks.length)] || 0, bh = Math.max(dpr, v * waveC.height); g.fillRect(i * bw + bw * .2, (waveC.height - bh) / 2, bw * .6, bh); }
-  }
-  new ResizeObserver(() => requestAnimationFrame(drawWave)).observe(document.querySelector('.film'));
-  new ResizeObserver(() => requestAnimationFrame(drawWave)).observe(document.getElementById('strip'));
-  addEventListener('resize', () => requestAnimationFrame(drawWave));
-  // a hair-thin red line over the wave shows where the sound is playing
-  const waveHead = document.createElement('i'); waveHead.id = 'waveHead'; document.querySelector('.film').appendChild(waveHead);
-  (function headLoop(){
+  (function waveLoop(){
     try {
-      const on = audioEl && waveC.style.display === 'block' && !audioEl.paused && audioEl.currentTime > 0;
-      if (on){
+      const show = window.__wavesOn && wavePeaks && playing && audioEl && !matchMedia('(max-width:760px), (max-height:500px)').matches;
+      if (show){
+        const r = c.getBoundingClientRect(), w = Math.round(Math.min(520, r.width * .6)), h = 30;
+        const x = r.left + (r.width - w) / 2, y = Math.max(4, r.top + 10);
+        Object.assign(waveC.style, { display: 'block', left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+        if (waveDrawnW !== w){
+          waveDrawnW = w; const dpr = window.devicePixelRatio || 1; waveC.width = Math.round(w * dpr); waveC.height = Math.round(h * dpr);
+          const g = waveC.getContext('2d'), n = Math.max(10, Math.floor(w / 3)), bw = waveC.width / n;
+          g.clearRect(0, 0, waveC.width, waveC.height); g.fillStyle = '#1A1F3A';
+          for (let i = 0; i < n; i++){ const v = wavePeaks[Math.floor(i / n * wavePeaks.length)] || 0, bh = Math.max(dpr, v * waveC.height); g.fillRect(i * bw + bw * .2, (waveC.height - bh) / 2, bw * .6, bh); }
+        }
         const d = isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : (audioClip && audioClip.dur) || 1;
-        const f = Math.max(0, Math.min(1, audioEl.currentTime / d)), w = parseFloat(waveC.style.width) || 0;
-        waveHead.style.left = (parseFloat(waveC.style.left) + f * w) + 'px'; waveHead.style.top = (parseFloat(waveC.style.top) - 2) + 'px';
-        waveHead.style.height = ((parseFloat(waveC.style.height) || 8) + 4) + 'px'; waveHead.style.display = 'block';
-      } else waveHead.style.display = 'none';
+        const f = Math.max(0, Math.min(1, audioEl.currentTime / d));
+        Object.assign(waveHead.style, { display: 'block', left: (x + f * w) + 'px', top: (y - 3) + 'px', height: (h + 6) + 'px' });
+      } else { waveC.style.display = 'none'; waveHead.style.display = 'none'; }
     } catch {}
-    requestAnimationFrame(headLoop);
+    requestAnimationFrame(waveLoop);
   })();
-  document.querySelectorAll('[data-panel="frames"]').forEach(x => x.addEventListener('click', () => setTimeout(drawWave, 60)));
   function audioLoop(){
     if (!audioEl || recActive) return;
     if (audioEl.paused || audioEl.ended){ try { audioEl.currentTime = 0; } catch {} const pr = audioEl.play(); pr && pr.catch && pr.catch(() => {}); }
