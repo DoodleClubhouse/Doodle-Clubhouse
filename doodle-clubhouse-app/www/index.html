@@ -1532,7 +1532,7 @@
   #filmWave{position:absolute; display:none; pointer-events:none}
   #waveHead{position:absolute; display:none; width:1.5px; margin-left:-.75px; background:#FF2D2D; border-radius:1px; pointer-events:none; z-index:2}
   @media (max-width:760px), (max-height:500px){ #filmWave{display:none!important} }
-  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 10px)!important} }
+  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 13px)!important} }
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6733,7 +6733,7 @@
     if (!wavePeaks || !fl || !st || getComputedStyle(fl).display === 'none' || !fl.getBoundingClientRect().width){ waveC.style.display = 'none'; return; }
     const tiles = [...st.querySelectorAll('.frame')]; if (!tiles.length){ waveC.style.display = 'none'; return; }
     const fr = fl.getBoundingClientRect(), a = tiles[0].getBoundingClientRect(), b = st.getBoundingClientRect();
-    const left = a.left - fr.left, width = Math.max(20, Math.min(b.right, fr.right) - a.left - 6), top = a.bottom - fr.top + 3, h = Math.max(4, Math.min(9, fr.bottom - a.bottom - 5));
+    const left = a.left - fr.left, width = Math.max(20, Math.min(b.right, fr.right) - a.left - 6), top = Math.max(a.bottom, b.bottom) - fr.top + 2, h = Math.max(4, Math.min(9, fr.bottom - Math.max(a.bottom, b.bottom) - 4));   // just under the frames' scroll bar
     Object.assign(waveC.style, { display: 'block', left: left + 'px', top: top + 'px', width: width + 'px', height: h + 'px' });
     const dpr = window.devicePixelRatio || 1; waveC.width = Math.round(width * dpr); waveC.height = Math.round(h * dpr);
     const g = waveC.getContext('2d'), n = Math.max(10, Math.floor(width / 3)), bw = waveC.width / n;
