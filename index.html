@@ -3344,7 +3344,7 @@
       hg.addColorStop(0, 'rgba(2,14,30,.95)'); hg.addColorStop(.6, 'rgba(6,40,80,.75)'); hg.addColorStop(1, 'rgba(6,40,80,0)');
       fxc.fillStyle = hg; fxc.beginPath(); fxc.arc(0, 0, dr * 1.6, 0, Math.PI * 2); fxc.fill();
       fxc.restore();
-      if (t >= 1){ fxEnd(); return; }
+      if (t >= 1){ fxEnd(); speedReset(); return; }   // flushed away: speed art starts fresh
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
@@ -7614,6 +7614,15 @@
     const scratch = document.createElement('canvas'), scg = scratch.getContext('2d');
     let pos = 0, cutA = 0, cutB = 1, run = false, raf = 0, lastT = 0;   // all 0..1 along the whole recording
     const status = t => { $('speedStatus').textContent = t; };
+    const cmpK = document.createElement('canvas'); cmpK.width = 96; cmpK.height = 96;
+    const cmpG = cmpK.getContext('2d', { willReadFrequently: true });
+    const px96 = im => { cmpG.clearRect(0, 0, 96, 96); cmpG.drawImage(im, 0, 0, 96, 96); return cmpG.getImageData(0, 0, 96, 96).data; };
+    function sameShot(a, b){
+      if (a.width !== b.width || a.height !== b.height) return false;
+      const p = px96(a), q = px96(b);
+      for (let i = 0; i < p.length; i++) if (Math.abs(p[i] - q[i]) > 6) return false;
+      return true;
+    }
     async function loadShots(){
       await speedChain;
       const list = speedLog.slice();
@@ -7623,10 +7632,13 @@
           const b = await createImageBitmap(e instanceof Blob ? e : e.b);
           const paths = (e && e.paths) || [], npts = paths.reduce((n, st) => n + st.pts.length, 0);
           // longer strokes get more screen time; plain changes (fill, stickers tapped once) a short beat
-          const ms = paths.reduce((t, st) => t + (st.ms || st.pts.length * 16), 0);
+          // (time the pen sat still mid-line is cut out, so the replay never stalls)
+          const ms = paths.reduce((t, st) => t + Math.min(st.ms || 1e9, st.pts.length * 22 + 120), 0);
           const pg = (e && e.pg) || 0;
           // the picture this one grows from: the last one of the SAME page (switching pages never shows the other page underneath)
           let base = -1; for (let j = bmps.length - 1; j >= 0; j--) if (bmps[j].pg === pg){ base = j; break; }
+          // a change you can't see (nothing on the page moved): skipped, so there's never a pause with nothing happening
+          if (!(e && e.cut) && base >= 0 && sameShot(bmps[base].bmp, b)){ b.close && b.close(); continue; }
           bmps.push({ bmp: b, paths, npts, pg, base, cut: !!(e && e.cut), wt: e && e.cut ? 1 : paths.length ? Math.max(120, ms) : (e && e.m ? 70 : 300) });
         } catch {}
       }
