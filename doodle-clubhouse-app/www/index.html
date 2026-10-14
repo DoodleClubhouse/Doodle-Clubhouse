@@ -178,7 +178,8 @@
   }
   .export-opt b{font:800 16px var(--body); color:var(--ink)}
   .export-opt:disabled{opacity:.5; cursor:default}
-  #closeExport.sq-x{width:38px; height:38px; min-width:38px; padding:0!important; display:grid; place-items:center; flex:none; border-radius:10px}
+  #closePay.sq-x svg{width:18px; height:18px}
+  #closePay.sq-x, #closeExport.sq-x{width:38px!important; height:38px!important; min-width:38px!important; min-height:38px!important; padding:0!important; display:grid; place-items:center; flex:none; border-radius:10px}
   #closeExport.sq-x svg{width:18px; height:18px}
   /* each export choice has its picture on the left, beside the words (all icons drawn with the same line width) */
   .export-opt{display:grid; grid-template-columns:auto 1fr; column-gap:12px; row-gap:2px; align-items:center}
@@ -1510,6 +1511,11 @@
   /* menu bar drop-downs: a small picture beside each word, all drawn with the same line width */
   .mb-drop > button{display:flex; align-items:center; gap:10px}
   .mb-drop > button > .mbi{width:20px; height:20px; flex:none}
+
+  /* Art Pack shop: restore link in plain black with an underline; a big green unlock button */
+  #restoreBuy{color:var(--ink)!important; text-decoration:underline; text-underline-offset:2px}
+  .pay .confirm-row{justify-content:center}
+  #buy{background:#2FB84B!important; border-color:var(--ink)!important; color:#fff!important; font-size:20px!important; padding:14px 30px!important; min-width:min(320px, 100%); justify-content:center; border-radius:14px!important}
 </style>
 
 <nav class="menubar" id="menubar" aria-label="Menu">
@@ -1577,7 +1583,7 @@
       <div class="text-tool-home" hidden><button class="tool" data-tool="text" title="Type (T): tap the page and type words" aria-label="Type" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7V4.5h15V7"/><path d="M12 4.5v15"/><path d="M8.5 19.5h7"/></svg></button><button id="textToolGo" type="button">Text</button></div>
     </section>
     <section class="premium sec-tools" id="premium">
-      <div class="group-label">Brush Pack <span class="tag price">$2.99</span></div>
+      <div class="group-label">Art Pack <span class="tag price">$2.99</span></div>
       <div class="premium-grid">
         <button class="tool pro" data-tool="brush" title="Paintbrush (P)" aria-label="Paintbrush" aria-pressed="false">
           <span class="lock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1v11H6V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg></span><svg viewBox="8.8 1.3 411.4 411.4" stroke="#111" stroke-width="30.38" stroke-linejoin="round" aria-hidden="true"><path d="M402.3 23.0 385.3 24.0 366.3 36.0 330.3 63.0 254.3 127.0 161.0 213.3 161.0 228.3 199.3 267.7 215.3 267.7 268.7 209.3 334.7 132.3 365.7 93.3 397.7 48.3 402.7 39.3Z" fill="#2E9CDB"/><path d="M172.7 303.3 126.3 256.0 103.3 257.0 92.3 260.0 79.3 266.0 67.0 276.3 58.0 290.3 54.0 301.3 43.0 349.3 37.0 361.3 27.0 371.3 27.0 385.3 32.3 387.7 50.3 390.7 89.3 391.7 112.3 387.7 131.3 379.7 141.3 372.7 151.7 362.3 161.7 347.3 170.7 325.3 172.7 317.3Z" fill="#33384F" stroke="none"/><path d="M54.3 301.0 43.0 349.3 37.0 361.3 27.0 371.3 27.0 385.3 32.3 387.7 50.3 390.7 89.3 391.7 104.3 389.7 125.3 382.7 125.7 380.3 121.7 372.3 117.7 358.3 110.7 345.3 97.3 334.0 73.3 323.0 66.3 318.0Z" fill="#FF5A5F" stroke="none"/><path d="M172.7 303.3 126.3 256.0 103.3 257.0 92.3 260.0 79.3 266.0 67.0 276.3 58.0 290.3 54.0 301.3 43.0 349.3 37.0 361.3 27.0 371.3 27.0 385.3 32.3 387.7 50.3 390.7 89.3 391.7 112.3 387.7 131.3 379.7 141.3 372.7 151.7 362.3 161.7 347.3 170.7 325.3 172.7 317.3Z" fill="none"/><path d="M148.3 225.0 126.0 247.3 126.0 262.3 166.3 302.7 181.3 302.7 203.7 280.3 203.7 265.3 164.3 225.0Z" fill="#C9D3E0"/></svg>
@@ -1802,10 +1808,10 @@
   <div class="sheet pay" role="dialog" aria-modal="true" aria-labelledby="payTitle" style="width:min(660px,100%)">
     <div class="sheet-head">
       <div>
-        <h2 id="payTitle">Unlock the Brush Pack</h2>
+        <h2 id="payTitle">Unlock the Art Pack</h2>
         <div id="payDesc"></div>
       </div>
-      <button class="btn" id="closePay">Not now</button>
+      <button class="btn sq-x" id="closePay" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="perks" id="perksBrushes">
       <div class="perk"><canvas id="demoBrush" width="300" height="80" aria-hidden="true"></canvas><b>Paintbrush</b>Soft bristles like real paint</div>
@@ -5232,7 +5238,7 @@
   function showPaywall(product){
     payProduct = product;
     const brushes = product === 'brushes';
-    $('payTitle').textContent = 'Unlock the Brush Pack';
+    $('payTitle').textContent = 'Unlock the Art Pack';
     $('payDesc').innerHTML = (brushes ? '' : `<span class="pay-note">You've used all ${FREE_FRAMES} free frames.</span>`) +
       `<ul class="pay-list"><li>6 special brushes</li><li>4 magic effects: wormhole, neon, tornado &amp; flush</li><li>Unlimited frames</li><li>No watermark on exports</li></ul>` +
       `<span class="pay-small"><b>${PRICE} one-time purchase</b>: no subscription, yours to keep. Covers your whole family.</span>`;
@@ -5300,8 +5306,8 @@
     try { document.activeElement && document.activeElement.blur(); } catch {}
     resetScroll(); setTimeout(resetScroll, 350);
     try { fitTools(); fit(); } catch {}
-    if (!fromPaywall && !payOpen){ if (!was) toast('Brush Pack restored!'); return; }
-    toast('Brush Pack unlocked: new brushes, unlimited frames and no watermark!');
+    if (!fromPaywall && !payOpen){ if (!was) toast('Art Pack restored!'); return; }
+    toast('Art Pack unlocked: new brushes, unlimited frames and no watermark!');
     if (payProduct === 'frames'){ addFrame(pendingCopy); return; }
     setTool(pendingTool || 'brush'); pendingTool = null;
   }
@@ -5343,7 +5349,7 @@
     if (!store) return;
     $('gateMsg').textContent = 'Checking your purchases…';
     await store.restorePurchases();
-    if (store.owned(PRODUCT_ID)) grantUnlock(true); else $('gateMsg').textContent = 'We couldn’t find a Brush Pack purchase on this Apple ID.';
+    if (store.owned(PRODUCT_ID)) grantUnlock(true); else $('gateMsg').textContent = 'We couldn’t find an Art Pack purchase on this Apple ID.';
   };
   if (NATIVE){
     $('restoreBuy').hidden = false;
