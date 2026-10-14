@@ -6571,9 +6571,15 @@
     const f = ensureLayers(); if (!f) return;
     const inp = document.createElement('input'); inp.className = 'lw-rename'; inp.value = f.layers[i].name; inp.maxLength = 24;
     nm.replaceWith(inp); inp.focus(); inp.select();
-    const done = ok => { if (ok && inp.value.trim()) f.layers[i].name = inp.value.trim(); schedulePersist(); syncLayersWin(); };
-    inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape'){ inp.onblur = null; done(false); } };
-    inp.onblur = () => done(true);
+    // (a tap can send a second, late click that steals the focus: grab it back, and only finish on Enter or a real tap elsewhere)
+    const t0 = performance.now();
+    let fin = false;
+    const done = ok => { if (fin) return; fin = true; document.removeEventListener('pointerdown', outside, true); if (ok && inp.value.trim()) f.layers[i].name = inp.value.trim().slice(0, 24); schedulePersist(); syncLayersWin(); };
+    const outside = e => { if (e.target !== inp && performance.now() - t0 > 350) done(true); };
+    document.addEventListener('pointerdown', outside, true);
+    inp.onkeydown = e => { if (e.key === 'Enter') done(true); if (e.key === 'Escape') done(false); };
+    inp.onblur = () => { if (!fin && performance.now() - t0 < 600) setTimeout(() => { if (!fin){ inp.focus(); } }, 0); };
+    setTimeout(() => { if (!fin){ inp.focus(); inp.select(); } }, 60);
     inp.onclick = e => e.stopPropagation(); inp.onpointerdown = e => e.stopPropagation();
   }
   let lwMenu = null;
