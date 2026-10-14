@@ -3570,7 +3570,7 @@
     window.addEventListener('pointerup', () => setTimeout(flush, 0));
     const cal = { dx: 0, dy: 0, ok: false };   // lines the watcher's positions up with the page's
     window.__nativePen = s => {
-      if (!window.__nativePenOn) toast('✏️ Pencil helper is on');   // (test builds) shows the app's Pencil watcher is working
+      // (the test-build "Pencil helper is on" message is gone for the App Store)
       window.__nativePenOn = true;
       const pts = s && s.pts; if (!pts || !pts.length) return;
       const now = performance.now(), dur = Math.max(0, (pts[pts.length - 1][3] - pts[0][3]) * 1000);
