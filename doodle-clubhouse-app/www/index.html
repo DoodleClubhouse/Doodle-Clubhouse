@@ -1549,30 +1549,30 @@
   #layersWin .lw-min{position:absolute; top:9px; right:27px}
   #layersWin.min{height:auto!important}
   #layersWin.min .lw-list, #layersWin.min .lw-foot, #layersWin.min .lw-size{display:none!important}
-  #layersWin .lw-list{flex:1; overflow-y:auto; overflow-x:hidden; padding:4px 8px; display:flex; flex-direction:column; gap:5px}
-  #layersWin .lw-row{display:flex; align-items:center; gap:5px; padding:5px; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:none; position:relative; flex:none}
+  #layersWin .lw-list{flex:1; overflow-y:auto; overflow-x:hidden; padding:4px 5px; display:flex; flex-direction:column; gap:5px}
+  #layersWin .lw-row{display:flex; align-items:center; gap:3px; padding:4px; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:none; position:relative; flex:none}
   #layersWin .lw-row.on{outline:3px solid #2E9CDB; outline-offset:1px}
   #layersWin .lw-row.drag{z-index:3; opacity:.9; box-shadow:0 8px 16px rgba(0,0,0,.25); cursor:grabbing}
   #layersWin .lw-row.drop-at{box-shadow:0 -4px 0 #2E9CDB, 0 2px 0 var(--ink)}
   #layersWin .lw-row.off .lw-thumb, #layersWin .lw-row.off .lw-name{opacity:.4}
   #layersWin .lw-thumb{flex:none; width:40px; border:1.5px solid rgba(26,31,58,.35); border-radius:4px; background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/8px 8px; pointer-events:none}
-  #layersWin .lw-name{flex:1; min-width:0; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:auto}
+  #layersWin .lw-name{flex:1; min-width:44px; margin-left:2px; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:auto}
   #layersWin .lw-rename{flex:1; min-width:0; font:800 13px var(--body); border:2px solid #2E9CDB; border-radius:6px; padding:2px 4px}
-  #layersWin .lw-b{flex:none; width:24px; height:26px; padding:0; display:grid; place-items:center; border:0; background:none; color:var(--ink); border-radius:6px; cursor:pointer}
+  #layersWin .lw-b{flex:none; width:20px; height:26px; padding:0; display:grid; place-items:center; border:0; background:none; color:var(--ink); border-radius:6px; cursor:pointer}
   #layersWin .lw-b svg{width:17px; height:17px}
   #layersWin .lw-b:active{background:rgba(26,31,58,.12)}
   #layersWin .lw-foot{padding:6px 8px 10px; display:flex; gap:6px; flex:none}
   #layersWin .lw-foot .btn{flex:1; justify-content:center; min-width:0; padding-left:4px; padding-right:4px}
   #layersWin .lw-foot .btn em{font-style:normal}
   #layersWin .lw-note{font:700 12px var(--body); color:var(--ink); margin:6px 2px}
-  /* skinnier and skinnier: arrows go first (drag instead), then the eye and name, then everything but the picture */
-  #layersWin.lw-mid .lw-up, #layersWin.lw-mid .lw-dn{display:none}
-  #layersWin.lw-slim .lw-eye, #layersWin.lw-slim .lw-name, #layersWin.lw-slim .lw-frame, #layersWin.lw-slim .lw-foot .btn em{display:none}
-  #layersWin.lw-slim .lw-row{justify-content:space-between}
-  #layersWin.lw-tiny .lw-more, #layersWin.lw-tiny .lw-title{display:none}
-  #layersWin.lw-tiny .lw-head{padding-left:6px}
-  #layersWin.lw-tiny .lw-list{padding:4px 5px}
-  #layersWin.lw-tiny .lw-row{padding:3px; justify-content:center}
+  /* skinnier and skinnier: the name goes first, then the arrows (drag instead), then the eye, then the menu */
+  #layersWin.lw-noname .lw-name, #layersWin.lw-narrow .lw-frame, #layersWin.lw-narrow .lw-foot .btn em{display:none}
+  #layersWin.lw-noname .lw-row{justify-content:space-between}
+  #layersWin.lw-noarrows .lw-up, #layersWin.lw-noarrows .lw-dn{display:none}
+  #layersWin.lw-noeye .lw-eye{display:none}
+  #layersWin.lw-nomore .lw-more, #layersWin.lw-nomore .lw-title{display:none}
+  #layersWin.lw-nomore .lw-head{padding-left:6px}
+  #layersWin.lw-nomore .lw-row{padding:3px; justify-content:center}
   #layersWin .lw-size{position:absolute; width:22px; height:22px; touch-action:none; z-index:2}
   #layersWin .lw-br{right:0; bottom:0; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(26,31,58,.45) 50%, rgba(26,31,58,.45) 58%, transparent 58%, transparent 70%, rgba(26,31,58,.45) 70%, rgba(26,31,58,.45) 78%, transparent 78%)}
   #layersWin .lw-tl{left:0; top:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, rgba(26,31,58,.45) 0 22%, transparent 22% 36%, rgba(26,31,58,.45) 36% 50%, transparent 50%)}
@@ -6473,7 +6473,7 @@
   }
   function ensureLayers(){
     const f = curF(); if (!f) return null;
-    if (!f.layers){ f.layers = [{ name: 'Layer 1', vis: true, blob: null }]; f.active = 0; LC = [copyC(c)]; }
+    if (!f.layers){ f.layers = [{ name: '1', vis: true, blob: null }]; f.active = 0; LC = [copyC(c)]; }
     else if (!LC) LC = f.layers.map(() => mk(W, H));
     return f;
   }
@@ -6486,8 +6486,8 @@
   function addLayer(){
     const f = ensureLayers(); if (!f) return toast('Pick a frame first');
     LC[f.active] = copyC(c);
-    let n = f.layers.length + 1; const names = new Set(f.layers.map(L => L.name)); while (names.has('Layer ' + n)) n++;
-    f.layers.splice(f.active + 1, 0, { name: 'Layer ' + n, vis: true, blob: null }); LC.splice(f.active + 1, 0, mk(W, H));
+    let n = f.layers.length + 1; const names = new Set(f.layers.map(L => L.name)); while (names.has(String(n))) n++;
+    f.layers.splice(f.active + 1, 0, { name: String(n), vis: true, blob: null }); LC.splice(f.active + 1, 0, mk(W, H));
     f.active++; blank(); layersChanged(); toast('New layer: draw on it');
   }
   function deleteLayer(i){
@@ -6542,8 +6542,10 @@
   }
   const lwSave = () => { const r = lw.getBoundingClientRect(); lwState = { ...lwState, x: r.left, y: r.top, w: r.width, ...(lwState.min ? {} : { h: r.height }) }; try { localStorage.setItem(LW_KEY, JSON.stringify(lwState)); } catch {} };
   // how much fits: wide = everything, mid = no arrows, slim = picture + menu, tiny = just the picture
+  // what fits on a row, added in this order as the window gets wider: eye, then the up/down arrows, then the name (5+ letters)
   function lwFit(){ const w = lw.getBoundingClientRect().width || parseFloat(lw.style.width) || 320;
-    lw.classList.toggle('lw-mid', w < 290); lw.classList.toggle('lw-slim', w < 200); lw.classList.toggle('lw-tiny', w < 120); }
+    lw.classList.toggle('lw-nomore', w < 90); lw.classList.toggle('lw-noeye', w < 116); lw.classList.toggle('lw-noarrows', w < 162);
+    lw.classList.toggle('lw-noname', w < 202); lw.classList.toggle('lw-narrow', w < 202); }
   new ResizeObserver(lwFit).observe(lw);
   function moveLayerTo(from, to){
     const f = ensureLayers(); if (!f || from === to) return;
@@ -6592,7 +6594,7 @@
     lw.querySelector('.lw-frame').textContent = bgEdit ? 'BG' : `Frame ${cur + 1}`;
     lwList.innerHTML = '';
     if (!f){ lwList.innerHTML = '<p class="lw-note">The background has one layer. Tap a frame to use layers.</p>'; return; }
-    const list = f.layers || [{ name: 'Layer 1', vis: true }], act = f.layers ? f.active : 0, tw = 40, th = Math.max(20, Math.round(tw * H / W));
+    const list = f.layers || [{ name: '1', vis: true }], act = f.layers ? f.active : 0, tw = 40, th = Math.max(20, Math.round(tw * H / W));
     const SV = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
     for (let i = list.length - 1; i >= 0; i--){
       const L = list[i], row = document.createElement('div'); row.className = 'lw-row' + (i === act ? ' on' : '') + (L.vis ? '' : ' off'); row.dataset.i = i;
