@@ -1549,8 +1549,8 @@
   #layersWin .lw-min{position:absolute; top:9px; right:27px}
   #layersWin.min{height:auto!important}
   #layersWin.min .lw-list, #layersWin.min .lw-foot, #layersWin.min .lw-size{display:none!important}
-  #layersWin .lw-list{flex:1; overflow-y:auto; overflow-x:hidden; padding:4px 5px; display:flex; flex-direction:column; gap:5px}
-  #layersWin .lw-row{display:flex; align-items:center; gap:2px; padding:4px; min-width:0; overflow:hidden; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:none; position:relative; flex:none}
+  #layersWin .lw-list{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; overflow-x:hidden; padding:4px 5px; display:flex; flex-direction:column; gap:5px}
+  #layersWin .lw-row{display:flex; align-items:center; gap:2px; padding:4px; min-width:0; overflow:hidden; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:pan-y; position:relative; flex:none}
   #layersWin .lw-row.on{outline:3px solid #2E9CDB; outline-offset:1px}
   #layersWin .lw-row.drag{z-index:3; opacity:.9; box-shadow:0 8px 16px rgba(0,0,0,.25); cursor:grabbing}
   #layersWin .lw-row.drop-at{box-shadow:0 -4px 0 #2E9CDB, 0 2px 0 var(--ink)}
@@ -6548,7 +6548,7 @@
     const st = lwState, w = Math.max(84, Math.min(innerWidth - 16, st.w || 320)), h = Math.max(120, Math.min(innerHeight - 16, st.h || 300));
     const x = isFinite(st.x) ? st.x : innerWidth - w - 24, y = isFinite(st.y) ? st.y : 70;
     Object.assign(lw.style, { width: w + 'px', height: st.min ? '' : h + 'px', left: Math.max(0, Math.min(innerWidth - Math.min(w, 60), x)) + 'px', top: Math.max(0, Math.min(innerHeight - 40, y)) + 'px' });
-    lw.classList.toggle('min', !!st.min); lwFit();
+    lw.classList.toggle('min', !!st.min); try { lwMinIcon(); } catch {} lwFit();
   }
   const lwSave = () => { const r = lw.getBoundingClientRect(); lwState = { ...lwState, x: r.left, y: r.top, w: r.width, ...(lwState.min ? {} : { h: r.height }) }; try { localStorage.setItem(LW_KEY, JSON.stringify(lwState)); } catch {} };
   // how much fits: wide = everything, mid = no arrows, slim = picture + menu, tiny = just the picture
@@ -6630,30 +6630,37 @@
       lwList.appendChild(row);
     }
   }
-  { // tap a row = draw on that layer; drag a row up or down = put the layer in a new spot
+  { // tap a row = draw on that layer; swipe = scroll the list; press and hold a row (a moment), then drag = put the layer in a new spot
     let d = null;
+    const arm = () => { if (!d || d.armed) return; d.armed = true; d.row.classList.add('drag'); try { navigator.vibrate && navigator.vibrate(8); } catch {} };
     lwList.addEventListener('pointerdown', e => {
       const row = e.target.closest('.lw-row'); if (!row || e.target.closest('button, input')) return;
       const rows = [...lwList.querySelectorAll('.lw-row')];
-      d = { id: e.pointerId, row, y0: e.clientY, moved: false, from: +row.dataset.i, rects: rows.map(r => r.getBoundingClientRect()), rows };
-      try { row.setPointerCapture(e.pointerId); } catch {}
+      d = { id: e.pointerId, row, y0: e.clientY, x0: e.clientX, armed: false, from: +row.dataset.i, rects: rows.map(r => r.getBoundingClientRect()), rows, mouse: e.pointerType === 'mouse' };
+      if (!d.mouse) d.t = setTimeout(arm, 280);
     });
     lwList.addEventListener('pointermove', e => {
       if (!d || e.pointerId !== d.id) return;
-      const dy = e.clientY - d.y0;
-      if (!d.moved && Math.abs(dy) < 6) return;
-      d.moved = true; e.preventDefault(); d.row.classList.add('drag'); d.row.style.transform = `translateY(${dy}px)`;
-      // where it would land: the row slot under the finger
+      const dy = e.clientY - d.y0, dx = e.clientX - d.x0;
+      if (!d.armed){
+        if (d.mouse && Math.abs(dy) > 5){ arm(); try { d.row.setPointerCapture(e.pointerId); } catch {} }
+        else if (Math.hypot(dx, dy) > 8){ clearTimeout(d.t); d = null; return; }   // a swipe: let the list scroll
+        else return;
+      }
+      e.preventDefault(); d.row.style.transform = `translateY(${dy}px)`;
       let k = d.rects.length - 1; for (let j = 0; j < d.rects.length; j++){ if (e.clientY < d.rects[j].top + d.rects[j].height / 2){ k = j; break; } }
       d.k = k; d.rows.forEach((r, j) => r.classList.toggle('drop-at', j === k && r !== d.row));
     });
+    // while dragging a row, the finger must not scroll the list (iPad)
+    lwList.addEventListener('touchmove', e => { if (d && d.armed) e.preventDefault(); }, { passive: false });
     const end = e => {
       if (!d || e.pointerId !== d.id) return;
-      const dd = d; d = null;
-      if (!dd.moved){ selectLayer(dd.from); return; }
-      const n = dd.rects.length, to = n - 1 - (dd.k ?? (n - 1 - dd.from));   // rows are listed top layer first
-      dd.row.style.transform = ''; moveLayerTo(dd.from, Math.max(0, Math.min(n - 1, to)));
-      if (to === dd.from) syncLayersWin();
+      const dd = d; d = null; clearTimeout(dd.t);
+      if (!dd.armed){ if (e.type === 'pointerup') selectLayer(dd.from); return; }
+      dd.row.style.transform = ''; dd.row.classList.remove('drag');
+      if (dd.k === undefined){ syncLayersWin(); return; }
+      const n = dd.rects.length, to = n - 1 - dd.k;   // rows are listed top layer first
+      if (to === dd.from) syncLayersWin(); else moveLayerTo(dd.from, Math.max(0, Math.min(n - 1, to)));
     };
     lwList.addEventListener('pointerup', end); lwList.addEventListener('pointercancel', end);
   }
@@ -6662,7 +6669,11 @@
   addEventListener('pointerup', lwThumbs);
   window.openLayers = () => { lw.hidden = false; lwPlace(); syncLayersWin(); };
   lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; lwCloseMenu(); };
-  lw.querySelector('.lw-min').onclick = () => { lwState.min = !lwState.min; lw.classList.toggle('min', lwState.min); lw.style.height = lwState.min ? '' : (lwState.h || 300) + 'px'; lwSave(); };
+  // the minimize button shows – when open and an expand sign when it's tucked down to just the bar
+  const MIN_SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>';
+  const EXP_SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6"/></svg>';
+  function lwMinIcon(){ const b = lw.querySelector('.lw-min'), m = !!lwState.min; b.innerHTML = m ? EXP_SV : MIN_SV; b.title = m ? 'Expand' : 'Minimize'; b.setAttribute('aria-label', b.title); }
+  lw.querySelector('.lw-min').onclick = () => { lwState.min = !lwState.min; lw.classList.toggle('min', lwState.min); lw.style.height = lwState.min ? '' : (lwState.h || 300) + 'px'; lwMinIcon(); lwSave(); };
   lw.querySelector('.lw-add').onclick = () => { addLayer(); };
   lw.querySelector('.lw-trash').onclick = () => { const f = curF(); if (!f) return; deleteLayer(f.layers ? f.active : 0); };
   { // drag by the bar (also when minimized)
