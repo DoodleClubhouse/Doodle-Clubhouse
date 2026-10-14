@@ -3528,7 +3528,7 @@
   // so writing quickly with your hand resting on the screen never draws blobs, zooms, or undoes (2-finger tap) your last letter
   let lastPenAt = -1e9;
   ['pointerdown', 'pointermove', 'pointerup'].forEach(t => window.addEventListener(t, e => { if (e.pointerType === 'pen') lastPenAt = performance.now(); }, true));
-  const penRecent = () => performance.now() - lastPenAt < 1200;
+  const penRecent = () => performance.now() - lastPenAt < 3000;   // fingers draw again 3 seconds after the Pencil was last used
   // iPad: stop the screen itself from zooming in (which hid the tool bars), and put it right if it ever happens
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
   document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
@@ -3561,6 +3561,23 @@
     activePointer = null; speedStroke = null;
     if (undoStack.length){ ctx.putImageData(undoStack.pop(), 0, 0); if (pushUndo.keptRedo) redoStack.splice(0, redoStack.length, ...pushUndo.keptRedo); syncHist(); }
   }
+  // big touches (the side of your hand / palm) never draw: a fingertip is small, a palm is a big blob.
+  // If a touch grows into a palm mid-stroke, that stroke is taken back.
+  const PALM_SIZE = 70, palmIds = new Set();
+  const palmSize = e => Math.max(e.width || 0, e.height || 0);
+  board.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch') return;
+    if (palmSize(e) > PALM_SIZE){ palmIds.add(e.pointerId); e.stopImmediatePropagation(); }
+  }, true);
+  board.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'touch') return;
+    if (!palmIds.has(e.pointerId) && palmSize(e) > PALM_SIZE){
+      palmIds.add(e.pointerId); touches.delete(e.pointerId);
+      if (drawing && activePointer === e.pointerId) cancelStroke();
+    }
+    if (palmIds.has(e.pointerId)) e.stopImmediatePropagation();
+  }, true);
+  ['pointerup', 'pointercancel'].forEach(t => window.addEventListener(t, e => { palmIds.delete(e.pointerId); }));
   board.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
     if (e.pointerType === 'pen'){ touches.clear(); gesture = null; return; }
