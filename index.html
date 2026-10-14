@@ -1543,10 +1543,12 @@
   /* Layers window: floats over the page; drag it by the bar, resize from either corner, minimize to the bar */
   #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:84px; min-height:0}
   #layersWin[hidden]{display:none!important}
-  #layersWin .lw-head{display:flex; align-items:center; gap:6px; min-height:34px; padding:6px 52px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink); position:relative; flex:none}
+  #layersWin .lw-head{display:flex; align-items:center; gap:6px; min-height:36px; padding:6px 66px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink); position:relative; flex:none}
   #layersWin .lw-frame{font:700 12px var(--body); color:var(--muted); white-space:nowrap}
-  #layersWin .lw-x{position:absolute; top:9px; right:7px}
-  #layersWin .lw-min{position:absolute; top:9px; right:27px}
+  #layersWin .lw-x, #layersWin .lw-min{position:absolute; top:6px; width:24px!important; height:24px!important; border-radius:7px!important; display:grid; place-items:center}
+  #layersWin .lw-x{right:6px}
+  #layersWin .lw-min{right:36px}
+  #layersWin .lw-x svg, #layersWin .lw-min svg{width:13px!important; height:13px!important}
   #layersWin.min{height:auto!important}
   #layersWin.min .lw-list, #layersWin.min .lw-foot, #layersWin.min .lw-size{display:none!important}
   #layersWin .lw-list{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; overflow-x:hidden; padding:4px 5px; display:flex; flex-direction:column; gap:5px}
