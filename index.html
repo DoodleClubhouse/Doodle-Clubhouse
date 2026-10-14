@@ -3497,7 +3497,11 @@
   window.addEventListener('pointerdown', e => {
     if (e.pointerType === 'touch' || e.target === c || !e.isTrusted) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (!e.target.closest || e.target.closest('button, input, select, textarea, label, a, [contenteditable], [role="dialog"], [role="menu"], nav, header, .menubar, .tools, .film, .dock, .extras, .more-sheet, .overlay, #typeBar, .mix-pop, .mic-pop, .mb-drop, .toast')) return;
+    // the frames bar along the top: starting on its bottom edge (not on a button or frame) still draws, so a line can begin right at the paper's top edge
+    { const fl = e.target.closest && e.target.closest('.film');
+      if (fl){ const fr = fl.getBoundingClientRect(), cr = c.getBoundingClientRect();
+        if (e.target.closest('button, input, .frame, .seg') || !(e.clientY >= fr.bottom - 14 && cr.top >= fr.bottom - 2)) return; } }
+    if (!e.target.closest || e.target.closest('button, input, select, textarea, label, a, [contenteditable], [role="dialog"], [role="menu"], nav, header, .menubar, .tools, .dock, .extras, .more-sheet, .overlay, #typeBar, .mix-pop, .mic-pop, .mb-drop, .toast')) return;
     if (document.querySelector('[id$="Overlay"]:not([hidden])')) return;   // a window is open
     if (playing || (typeof moveOn !== 'undefined' && moveOn)) return;
     const r = c.getBoundingClientRect(), pad = 70;
