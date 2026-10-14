@@ -1527,6 +1527,11 @@
   #photoBox .ph-rot{left:50%; top:-52px; margin-left:-17px; background:#FF9F1C; cursor:grab}
   #photoBox .ph-rot::after{content:""; position:absolute; left:50%; top:100%; width:2.5px; height:16px; margin-left:-1.25px; background:#1A1F3A}
   #photoBar{position:fixed; z-index:41; transform:translateX(-50%); display:flex; gap:8px}
+
+  /* the sound's wave under the frames (iPad / computer frames bar only) */
+  #filmWave{position:absolute; display:none; pointer-events:none}
+  @media (max-width:760px), (max-height:500px){ #filmWave{display:none!important} }
+  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 10px)!important} }
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6592,6 +6597,7 @@
     audioEl = audioClip ? new Audio(URL.createObjectURL(audioClip.blob)) : null;
     if (audioEl) audioEl.preload = 'auto';
     micBtn.classList.toggle('has', !!audioClip);
+    try { waveFor(audioClip); } catch {}
     micBtn.title = audioClip ? `Sound (${Math.max(1, Math.round(audioClip.dur))}s): listen, record again or delete` : 'Sound: record your voice while your cartoon plays';
   }
   // ---------- import a sound file (music note button on the frames bar) ----------
@@ -6686,6 +6692,39 @@
     phBox.hidden = phBar.hidden = false; phLoop();
     toast('Drag to move, pull the corner to resize, turn with the orange knob');
   };
+  // ---------- a little picture of the sound (its wave) along the bottom of the frames bar ----------
+  const waveC = document.createElement('canvas'); waveC.id = 'filmWave'; waveC.setAttribute('aria-hidden', 'true');
+  document.querySelector('.film').appendChild(waveC);
+  let wavePeaks = null, waveSeq = 0;
+  async function waveFor(clip){
+    const my = ++waveSeq; wavePeaks = null; document.querySelector('.film').classList.toggle('has-audio', !!clip); drawWave();
+    if (!clip) return;
+    try {
+      const buf = await clip.blob.arrayBuffer();
+      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) return;
+      const oc = new OAC(1, 1, 44100);
+      const ab = await new Promise((res, rej) => { const pr = oc.decodeAudioData(buf, res, rej); pr && pr.then && pr.then(res, rej); });
+      if (my !== waveSeq) return;
+      const d = ab.getChannelData(0), N = 400, step = Math.max(1, Math.floor(d.length / N)), pk = new Float32Array(N);
+      for (let i = 0; i < N; i++){ let m = 0; const o = i * step; for (let j = 0; j < step; j += 4){ const v = Math.abs(d[o + j] || 0); if (v > m) m = v; } pk[i] = m; }
+      const top = Math.max(.05, ...pk); for (let i = 0; i < N; i++) pk[i] /= top;
+      wavePeaks = pk; drawWave();
+    } catch {}
+  }
+  function drawWave(){
+    const fl = document.querySelector('.film'), st = document.getElementById('strip');
+    if (!wavePeaks || !fl || !st || getComputedStyle(fl).display === 'none' || !fl.getBoundingClientRect().width){ waveC.style.display = 'none'; return; }
+    const tiles = [...st.querySelectorAll('.frame')]; if (!tiles.length){ waveC.style.display = 'none'; return; }
+    const fr = fl.getBoundingClientRect(), a = tiles[0].getBoundingClientRect(), b = st.getBoundingClientRect();
+    const left = a.left - fr.left, width = Math.max(20, Math.min(b.right, fr.right) - a.left - 6), top = a.bottom - fr.top + 3, h = Math.max(4, Math.min(9, fr.bottom - a.bottom - 5));
+    Object.assign(waveC.style, { display: 'block', left: left + 'px', top: top + 'px', width: width + 'px', height: h + 'px' });
+    const dpr = window.devicePixelRatio || 1; waveC.width = Math.round(width * dpr); waveC.height = Math.round(h * dpr);
+    const g = waveC.getContext('2d'), n = Math.max(10, Math.floor(width / 3)), bw = waveC.width / n;
+    g.clearRect(0, 0, waveC.width, waveC.height); g.fillStyle = 'rgba(26,31,58,.55)';
+    for (let i = 0; i < n; i++){ const v = wavePeaks[Math.floor(i / n * wavePeaks.length)] || 0, bh = Math.max(dpr, v * waveC.height); g.fillRect(i * bw + bw * .2, (waveC.height - bh) / 2, bw * .6, bh); }
+  }
+  new ResizeObserver(() => requestAnimationFrame(drawWave)).observe(document.querySelector('.film'));
+  document.querySelectorAll('[data-panel="frames"]').forEach(x => x.addEventListener('click', () => setTimeout(drawWave, 60)));
   function audioLoop(){
     if (!audioEl || recActive) return;
     if (audioEl.paused || audioEl.ended){ try { audioEl.currentTime = 0; } catch {} const pr = audioEl.play(); pr && pr.catch && pr.catch(() => {}); }
