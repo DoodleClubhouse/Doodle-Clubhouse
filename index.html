@@ -1535,6 +1535,10 @@
   
 
   .ghost-pop .gp-waves .btn[aria-pressed="true"]{background:var(--ink); color:#fff}
+
+  /* the sound's source: a tiny green check in the top-right corner of the mic or music-note button */
+  #micBtn, #sndImport{position:relative}
+  #micBtn.snd-check::after, #sndImport.snd-check::after{content:""; position:absolute; top:-5px; right:-5px; width:13px; height:13px; border-radius:50%; background:#2FB84B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/9px no-repeat; border:1.5px solid #1A1F3A; pointer-events:none; z-index:2}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6611,6 +6615,9 @@
     audioEl = audioClip ? new Audio(URL.createObjectURL(audioClip.blob)) : null;
     if (audioEl) audioEl.preload = 'auto';
     micBtn.classList.toggle('has', !!audioClip);
+    // a tiny green check on whichever button the sound came from: the mic (recorded) or the music note (a file)
+    micBtn.classList.toggle('snd-check', !!audioClip && !audioClip.name);
+    try { $('sndImport').classList.toggle('snd-check', !!audioClip && !!audioClip.name); } catch {}
     try { waveFor(audioClip); } catch {}
     micBtn.title = audioClip ? `Sound (${Math.max(1, Math.round(audioClip.dur))}s): listen, record again or delete` : 'Sound: record your voice while your cartoon plays';
   }
@@ -6772,7 +6779,7 @@
   // (a thin red line runs along it to show where the sound is; on/off in the frames Settings)
   const WAVES_KEY = 'doodle-clubhouse-show-waves';
   // 'always' = whenever the cartoon has a sound, 'play' (Sometimes) = only while it plays, 'hide' = never
-  window.__wavesMode = 'play'; try { const v = localStorage.getItem(WAVES_KEY); window.__wavesMode = v === '0' || v === 'hide' ? 'hide' : v === 'always' ? 'always' : 'play'; } catch {}
+  window.__wavesMode = 'hide'; try { const v = localStorage.getItem(WAVES_KEY); window.__wavesMode = v === 'always' ? 'always' : v === 'play' ? 'play' : 'hide'; } catch {}
   window.__setWaves = m => { window.__wavesMode = m; try { localStorage.setItem(WAVES_KEY, m); } catch {} };
   const waveC = document.createElement('canvas'); waveC.id = 'pageWave'; waveC.setAttribute('aria-hidden', 'true');
   const waveHead = document.createElement('i'); waveHead.id = 'waveHead';
