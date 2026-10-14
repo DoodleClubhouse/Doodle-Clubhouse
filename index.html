@@ -6045,10 +6045,24 @@
   function speedReset(){ clearTimeout(speedT); speedPending = false; speedLog = []; speedStroke = null; speedRecord.paths = null; }
   const canvasBlob = () => new Promise(r => c.toBlob(b => r(b), 'image/png'));
   function canvasEmpty(){ const d = ctx.getImageData(0, 0, W, H).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return false; return true; }
-  async function commit(){
+  // commit(true) is the quick one for adding / switching frames: it copies the drawing straight away (instant) and
+  // packs it into a picture file in the background. A plain commit() waits until everything is packed (saving etc).
+  let encQ = Promise.resolve();
+  const packCanvas = k => new Promise(r => k.toBlob(b => r(b), 'image/png'));
+  async function commit(fast){
     if (bgEdit){ if (bgDirty){ bgDirty = false; bgBlob = canvasEmpty() ? null : await canvasBlob(); } return; }
     const f = frames[cur];
-    if (f && (f.dirty || !f.blob)){ f.dirty = false; f.blob = await canvasBlob(); }
+    if (f && (f.dirty || !f.blob)){
+      f.dirty = false;
+      if (fast){
+        const snap = mk(c.width, c.height); snap.getContext('2d').drawImage(c, 0, 0); f.blob = snap;
+        encQ = encQ.then(async () => { const b = await packCanvas(snap); if (b && f.blob === snap) f.blob = b; });
+      } else f.blob = await canvasBlob();
+    }
+    if (!fast){
+      await encQ;
+      for (const fr of frames) if (fr.blob && !(fr.blob instanceof Blob)) fr.blob = await packCanvas(fr.blob);
+    }
   }
   async function bmpOf(blob, w, h){
     try { return await createImageBitmap(blob, { resizeWidth:w, resizeHeight:h, resizeQuality:'medium' }); }
@@ -6236,7 +6250,7 @@
     if (playing) stopPlay();
     if (i === cur) return;
     busy = true;
-    await commit(); cur = i; await paintBlob(frames[cur].blob);
+    await commit(true); cur = i; await paintBlob(frames[cur].blob);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
   }
@@ -6246,7 +6260,7 @@
     if (playing) stopPlay();
     if (!framesUnlocked && frames.length >= FREE_FRAMES){ openFramePaywall(copy); return; }
     busy = true;
-    await commit();
+    await commit(true);
     const f = newFrame();
     if (copy === 'paste'){ f.blob = frameClip; f.dirty = false; await paintBlob(frameClip); }
     else if (copy){ f.blob = frames[cur].blob; f.dirty = false; }
