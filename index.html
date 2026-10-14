@@ -1516,6 +1516,17 @@
   #restoreBuy{color:var(--ink)!important; text-decoration:underline; text-underline-offset:2px}
   .pay .confirm-row{justify-content:center}
   #buy{background:#2FB84B!important; border-color:var(--ink)!important; color:#fff!important; font-size:20px!important; padding:14px 30px!important; min-width:min(320px, 100%); justify-content:center; border-radius:14px!important}
+
+  /* imported photo: floats above the page until Done */
+  #photoBox{position:fixed; z-index:40; touch-action:none; outline:2.5px dashed #2E9CDB; outline-offset:2px; cursor:move}
+  #photoBox[hidden], #photoBar[hidden]{display:none!important}
+  #photoBox .ph-img{width:100%; height:100%; display:block; pointer-events:none}
+  #photoBox i{position:absolute; width:34px; height:34px; border-radius:50%; border:2.5px solid #1A1F3A; color:#fff; display:grid; place-items:center; box-shadow:0 2px 0 #1A1F3A; touch-action:none}
+  #photoBox i svg{width:18px; height:18px; pointer-events:none}
+  #photoBox .ph-size{right:-19px; bottom:-19px; background:#2E9CDB; cursor:nwse-resize}
+  #photoBox .ph-rot{left:50%; top:-52px; margin-left:-17px; background:#FF9F1C; cursor:grab}
+  #photoBox .ph-rot::after{content:""; position:absolute; left:50%; top:100%; width:2.5px; height:16px; margin-left:-1.25px; background:#1A1F3A}
+  #photoBar{position:fixed; z-index:41; transform:translateX(-50%); display:flex; gap:8px}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -3522,6 +3533,7 @@
   // ---------- start a line a little off the paper (Pencil or mouse): the stroke is handed to the paper ----------
   window.addEventListener('pointerdown', e => {
     if (e.pointerType === 'touch' || e.target === c || !e.isTrusted) return;
+    if (e.target.closest && e.target.closest('#photoBox, #photoBar')) return;   // moving / sizing an imported photo
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     // the frames bar along the top: starting on its bottom edge (not on a button or frame) still draws, so a line can begin right at the paper's top edge
     { const fl = e.target.closest && e.target.closest('.film');
@@ -6597,15 +6609,82 @@
   };
   // ---------- File > Import photo: the picture is placed on the frame you're on (fits the page; Undo takes it off) ----------
   window.importPhoto = () => { const f = $('photoFile'); f.value = ''; f.click(); };
+  // The photo first floats above the page: drag it to move, pull the blue corner to resize, the orange knob (or two fingers) to
+  // rotate. Done (or starting to draw) lays it onto the frame; Undo takes it off again.
+  let photoT = null;
+  const phBox = document.createElement('div'); phBox.id = 'photoBox'; phBox.hidden = true;
+  phBox.innerHTML = '<canvas class="ph-img"></canvas><i class="ph-rot" title="Turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></i><i class="ph-size" title="Resize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></i>';
+  const phBar = document.createElement('div'); phBar.id = 'photoBar'; phBar.hidden = true;
+  phBar.innerHTML = '<button class="btn" data-ph="cancel" aria-label="Cancel">✕ Cancel</button><button class="btn primary" data-ph="done">✓ Done</button>';
+  document.body.append(phBox, phBar);
+  const phCan = phBox.querySelector('.ph-img');
+  function phLayout(){
+    if (!photoT) return;
+    const r = c.getBoundingClientRect(), k = r.width / W, t = photoT;
+    phBox.style.left = (r.left + t.x * k) + 'px'; phBox.style.top = (r.top + t.y * k) + 'px';
+    phBox.style.width = (t.w * k) + 'px'; phBox.style.height = (t.h * k) + 'px';
+    phBox.style.transform = `translate(-50%, -50%) rotate(${t.a}rad)`;
+    const br = phBox.getBoundingClientRect();
+    phBar.style.left = (br.left + br.width / 2) + 'px'; phBar.style.top = Math.min(innerHeight - 56, br.bottom + 12) + 'px';
+  }
+  function phLoop(){ if (!photoT) return; phLayout(); requestAnimationFrame(phLoop); }
+  function phClose(){ photoT = null; phBox.hidden = phBar.hidden = true; }
+  function phCommit(){
+    const t = photoT; if (!t) return; phClose();
+    pushUndo();
+    ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.translate(t.x, t.y); ctx.rotate(t.a); ctx.drawImage(t.bmp, -t.w / 2, -t.h / 2, t.w, t.h); ctx.restore();
+    t.bmp.close && t.bmp.close();
+    onCanvasChanged(); toast('Photo added! Draw on top, or Undo to take it off');
+  }
+  phBar.querySelector('[data-ph="done"]').onclick = phCommit;
+  phBar.querySelector('[data-ph="cancel"]').onclick = () => { const t = photoT; phClose(); t && t.bmp.close && t.bmp.close(); };
+  // start drawing anywhere on the page: the photo is laid down first
+  c.addEventListener('pointerdown', () => { if (photoT) phCommit(); }, true);
+  { // dragging: one finger moves (or resizes / turns from the knobs), two fingers pinch-resize and turn together
+    const ptrs = new Map(); let g0 = null, mode = '';
+    const toPage = e => { const r = c.getBoundingClientRect(), k = W / r.width; return { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k }; };
+    const snap = () => {
+      const t = photoT, ps = [...ptrs.values()];
+      if (ps.length >= 2){ const [p, q] = ps; g0 = { d: Math.hypot(q.x - p.x, q.y - p.y) || 1, an: Math.atan2(q.y - p.y, q.x - p.x), mx: (p.x + q.x) / 2, my: (p.y + q.y) / 2, t: { ...t } }; }
+      else if (ps.length === 1){ const p = ps[0]; g0 = { p, t: { ...t }, d: Math.hypot(p.x - t.x, p.y - t.y) || 1, an: Math.atan2(p.y - t.y, p.x - t.x) }; }
+    };
+    phBox.addEventListener('pointerdown', e => {
+      if (!photoT) return; e.preventDefault(); e.stopPropagation();
+      try { phBox.setPointerCapture(e.pointerId); } catch {}
+      if (!ptrs.size) mode = e.target.closest('.ph-rot') ? 'rot' : e.target.closest('.ph-size') ? 'size' : 'move';
+      ptrs.set(e.pointerId, toPage(e)); snap();
+    });
+    phBox.addEventListener('pointermove', e => {
+      if (!photoT || !ptrs.has(e.pointerId) || !g0) return; e.preventDefault();
+      ptrs.set(e.pointerId, toPage(e));
+      const t = photoT, ps = [...ptrs.values()], o = g0.t, ar = o.w / o.h;
+      if (ps.length >= 2){
+        const [p, q] = ps, d = Math.hypot(q.x - p.x, q.y - p.y), an = Math.atan2(q.y - p.y, q.x - p.x);
+        const f = d / g0.d; t.w = Math.max(20, o.w * f); t.h = t.w / ar; t.a = o.a + (an - g0.an);
+        t.x = o.x + ((p.x + q.x) / 2 - g0.mx); t.y = o.y + ((p.y + q.y) / 2 - g0.my);
+      } else {
+        const p = ps[0];
+        if (mode === 'move'){ t.x = o.x + (p.x - g0.p.x); t.y = o.y + (p.y - g0.p.y); }
+        else if (mode === 'size'){ const f = Math.hypot(p.x - o.x, p.y - o.y) / g0.d; t.w = Math.max(20, o.w * f); t.h = t.w / ar; }
+        else { t.a = o.a + (Math.atan2(p.y - o.y, p.x - o.x) - g0.an); const st = Math.PI / 12, sn = Math.round(t.a / st) * st; if (Math.abs(t.a - sn) < .05) t.a = sn; }
+      }
+      phLayout();
+    });
+    const up = e => { if (ptrs.delete(e.pointerId)){ if (ptrs.size) snap(); else g0 = null; } };
+    phBox.addEventListener('pointerup', up); phBox.addEventListener('pointercancel', up);
+  }
   $('photoFile').onchange = async () => {
     const file = $('photoFile').files && $('photoFile').files[0]; if (!file) return;
     let bmp; try { bmp = await createImageBitmap(file); } catch { toast('That picture can’t be opened here'); return; }
     if (playing) stopPlay();
-    pushUndo();
-    const k = Math.min(W / bmp.width, H / bmp.height), w = bmp.width * k, h = bmp.height * k;
-    ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(bmp, (W - w) / 2, (H - h) / 2, w, h); ctx.restore();
-    bmp.close && bmp.close();
-    onCanvasChanged(); toast('Photo added! Draw on top, or Undo to take it off');
+    if (photoT) phCommit();
+    const k = Math.min(W / bmp.width, H / bmp.height) * .8;
+    photoT = { bmp, x: W / 2, y: H / 2, w: bmp.width * k, h: bmp.height * k, a: 0 };
+    phCan.width = Math.min(1200, bmp.width); phCan.height = Math.round(phCan.width * bmp.height / bmp.width);
+    phCan.getContext('2d').drawImage(bmp, 0, 0, phCan.width, phCan.height);
+    phBox.hidden = phBar.hidden = false; phLoop();
+    toast('Drag to move, pull the corner to resize, turn with the orange knob');
   };
   function audioLoop(){
     if (!audioEl || recActive) return;
