@@ -7246,7 +7246,7 @@
     }
     // keep filling the screen when the phone/tablet turns or the window changes size
     let fitT = 0;
-    paperAutoFit = () => { if (sizeMode !== 'fit') return; const f = fitSize(); if (Math.abs(f.w - W) > 8 || Math.abs(f.h - H) > 8) applySize(f.w, f.h, false); };
+    paperAutoFit = () => { if (sizeMode !== 'fit') return; const ae = document.activeElement; if (ae && /INPUT|TEXTAREA/.test(ae.tagName) || (ae && ae.isContentEditable)) return; const f = fitSize(); if (Math.abs(f.w - W) > 8 || Math.abs(f.h - H) > 8) applySize(f.w, f.h, false); };
     addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(paperAutoFit, 300); });
     // tap: square -> wide -> tall -> fill screen -> square. Press and hold (or right-click) for the full size menu.
     let holdT = 0, held = false;
@@ -7297,6 +7297,8 @@
       if (bgEdit) bgDirty = true;
       setDims(w, h);
       reframePage(curF, snap, snap.width, snap.height, W, H, ctx);   // art keeps its size, or shrinks just enough never to be cut off
+      // the frame's other layers get the same new page (never stretched), and the layer stack is redrawn at the new size
+      try { if (curF && curF.layers && LC) LC = LC.map((L, i) => { if (i === curF.active || !L) return L; const k = mk(W, H); reframePage(null, L, L.width, L.height, W, H, k.getContext('2d')); return k; }); renderLayerStack(); } catch {}
       frames.forEach(f => { const t = mk(TW, TH); t.getContext('2d').drawImage(f.thumb, 0, 0, TW, TH); f.thumb = t; if (f !== curF && f.blob) f.refit = true; });
       if (curF){ curF.dirty = true; drawThumb(curF); }
       syncHist(); renderStrip(); drawGhost(); drawBgLayer();   // undo still works after a size change
