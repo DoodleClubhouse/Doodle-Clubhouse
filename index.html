@@ -1562,6 +1562,8 @@
   #layersWin .lw-rename{flex:1; min-width:0; font:800 13px var(--body); border:2px solid #2E9CDB; border-radius:6px; padding:2px 4px}
   #layersWin .lw-b{flex:none; width:20px; height:26px; padding:0; display:grid; place-items:center; border:0; background:none; color:var(--ink); border-radius:6px; cursor:pointer}
   #layersWin .lw-b svg{width:17px; height:17px}
+  #layersWin .lw-b.lw-eye{width:32px; height:32px}
+  #layersWin .lw-b.lw-eye svg{width:24px; height:24px}
   #layersWin .lw-b:active{background:rgba(26,31,58,.12)}
   #layersWin .lw-foot{padding:6px 8px 10px; display:flex; gap:6px; flex:none}
   #layersWin .lw-foot .btn{flex:1; justify-content:center; min-width:0; padding-left:4px; padding-right:4px}
@@ -6593,8 +6595,8 @@
   // what fits on a row, added in this order as the window gets wider: eye, then the up/down arrows, then the name (5+ letters)
   // measured on the list itself, so a scroll bar (when there are lots of layers) is taken into account
   function lwFit(){ const ww = lw.getBoundingClientRect().width || parseFloat(lw.style.width) || 320, a = (lwList && lwList.clientWidth) || ww - 5;
-    lw.classList.toggle('lw-nomore', a < 85); lw.classList.toggle('lw-noeye', a < 111); lw.classList.toggle('lw-noarrows', a < 157);
-    lw.classList.toggle('lw-noname', a < 185); lw.classList.toggle('lw-narrow', ww < 202); }
+    lw.classList.toggle('lw-nomore', a < 85); lw.classList.toggle('lw-noeye', a < 123); lw.classList.toggle('lw-noarrows', a < 169);
+    lw.classList.toggle('lw-noname', a < 197); lw.classList.toggle('lw-narrow', ww < 202); }
   new ResizeObserver(lwFit).observe(lw);
   function moveLayerTo(from, to){
     const f = ensureLayers(); if (!f || from === to) return;
