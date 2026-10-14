@@ -1550,13 +1550,13 @@
   #layersWin.min{height:auto!important}
   #layersWin.min .lw-list, #layersWin.min .lw-foot, #layersWin.min .lw-size{display:none!important}
   #layersWin .lw-list{flex:1; overflow-y:auto; overflow-x:hidden; padding:4px 5px; display:flex; flex-direction:column; gap:5px}
-  #layersWin .lw-row{display:flex; align-items:center; gap:3px; padding:4px; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:none; position:relative; flex:none}
+  #layersWin .lw-row{display:flex; align-items:center; gap:2px; padding:4px; min-width:0; overflow:hidden; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:none; position:relative; flex:none}
   #layersWin .lw-row.on{outline:3px solid #2E9CDB; outline-offset:1px}
   #layersWin .lw-row.drag{z-index:3; opacity:.9; box-shadow:0 8px 16px rgba(0,0,0,.25); cursor:grabbing}
   #layersWin .lw-row.drop-at{box-shadow:0 -4px 0 #2E9CDB, 0 2px 0 var(--ink)}
   #layersWin .lw-row.off .lw-thumb, #layersWin .lw-row.off .lw-name{opacity:.4}
   #layersWin .lw-thumb{flex:none; width:40px; border:1.5px solid rgba(26,31,58,.35); border-radius:4px; background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/8px 8px; pointer-events:none}
-  #layersWin .lw-name{flex:1; min-width:44px; margin-left:2px; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:auto}
+  #layersWin .lw-name{flex:1 1 0; min-width:30px; margin-left:2px; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:auto}
   #layersWin .lw-rename{flex:1; min-width:0; font:800 13px var(--body); border:2px solid #2E9CDB; border-radius:6px; padding:2px 4px}
   #layersWin .lw-b{flex:none; width:20px; height:26px; padding:0; display:grid; place-items:center; border:0; background:none; color:var(--ink); border-radius:6px; cursor:pointer}
   #layersWin .lw-b svg{width:17px; height:17px}
@@ -6542,6 +6542,7 @@
     + '<i class="lw-size lw-br" title="Resize"></i><i class="lw-size lw-tl" title="Resize"></i>';
   document.body.appendChild(lw);
   const lwList = lw.querySelector('.lw-list');
+  new ResizeObserver(() => lwFit()).observe(lwList);
   let lwState = {}; try { lwState = JSON.parse(localStorage.getItem(LW_KEY)) || {}; } catch {}
   function lwPlace(){
     const st = lwState, w = Math.max(84, Math.min(innerWidth - 16, st.w || 320)), h = Math.max(120, Math.min(innerHeight - 16, st.h || 300));
@@ -6552,9 +6553,10 @@
   const lwSave = () => { const r = lw.getBoundingClientRect(); lwState = { ...lwState, x: r.left, y: r.top, w: r.width, ...(lwState.min ? {} : { h: r.height }) }; try { localStorage.setItem(LW_KEY, JSON.stringify(lwState)); } catch {} };
   // how much fits: wide = everything, mid = no arrows, slim = picture + menu, tiny = just the picture
   // what fits on a row, added in this order as the window gets wider: eye, then the up/down arrows, then the name (5+ letters)
-  function lwFit(){ const w = lw.getBoundingClientRect().width || parseFloat(lw.style.width) || 320;
-    lw.classList.toggle('lw-nomore', w < 90); lw.classList.toggle('lw-noeye', w < 116); lw.classList.toggle('lw-noarrows', w < 162);
-    lw.classList.toggle('lw-noname', w < 202); lw.classList.toggle('lw-narrow', w < 202); }
+  // measured on the list itself, so a scroll bar (when there are lots of layers) is taken into account
+  function lwFit(){ const ww = lw.getBoundingClientRect().width || parseFloat(lw.style.width) || 320, a = (lwList && lwList.clientWidth) || ww - 5;
+    lw.classList.toggle('lw-nomore', a < 85); lw.classList.toggle('lw-noeye', a < 111); lw.classList.toggle('lw-noarrows', a < 157);
+    lw.classList.toggle('lw-noname', a < 185); lw.classList.toggle('lw-narrow', ww < 202); }
   new ResizeObserver(lwFit).observe(lw);
   function moveLayerTo(from, to){
     const f = ensureLayers(); if (!f || from === to) return;
