@@ -1540,25 +1540,43 @@
   #micBtn, #sndImport{position:relative}
   #micBtn.snd-check::after, #sndImport.snd-check::after{content:""; position:absolute; top:-5px; right:-5px; width:13px; height:13px; border-radius:50%; background:#2FB84B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/9px no-repeat; border:1.5px solid #1A1F3A; pointer-events:none; z-index:2}
 
-  /* Layers window: floats over the page, drag it by the top, resize it from the corner */
-  #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:200px; min-height:150px}
+  /* Layers window: floats over the page; drag it by the bar, resize from either corner, minimize to the bar */
+  #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:64px; min-height:0}
   #layersWin[hidden]{display:none!important}
-  #layersWin .lw-head{display:flex; align-items:center; gap:8px; padding:8px 30px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink)}
-  #layersWin .lw-frame{font:700 12px var(--body); color:var(--muted)}
-  #layersWin .lw-x{position:absolute; top:6px; right:6px}
-  #layersWin .lw-list{flex:1; overflow-y:auto; padding:2px 8px; display:flex; flex-direction:column; gap:5px}
-  #layersWin .lw-row{display:flex; align-items:center; gap:6px; padding:5px; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:pointer; box-shadow:0 2px 0 var(--ink)}
+  #layersWin .lw-head{display:flex; align-items:center; gap:6px; min-height:34px; padding:6px 52px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink); position:relative; flex:none}
+  #layersWin .lw-frame{font:700 12px var(--body); color:var(--muted); white-space:nowrap}
+  #layersWin .lw-x{position:absolute; top:9px; right:7px}
+  #layersWin .lw-min{position:absolute; top:9px; right:27px}
+  #layersWin.min{height:auto!important}
+  #layersWin.min .lw-list, #layersWin.min .lw-foot, #layersWin.min .lw-size{display:none!important}
+  #layersWin .lw-list{flex:1; overflow-y:auto; overflow-x:hidden; padding:4px 8px; display:flex; flex-direction:column; gap:5px}
+  #layersWin .lw-row{display:flex; align-items:center; gap:5px; padding:5px; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:grab; box-shadow:0 2px 0 var(--ink); touch-action:none; position:relative; flex:none}
   #layersWin .lw-row.on{outline:3px solid #2E9CDB; outline-offset:1px}
+  #layersWin .lw-row.drag{z-index:3; opacity:.9; box-shadow:0 8px 16px rgba(0,0,0,.25); cursor:grabbing}
+  #layersWin .lw-row.drop-at{box-shadow:0 -4px 0 #2E9CDB, 0 2px 0 var(--ink)}
   #layersWin .lw-row.off .lw-thumb, #layersWin .lw-row.off .lw-name{opacity:.4}
-  #layersWin .lw-thumb{flex:none; border:1.5px solid rgba(26,31,58,.35); border-radius:4px; background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/8px 8px}
-  #layersWin .lw-name{flex:1; min-width:56px; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  #layersWin .lw-thumb{flex:none; width:40px; border:1.5px solid rgba(26,31,58,.35); border-radius:4px; background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/8px 8px; pointer-events:none}
+  #layersWin .lw-name{flex:1; min-width:0; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:auto}
+  #layersWin .lw-rename{flex:1; min-width:0; font:800 13px var(--body); border:2px solid #2E9CDB; border-radius:6px; padding:2px 4px}
   #layersWin .lw-b{flex:none; width:24px; height:26px; padding:0; display:grid; place-items:center; border:0; background:none; color:var(--ink); border-radius:6px; cursor:pointer}
   #layersWin .lw-b svg{width:17px; height:17px}
   #layersWin .lw-b:active{background:rgba(26,31,58,.12)}
-  #layersWin .lw-foot{padding:6px 8px 10px; display:flex; gap:6px}
-  #layersWin .lw-foot .btn{flex:1; justify-content:center}
+  #layersWin .lw-foot{padding:6px 8px 10px; display:flex; gap:6px; flex:none}
+  #layersWin .lw-foot .btn{flex:1; justify-content:center; min-width:0; padding-left:4px; padding-right:4px}
+  #layersWin .lw-foot .btn em{font-style:normal}
   #layersWin .lw-note{font:700 12px var(--body); color:var(--ink); margin:6px 2px}
-  #layersWin .lw-size{position:absolute; right:0; bottom:0; width:22px; height:22px; cursor:nwse-resize; touch-action:none; background:linear-gradient(135deg, transparent 50%, rgba(26,31,58,.45) 50%, rgba(26,31,58,.45) 58%, transparent 58%, transparent 70%, rgba(26,31,58,.45) 70%, rgba(26,31,58,.45) 78%, transparent 78%)}
+  /* skinnier and skinnier: arrows go first (drag instead), then the eye and name, then everything but the picture */
+  #layersWin.lw-mid .lw-up, #layersWin.lw-mid .lw-dn{display:none}
+  #layersWin.lw-slim .lw-eye, #layersWin.lw-slim .lw-name, #layersWin.lw-slim .lw-frame, #layersWin.lw-slim .lw-foot .btn em{display:none}
+  #layersWin.lw-slim .lw-row{justify-content:space-between}
+  #layersWin.lw-tiny .lw-more, #layersWin.lw-tiny .lw-title{display:none}
+  #layersWin.lw-tiny .lw-head{padding-left:6px}
+  #layersWin.lw-tiny .lw-list{padding:4px 5px}
+  #layersWin.lw-tiny .lw-row{padding:3px; justify-content:center}
+  #layersWin .lw-size{position:absolute; width:22px; height:22px; touch-action:none; z-index:2}
+  #layersWin .lw-br{right:0; bottom:0; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(26,31,58,.45) 50%, rgba(26,31,58,.45) 58%, transparent 58%, transparent 70%, rgba(26,31,58,.45) 70%, rgba(26,31,58,.45) 78%, transparent 78%)}
+  #layersWin .lw-tl{left:0; top:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, rgba(26,31,58,.45) 0 22%, transparent 22% 36%, rgba(26,31,58,.45) 36% 50%, transparent 50%)}
+  .lw-menu{z-index:60}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6503,62 +6521,149 @@
       if (hasInk(LC[i].getContext('2d'))){ selectLayer(i); toast(f.layers[i].name); return; }
     }
   }, true);
-  // ---------- the Layers window: drag it by its top, resize it from the corner ----------
+  // ---------- the Layers window: drag it by its bar, resize from either corner, minimize to just the bar ----------
+  // rows can be dragged up and down to re-stack the layers; it can be made very skinny (then it shows just the pictures)
   const LW_KEY = 'doodle-clubhouse-layers-win';
+  const XSV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const lw = document.createElement('div'); lw.id = 'layersWin'; lw.hidden = true; lw.setAttribute('role', 'dialog'); lw.setAttribute('aria-label', 'Layers');
-  lw.innerHTML = '<div class="lw-head"><b>Layers</b><span class="lw-frame"></span><button type="button" class="pop-x lw-x" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
-    + '<div class="lw-list"></div><div class="lw-foot"><button type="button" class="btn sm lw-add">+ Add layer</button></div><i class="lw-size" title="Resize"></i>';
+  lw.innerHTML = '<div class="lw-head"><b class="lw-title">Layers</b><span class="lw-frame"></span>'
+    + '<button type="button" class="pop-x lw-min" aria-label="Minimize" title="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>'
+    + '<button type="button" class="pop-x lw-x" aria-label="Close" title="Close">' + XSV + '</button></div>'
+    + '<div class="lw-list"></div><div class="lw-foot"><button type="button" class="btn sm lw-add" title="Add a layer"><span>+</span><em> Add layer</em></button></div>'
+    + '<i class="lw-size lw-br" title="Resize"></i><i class="lw-size lw-tl" title="Resize"></i>';
   document.body.appendChild(lw);
   const lwList = lw.querySelector('.lw-list');
+  let lwState = {}; try { lwState = JSON.parse(localStorage.getItem(LW_KEY)) || {}; } catch {}
   function lwPlace(){
-    let st = null; try { st = JSON.parse(localStorage.getItem(LW_KEY)); } catch {}
-    const w = Math.max(200, Math.min(innerWidth - 16, (st && st.w) || 320)), h = Math.max(170, Math.min(innerHeight - 16, (st && st.h) || 300));
-    const x = st && isFinite(st.x) ? st.x : innerWidth - w - 24, y = st && isFinite(st.y) ? st.y : 70;
-    Object.assign(lw.style, { width: w + 'px', height: h + 'px', left: Math.max(4, Math.min(innerWidth - w - 4, x)) + 'px', top: Math.max(4, Math.min(innerHeight - 60, y)) + 'px' });
+    const st = lwState, w = Math.max(64, Math.min(innerWidth - 16, st.w || 320)), h = Math.max(120, Math.min(innerHeight - 16, st.h || 300));
+    const x = isFinite(st.x) ? st.x : innerWidth - w - 24, y = isFinite(st.y) ? st.y : 70;
+    Object.assign(lw.style, { width: w + 'px', height: st.min ? '' : h + 'px', left: Math.max(0, Math.min(innerWidth - Math.min(w, 60), x)) + 'px', top: Math.max(0, Math.min(innerHeight - 40, y)) + 'px' });
+    lw.classList.toggle('min', !!st.min); lwFit();
   }
-  const lwSave = () => { try { const r = lw.getBoundingClientRect(); localStorage.setItem(LW_KEY, JSON.stringify({ x: r.left, y: r.top, w: r.width, h: r.height })); } catch {} };
+  const lwSave = () => { const r = lw.getBoundingClientRect(); lwState = { ...lwState, x: r.left, y: r.top, w: r.width, ...(lwState.min ? {} : { h: r.height }) }; try { localStorage.setItem(LW_KEY, JSON.stringify(lwState)); } catch {} };
+  // how much fits: wide = everything, mid = no arrows, slim = picture + menu, tiny = just the picture
+  function lwFit(){ const w = lw.getBoundingClientRect().width || parseFloat(lw.style.width) || 320;
+    lw.classList.toggle('lw-mid', w < 290); lw.classList.toggle('lw-slim', w < 200); lw.classList.toggle('lw-tiny', w < 120); }
+  new ResizeObserver(lwFit).observe(lw);
+  function moveLayerTo(from, to){
+    const f = ensureLayers(); if (!f || from === to) return;
+    LC[f.active] = copyC(c);
+    const actL = f.layers[f.active];
+    const [L] = f.layers.splice(from, 1), [K] = LC.splice(from, 1);
+    f.layers.splice(to, 0, L); LC.splice(to, 0, K);
+    f.active = f.layers.indexOf(actL);
+    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged();
+  }
+  function dupLayer(i){
+    const f = ensureLayers(); if (!f) return;
+    LC[f.active] = copyC(c);
+    f.layers.splice(i + 1, 0, { name: f.layers[i].name + ' copy', vis: f.layers[i].vis, blob: null }); LC.splice(i + 1, 0, copyC(LC[i]));
+    if (f.active > i) f.active++;
+    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged();
+  }
+  function renameLayer(i, nm){
+    const f = ensureLayers(); if (!f) return;
+    const inp = document.createElement('input'); inp.className = 'lw-rename'; inp.value = f.layers[i].name; inp.maxLength = 24;
+    nm.replaceWith(inp); inp.focus(); inp.select();
+    const done = ok => { if (ok && inp.value.trim()) f.layers[i].name = inp.value.trim(); schedulePersist(); syncLayersWin(); };
+    inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape'){ inp.onblur = null; done(false); } };
+    inp.onblur = () => done(true);
+    inp.onclick = e => e.stopPropagation(); inp.onpointerdown = e => e.stopPropagation();
+  }
+  let lwMenu = null;
+  const lwCloseMenu = () => { if (lwMenu){ lwMenu.remove(); lwMenu = null; } };
+  document.addEventListener('pointerdown', e => { if (lwMenu && !lwMenu.contains(e.target) && !e.target.closest('.lw-more')) lwCloseMenu(); }, true);
+  function lwOpenMenu(i, btn, nm){
+    lwCloseMenu();
+    const f = curF(), list = (f && f.layers) || [{ vis: true }], m = lwMenu = document.createElement('div'); m.className = 'mic-pop lw-menu'; m.setAttribute('role', 'menu');
+    const item = (t, fn) => { const b = document.createElement('button'); b.className = 'btn sm'; b.textContent = t; b.onclick = () => { lwCloseMenu(); fn(); }; m.appendChild(b); };
+    item('✏️ Rename', () => renameLayer(i, nm));
+    item(list[i].vis ? '🙈 Hide' : '👁 Show', () => toggleLayer(i));
+    item('⧉ Duplicate', () => dupLayer(i));
+    item('🗑 Delete', () => deleteLayer(i));
+    document.body.appendChild(m);
+    const r = btn.getBoundingClientRect(), pw = m.offsetWidth, ph = m.offsetHeight;
+    m.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.right - pw)) + 'px';
+    m.style.top = (r.bottom + 6 + ph < innerHeight ? r.bottom + 6 : Math.max(8, r.top - ph - 6)) + 'px';
+  }
   function syncLayersWin(){
     if (lw.hidden) return;
     const f = curF();
-    lw.querySelector('.lw-frame').textContent = bgEdit ? 'Background' : `Frame ${cur + 1}`;
+    lw.querySelector('.lw-frame').textContent = bgEdit ? 'BG' : `Frame ${cur + 1}`;
     lwList.innerHTML = '';
     if (!f){ lwList.innerHTML = '<p class="lw-note">The background has one layer. Tap a frame to use layers.</p>'; return; }
     const list = f.layers || [{ name: 'Layer 1', vis: true }], act = f.layers ? f.active : 0, tw = 40, th = Math.max(20, Math.round(tw * H / W));
+    const SV = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
     for (let i = list.length - 1; i >= 0; i--){
-      const L = list[i], row = document.createElement('div'); row.className = 'lw-row' + (i === act ? ' on' : '') + (L.vis ? '' : ' off');
-      const tc = document.createElement('canvas'); tc.width = tw * 2; tc.height = th * 2; tc.className = 'lw-thumb'; tc.style.width = tw + 'px'; tc.style.height = th + 'px';
+      const L = list[i], row = document.createElement('div'); row.className = 'lw-row' + (i === act ? ' on' : '') + (L.vis ? '' : ' off'); row.dataset.i = i;
+      const tc = document.createElement('canvas'); tc.width = tw * 2; tc.height = th * 2; tc.className = 'lw-thumb'; tc.style.height = th + 'px';
       const src = i === act ? c : (LC && LC[i]); if (src) tc.getContext('2d').drawImage(src, 0, 0, tc.width, tc.height);
       const nm = document.createElement('span'); nm.className = 'lw-name'; nm.textContent = L.name;
-      const mkb = (cls, title, svg, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lw-b ' + cls; b.title = title; b.setAttribute('aria-label', title); b.innerHTML = svg; b.onclick = ev => { ev.stopPropagation(); fn(); }; return b; };
-      const SV = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+      const mkb = (cls, title, svg, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lw-b ' + cls; b.title = title; b.setAttribute('aria-label', title); b.innerHTML = svg; b.onclick = ev => { ev.stopPropagation(); fn(b); }; b.onpointerdown = ev => ev.stopPropagation(); return b; };
       row.append(tc, nm,
         mkb('lw-eye', L.vis ? 'Hide layer' : 'Show layer', SV(L.vis ? '<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M3 3l18 18"/><path d="M10.6 5.6A10 10 0 0 1 12 5.5c6.5 0 10 6.5 10 6.5a17 17 0 0 1-3.2 3.9M6.6 6.6C3.7 8.4 2 12 2 12s3.5 6.5 10 6.5a9.6 9.6 0 0 0 4.3-1"/>'), () => toggleLayer(i)),
         mkb('lw-up', 'Move layer up', SV('<path d="M12 19V5M6 11l6-6 6 6"/>'), () => moveLayer(i, 1)),
         mkb('lw-dn', 'Move layer down', SV('<path d="M12 5v14M6 13l6 6 6-6"/>'), () => moveLayer(i, -1)),
-        mkb('lw-del', 'Delete layer', SV('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'), () => deleteLayer(i)));
-      row.onclick = () => selectLayer(i);
-      nm.ondblclick = ev => { ev.stopPropagation(); const v = prompt('Layer name', L.name); if (v && f.layers){ f.layers[i].name = v.slice(0, 24); syncLayersWin(); schedulePersist(); } };
+        mkb('lw-more', 'More: rename, duplicate, delete', SV('<path d="M6 9l6 6 6-6"/>'), b => lwOpenMenu(i, b, nm)));
+      nm.ondblclick = ev => { ev.stopPropagation(); renameLayer(i, nm); };
       lwList.appendChild(row);
     }
   }
+  { // tap a row = draw on that layer; drag a row up or down = put the layer in a new spot
+    let d = null;
+    lwList.addEventListener('pointerdown', e => {
+      const row = e.target.closest('.lw-row'); if (!row || e.target.closest('button, input')) return;
+      const rows = [...lwList.querySelectorAll('.lw-row')];
+      d = { id: e.pointerId, row, y0: e.clientY, moved: false, from: +row.dataset.i, rects: rows.map(r => r.getBoundingClientRect()), rows };
+      try { row.setPointerCapture(e.pointerId); } catch {}
+    });
+    lwList.addEventListener('pointermove', e => {
+      if (!d || e.pointerId !== d.id) return;
+      const dy = e.clientY - d.y0;
+      if (!d.moved && Math.abs(dy) < 6) return;
+      d.moved = true; e.preventDefault(); d.row.classList.add('drag'); d.row.style.transform = `translateY(${dy}px)`;
+      // where it would land: the row slot under the finger
+      let k = d.rects.length - 1; for (let j = 0; j < d.rects.length; j++){ if (e.clientY < d.rects[j].top + d.rects[j].height / 2){ k = j; break; } }
+      d.k = k; d.rows.forEach((r, j) => r.classList.toggle('drop-at', j === k && r !== d.row));
+    });
+    const end = e => {
+      if (!d || e.pointerId !== d.id) return;
+      const dd = d; d = null;
+      if (!dd.moved){ selectLayer(dd.from); return; }
+      const n = dd.rects.length, to = n - 1 - (dd.k ?? (n - 1 - dd.from));   // rows are listed top layer first
+      dd.row.style.transform = ''; moveLayerTo(dd.from, Math.max(0, Math.min(n - 1, to)));
+      if (to === dd.from) syncLayersWin();
+    };
+    lwList.addEventListener('pointerup', end); lwList.addEventListener('pointercancel', end);
+  }
   let lwThumbT = 0;   // keep the little pictures up to date while you draw (not every stroke point)
-  const lwThumbs = () => { if (lw.hidden || lwThumbT) return; lwThumbT = setTimeout(() => { lwThumbT = 0; syncLayersWin(); }, 400); };
-  c.addEventListener('pointerup', lwThumbs); addEventListener('pointerup', lwThumbs);
+  const lwThumbs = () => { if (lw.hidden || lwThumbT) return; lwThumbT = setTimeout(() => { lwThumbT = 0; if (!lw.querySelector('.lw-rename')) syncLayersWin(); }, 400); };
+  addEventListener('pointerup', lwThumbs);
   window.openLayers = () => { lw.hidden = false; lwPlace(); syncLayersWin(); };
-  lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; };
+  lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; lwCloseMenu(); };
+  lw.querySelector('.lw-min').onclick = () => { lwState.min = !lwState.min; lw.classList.toggle('min', lwState.min); lw.style.height = lwState.min ? '' : (lwState.h || 300) + 'px'; lwSave(); };
   lw.querySelector('.lw-add').onclick = () => { addLayer(); };
-  { // drag by the title bar
+  { // drag by the bar (also when minimized)
     const head = lw.querySelector('.lw-head'); let d = null;
     head.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; const r = lw.getBoundingClientRect(); d = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top }; try { head.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); });
-    head.addEventListener('pointermove', e => { if (!d || e.pointerId !== d.id) return; lw.style.left = Math.max(0, Math.min(innerWidth - 60, e.clientX - d.dx)) + 'px'; lw.style.top = Math.max(0, Math.min(innerHeight - 40, e.clientY - d.dy)) + 'px'; });
+    head.addEventListener('pointermove', e => { if (!d || e.pointerId !== d.id) return; lw.style.left = Math.max(0, Math.min(innerWidth - 50, e.clientX - d.dx)) + 'px'; lw.style.top = Math.max(0, Math.min(innerHeight - 30, e.clientY - d.dy)) + 'px'; });
     const end = e => { if (d && e.pointerId === d.id){ d = null; lwSave(); } };
     head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
-    // resize from the bottom-right corner
-    const grip = lw.querySelector('.lw-size'); let g = null;
-    grip.addEventListener('pointerdown', e => { const r = lw.getBoundingClientRect(); g = { id: e.pointerId, x: e.clientX, y: e.clientY, w: r.width, h: r.height }; try { grip.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); e.stopPropagation(); });
-    grip.addEventListener('pointermove', e => { if (!g || e.pointerId !== g.id) return; lw.style.width = Math.max(200, Math.min(innerWidth - 8, g.w + e.clientX - g.x)) + 'px'; lw.style.height = Math.max(150, Math.min(innerHeight - 8, g.h + e.clientY - g.y)) + 'px'; });
-    const gend = e => { if (g && e.pointerId === g.id){ g = null; lwSave(); } };
-    grip.addEventListener('pointerup', gend); grip.addEventListener('pointercancel', gend);
+    // resize from the bottom-right or the top-left corner
+    lw.querySelectorAll('.lw-size').forEach(grip => {
+      let g = null; const tl = grip.classList.contains('lw-tl');
+      grip.addEventListener('pointerdown', e => { const r = lw.getBoundingClientRect(); g = { id: e.pointerId, x: e.clientX, y: e.clientY, r }; try { grip.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); e.stopPropagation(); });
+      grip.addEventListener('pointermove', e => {
+        if (!g || e.pointerId !== g.id) return;
+        const dx = e.clientX - g.x, dy = e.clientY - g.y, r = g.r;
+        if (tl){
+          const w = Math.max(64, Math.min(r.right - 4, r.width - dx)), h = Math.max(120, Math.min(r.bottom - 4, r.height - dy));
+          Object.assign(lw.style, { width: w + 'px', height: h + 'px', left: (r.right - w) + 'px', top: (r.bottom - h) + 'px' });
+        } else Object.assign(lw.style, { width: Math.max(64, Math.min(innerWidth - r.left - 4, r.width + dx)) + 'px', height: Math.max(120, Math.min(innerHeight - r.top - 4, r.height + dy)) + 'px' });
+      });
+      const gend = e => { if (g && e.pointerId === g.id){ g = null; lwSave(); } };
+      grip.addEventListener('pointerup', gend); grip.addEventListener('pointercancel', gend);
+    });
   }
   function startOver(){
     if (playing) stopPlay();
