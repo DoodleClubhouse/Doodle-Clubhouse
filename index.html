@@ -3803,7 +3803,7 @@
     let a = pts;
     for (let pass = 0; pass < 2 && a.length > 2; pass++){
       const b = [a[0]];
-      for (let i = 1; i < a.length - 1; i++) b.push({ x: (a[i - 1].x + 2 * a[i].x + a[i + 1].x) / 4, y: (a[i - 1].y + 2 * a[i].y + a[i + 1].y) / 4, k: ((a[i - 1].k || 1) + 2 * (a[i].k || 1) + (a[i + 1].k || 1)) / 4 });
+      for (let i = 1; i < a.length - 1; i++) if (a[i].c) b.push(a[i]); else b.push({ x: (a[i - 1].x + 2 * a[i].x + a[i + 1].x) / 4, y: (a[i - 1].y + 2 * a[i].y + a[i + 1].y) / 4, k: ((a[i - 1].k || 1) + 2 * (a[i].k || 1) + (a[i + 1].k || 1)) / 4 });
       b.push(a[a.length - 1]); a = b;
     }
     return a;
@@ -3814,6 +3814,7 @@
     if (pts.length === 1){ g.lineTo(pts[0].x + 0.5, pts[0].y); return; }
     for (let i = 1; i < pts.length - 1; i++){
       const a = pts[i], b = pts[i + 1];
+      if (a.c){ g.lineTo(a.x, a.y); continue; }   // a turn-around point: the line reaches it exactly (no rounding off the tip)
       g.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
     }
     const l = pts[pts.length - 1]; g.lineTo(l.x, l.y);
@@ -3893,6 +3894,18 @@
         pencilDir = dir;
       }
     }
+    // going back over the line (a sharp turn-around): the very tip is kept exactly where the pen turned,
+    // so the steadying and smoothing never shave a pixel or two off the end of the line
+    { const dx = p.x - st.raw.x, dy = p.y - st.raw.y, d = Math.hypot(dx, dy);
+      if (d > 1.2){
+        if (st.rd && (dx * st.rd.x + dy * st.rd.y) / d < -0.5){
+          const t = { x: st.raw.x, y: st.raw.y, k: st.s.k || (st.pts[st.pts.length - 1] || {}).k || 1, c: 1 };
+          const q0 = st.pts[st.pts.length - 1];
+          if (q0 && Math.hypot(t.x - q0.x, t.y - q0.y) < .6) Object.assign(q0, { x: t.x, y: t.y, c: 1 }); else st.pts.push(t);
+          st.s = { x: t.x, y: t.y, k: t.k };
+        }
+        st.rd = { x: dx / d, y: dy / d };
+      } }
     // light steadying, then only keep points that moved a little, so the curve has no tiny wiggles
     const sp = { x: st.s.x + (p.x - st.s.x) * k, y: st.s.y + (p.y - st.s.y) * k };
     sp.k = st.kind === 'brush' ? brushK(st, sp, p) : pencilK(p);
