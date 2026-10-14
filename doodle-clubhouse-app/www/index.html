@@ -1532,7 +1532,7 @@
   #filmWave{position:absolute; display:none; pointer-events:none}
   #waveHead{position:absolute; display:none; width:1.5px; margin-left:-.75px; background:#FF2D2D; border-radius:1px; pointer-events:none; z-index:2}
   @media (max-width:760px), (max-height:500px){ #filmWave{display:none!important} }
-  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 13px)!important} }
+  @media (min-width:761px) and (min-height:501px){ html body .film.has-audio{padding-bottom:calc(var(--tbPad, 9px) + 22px)!important} }
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -6618,7 +6618,7 @@
   window.importPhoto = () => { const f = $('photoFile'); f.value = ''; f.click(); };
   // The photo first floats above the page: drag it to move, pull the blue corner to resize, the orange knob (or two fingers) to
   // rotate. Done (or starting to draw) lays it onto the frame; Undo takes it off again.
-  let photoT = null, phPlaced = null;
+  let photoT = null;
   const phBox = document.createElement('div'); phBox.id = 'photoBox'; phBox.hidden = true;
   phBox.innerHTML = '<canvas class="ph-img"></canvas><i class="ph-rot" title="Turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></i><i class="ph-size" title="Resize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></i>';
   const phBar = document.createElement('div'); phBar.id = 'photoBar'; phBar.hidden = true;
@@ -6636,30 +6636,67 @@
   }
   function phLoop(){ if (!photoT) return; phLayout(); requestAnimationFrame(phLoop); }
   function phClose(){ photoT = null; phBox.hidden = phBar.hidden = true; }
+  // every placed photo is remembered with the page as it was just before (p0) and just after (c0) it went down.
+  // Picking it up later with the Move tool: pixels that still match c0 go back to p0, anything drawn since stays put,
+  // so the photo lifts out from under your drawing and can be moved / resized / turned again.
+  const phPlacedMap = new Map();   // frame -> [{ t, p0, c0 }]
+  const phKey = () => bgEdit ? 'bg' : frames[cur];
   function phCommit(){
     const t = photoT; if (!t) return; phClose();
     pushUndo();
+    // the layers: what was under the photo (base), the photo, then anything drawn over it later (top)
+    const base = t.lift ? t.lift.base : undoStack[undoStack.length - 1], top = t.lift ? t.lift.top : null;
+    if (t.lift) ctx.putImageData(base, 0, 0);
     ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     ctx.translate(t.x, t.y); ctx.rotate(t.a); ctx.drawImage(t.bmp, -t.w / 2, -t.h / 2, t.w, t.h); ctx.restore();
-    // remembered, so the Move tool can pick it up again (until something else is drawn on this frame)
-    if (phPlaced && phPlaced.t.bmp !== t.bmp) try { phPlaced.t.bmp.close && phPlaced.t.bmp.close(); } catch {}
-    phPlaced = { t: { ...t }, snap: undoStack[undoStack.length - 1], frame: frames[cur] };
-    onCanvasChanged(); toast('Photo added! Draw on top, or Undo to take it off');
+    if (top){ const tc = mk(W, H); tc.getContext('2d').putImageData(top, 0, 0); ctx.drawImage(tc, 0, 0); }
+    const keep = { ...t }; delete keep.lift;
+    const list = phPlacedMap.get(phKey()) || []; list.push({ t: keep, base, top, c0: snapshot() }); phPlacedMap.set(phKey(), list);
+    let total = 0; for (const [k, l] of [...phPlacedMap].reverse()) for (let i = l.length - 1; i >= 0; i--) if (++total > 8){ l.splice(i, 1); }   // keep memory in check
+    onCanvasChanged(); toast('Photo added! Pick it up any time with the Move tool');
   }
   phBar.querySelector('[data-ph="done"]').onclick = phCommit;
-  phBar.querySelector('[data-ph="cancel"]').onclick = () => { const t = photoT; phClose(); t && t.bmp.close && t.bmp.close(); };
+  phBar.querySelector('[data-ph="cancel"]').onclick = () => { const t = photoT; phClose(); };
   // start drawing anywhere on the page: the photo is laid down first
   c.addEventListener('pointerdown', () => { if (photoT) phCommit(); }, true);
-  // Move tool on a photo you just placed: it lifts back off into its box (move / resize / turn again)
-  window.addEventListener('pointerdown', e => {
-    const pp = phPlaced;
-    if (e.target !== c || !moveOn || photoT || !pp || pp.frame !== frames[cur] || undoStack[undoStack.length - 1] !== pp.snap || redoStack.length) return;
+  const phHit = (pp, e) => {
     const r = c.getBoundingClientRect(), k = W / r.width, x = (e.clientX - r.left) * k - pp.t.x, y = (e.clientY - r.top) * k - pp.t.y;
     const ca = Math.cos(-pp.t.a), sa = Math.sin(-pp.t.a), lx = x * ca - y * sa, ly = x * sa + y * ca;
-    if (Math.abs(lx) > pp.t.w / 2 || Math.abs(ly) > pp.t.h / 2) return;
+    return Math.abs(lx) <= pp.t.w / 2 && Math.abs(ly) <= pp.t.h / 2;
+  };
+  // is the photo still on the page? (it could have been undone or erased) - some of its pixels must still look as they did
+  const phStillThere = (pp, cur0) => {
+    const d = cur0.data, c0 = pp.c0.data; let same = 0, n = 0;
+    for (let k = 0; k < 400; k++){
+      const lx = (Math.random() - .5) * pp.t.w, ly = (Math.random() - .5) * pp.t.h, ca = Math.cos(pp.t.a), sa = Math.sin(pp.t.a);
+      const x = Math.round(pp.t.x + lx * ca - ly * sa), y = Math.round(pp.t.y + lx * sa + ly * ca);
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      const i = (y * W + x) * 4; n++;
+      if (d[i] === c0[i] && d[i + 1] === c0[i + 1] && d[i + 2] === c0[i + 2] && d[i + 3] === c0[i + 3]) same++;
+    }
+    return n && same / n > .25;
+  };
+  // Move tool on a placed photo: it lifts back off into its box (move / resize / turn again), drawings stay where they are
+  window.addEventListener('pointerdown', e => {
+    if (e.target !== c || !moveOn || photoT || busy) return;
+    const list = phPlacedMap.get(phKey()); if (!list || !list.length) return;
+    let idx = -1; for (let i = list.length - 1; i >= 0; i--) if (phHit(list[i], e)){ idx = i; break; }
+    if (idx < 0) return;
+    const pp = list[idx];
+    if (pp.c0.width !== W || pp.c0.height !== H || pp.base.width !== W || pp.base.height !== H){ list.splice(idx, 1); return; }
+    const now = snapshot();
+    if (!phStillThere(pp, now)){ list.splice(idx, 1); return; }
     e.preventDefault(); e.stopImmediatePropagation();
-    restoreImg(undoStack.pop()); syncHist(); onCanvasChanged();
-    phPlaced = null; photoT = { ...pp.t };
+    pushUndo();
+    // anything that changed since the photo went down is drawing on top of it: keep it in the top layer
+    const top = new ImageData(pp.top ? new Uint8ClampedArray(pp.top.data) : new Uint8ClampedArray(W * H * 4), W, H), o = top.data, d = now.data, c0 = pp.c0.data;
+    for (let i = 0; i < d.length; i += 4){
+      if (d[i] !== c0[i] || d[i + 1] !== c0[i + 1] || d[i + 2] !== c0[i + 2] || d[i + 3] !== c0[i + 3]){ o[i] = d[i]; o[i + 1] = d[i + 1]; o[i + 2] = d[i + 2]; o[i + 3] = d[i + 3]; }
+    }
+    ctx.putImageData(pp.base, 0, 0); { const tc = mk(W, H); tc.getContext('2d').putImageData(top, 0, 0); ctx.drawImage(tc, 0, 0); }
+    onCanvasChanged();
+    list.splice(idx, 1);
+    photoT = { ...pp.t, lift: { base: pp.base, top } };
     phCan.width = Math.min(1200, photoT.bmp.width); phCan.height = Math.round(phCan.width * photoT.bmp.height / photoT.bmp.width);
     phCan.getContext('2d').drawImage(photoT.bmp, 0, 0, phCan.width, phCan.height);
     phBox.hidden = phBar.hidden = false; phLoop();
@@ -6733,7 +6770,7 @@
     if (!wavePeaks || !fl || !st || getComputedStyle(fl).display === 'none' || !fl.getBoundingClientRect().width){ waveC.style.display = 'none'; return; }
     const tiles = [...st.querySelectorAll('.frame')]; if (!tiles.length){ waveC.style.display = 'none'; return; }
     const fr = fl.getBoundingClientRect(), a = tiles[0].getBoundingClientRect(), b = st.getBoundingClientRect();
-    const left = a.left - fr.left, width = Math.max(20, Math.min(b.right, fr.right) - a.left - 6), top = Math.max(a.bottom, b.bottom) - fr.top + 2, h = Math.max(4, Math.min(9, fr.bottom - Math.max(a.bottom, b.bottom) - 4));   // just under the frames' scroll bar
+    const left = a.left - fr.left, width = Math.max(20, Math.min(b.right, fr.right) - a.left - 6), h = 9, top = fr.height - h - 5;   // along the very bottom of the frames bar, well below the frames' scroll bar
     Object.assign(waveC.style, { display: 'block', left: left + 'px', top: top + 'px', width: width + 'px', height: h + 'px' });
     const dpr = window.devicePixelRatio || 1; waveC.width = Math.round(width * dpr); waveC.height = Math.round(h * dpr);
     const g = waveC.getContext('2d'), n = Math.max(10, Math.floor(width / 3)), bw = waveC.width / n;
