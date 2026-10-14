@@ -6108,7 +6108,7 @@
   function onCanvasChanged(){
     if (!frames.length) return;
     if (bgEdit){ bgDirty = true; paintBgThumb(); projDirty = true; canvasVer++; speedUndo = false; speedStroke = null; schedulePersist(); return; }
-    const f = frames[cur]; f.dirty = true; f.edited = true; drawThumb(f); projDirty = true; canvasVer++; schedulePersist(); speedRecord();
+    const f = frames[cur]; f.dirty = true; f.edited = true; if (f.layers && f.layers[f.active]) f.layers[f.active].edited = true; drawThumb(f); projDirty = true; canvasVer++; schedulePersist(); speedRecord();
   }
   // ---------- speed art recorder: a small picture of the page after each change ----------
   let speedLog = [], speedT = 0, speedPending = false, speedUndo = false, speedChain = Promise.resolve();
@@ -6197,7 +6197,8 @@
     if (f && (f.dirty || !f.blob)){
       f.dirty = false;
       if (f.layers && LC){   // layers: keep the layer you're on, and the whole frame (all layers together) for thumbnails, playing and export
-        const al = mk(W, H); al.getContext('2d').drawImage(c, 0, 0); f.layers[f.active].blob = al; LC[f.active] = al;
+        const al = mk(W, H); al.getContext('2d').drawImage(c, 0, 0); LC[f.active] = al;
+        f.layers.forEach((L, i) => { if (LC[i] && L.blob !== LC[i]) L.blob = LC[i]; });   // every layer's picture is kept (packed into a file later)
       }
       const snap = flatC() === c ? (() => { const k = mk(c.width, c.height); k.getContext('2d').drawImage(c, 0, 0); return k; })() : flatC();
       if (fast){
@@ -6475,7 +6476,10 @@
   async function showFrame(f){
     LC = null;
     if (f && f.layers){
-      LC = await Promise.all(f.layers.map(async L => { const k = mk(W, H); if (L.blob){ try { const b = await createImageBitmap(L.blob); fitDraw(k.getContext('2d'), b, b.width, b.height, W, H); b.close && b.close(); } catch {} } return k; }));
+      LC = await Promise.all(f.layers.map(async L => { const k = mk(W, H); if (L.blob){ try { const b = await createImageBitmap(L.blob);
+        // same size paper: as it was; different paper: kept at its size (from its full-size memory when there is one), never squished
+        if (b.width === W && b.height === H) k.getContext('2d').drawImage(b, 0, 0); else { const src = mk(b.width, b.height); src.getContext('2d').drawImage(b, 0, 0); reframePage(L, src, b.width, b.height, W, H, k.getContext('2d')); }
+        b.close && b.close(); } catch {} } return k; }));
       blank(); ctx.drawImage(LC[f.active], 0, 0);
     } else await paintBlob(f ? f.blob : null);
     renderLayerStack(); syncLayersWin();
@@ -7307,9 +7311,12 @@
       const curF = bgEdit ? null : frames[cur];
       if (bgEdit) bgDirty = true;
       setDims(w, h);
-      reframePage(curF, snap, snap.width, snap.height, W, H, ctx);   // art keeps its size, or shrinks just enough never to be cut off
+      // art keeps its size, or shrinks just enough never to be cut off. Each layer remembers its own full-size picture
+      // (like the frame does), so going back to a bigger paper brings it back to full size instead of shrinking it again.
+      const lay = curF && curF.layers && LC ? curF.layers : null;
+      reframePage(lay ? lay[curF.active] : curF, snap, snap.width, snap.height, W, H, ctx);
       // the frame's other layers get the same new page (never stretched), and the layer stack is redrawn at the new size
-      try { if (curF && curF.layers && LC) LC = LC.map((L, i) => { if (i === curF.active || !L) return L; const k = mk(W, H); reframePage(null, L, L.width, L.height, W, H, k.getContext('2d')); return k; }); renderLayerStack(); } catch {}
+      try { if (lay) LC = LC.map((L, i) => { if (i === curF.active || !L) return L; const k = mk(W, H); reframePage(lay[i], L, L.width, L.height, W, H, k.getContext('2d')); return k; }); renderLayerStack(); } catch {}
       frames.forEach(f => { const t = mk(TW, TH); t.getContext('2d').drawImage(f.thumb, 0, 0, TW, TH); f.thumb = t; if (f !== curF && f.blob) f.refit = true; });
       if (curF){ curF.dirty = true; drawThumb(curF); }
       syncHist(); renderStrip(); drawGhost(); drawBgLayer();   // undo still works after a size change
