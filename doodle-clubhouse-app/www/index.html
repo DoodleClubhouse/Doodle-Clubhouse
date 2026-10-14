@@ -384,7 +384,7 @@
     html body .film .film-row{display:contents!important}
     html body .film .film-side .btn.sm{width:100%; height:100%; min-width:0; padding:0!important; display:grid; place-items:center; border-radius:10px}
     html body .film .film-side .btn.sm svg{width:calc(var(--fb, 40px) * .55)!important; height:calc(var(--fb, 40px) * .55)!important}
-    html body .film .film-side .seg{grid-column:span 4; height:100%}
+    html body .film .film-side .seg{grid-column:span 4; height:72%; align-self:center}
     html body .film .film-side .seg button{flex:1 1 0; min-width:0!important; padding:0!important}
     html body .film .film-side .seg button svg{height:15px!important; width:auto!important}
     /* a slim Play button (a third of the width, just the triangle), so the frames get the room */
@@ -394,7 +394,7 @@
     /* the frames themselves a little bigger, and every button rounded like the tool buttons */
     html body .film .strip .frame{border-radius:min(10px, calc(var(--tileH, 60px) * var(--arn, 1.5) / 4))!important}
     html body .film .strip{min-height:0!important; padding:4px 4px!important; align-items:center}
-    html body .film .btn.play{align-self:stretch!important; height:auto!important}
+    html body .film .btn.play{align-self:center!important; height:var(--fb, 40px)!important}
     html body .film .film-side .seg{border-radius:10px!important}
   }
   html body.dock-bottom .tools, html body.dock-bottom .film, html body.dock-bottom .extras, html body.dock-bottom .more-sheet,
@@ -404,6 +404,7 @@
   .ghost-pop .gp-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px}
   .ghost-pop .gp-sw{width:30px; height:30px; border:2px solid var(--ink); border-radius:50%; padding:0; cursor:pointer}
   .ghost-pop .gp-sw.own{background:conic-gradient(#ff3b3b, #ffb000, #2fb84b, #2b6fff, #8a3cff, #ff3b3b)}
+  .ghost-pop .gp-sw.none{background:var(--paper) linear-gradient(45deg, transparent 44%, #ff3b3b 44%, #ff3b3b 56%, transparent 56%)}
   .ghost-pop .gp-sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--plank), 0 0 0 5px var(--ink)}
   @media (max-width:760px){ .film-side{flex-wrap:wrap} }
   .seg button[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
@@ -742,7 +743,7 @@
   #pagesBtn{display:none}
   @media (min-width:761px) and (min-height:501px){
     .tools > #pagesBtn{display:flex}
-    .film{display:none; position:fixed; z-index:7; left:206px; right:16px; top:calc(var(--boardTop, 48px) + 6px); bottom:auto; padding-right:44px}   /* along the top of the page */
+    .film{display:none; position:fixed; z-index:7; left:206px; right:16px; top:calc(var(--boardTop, 48px) - 4px); bottom:auto; padding-right:44px}   /* along the top of the page */
     body[data-panel="frames"] .film{display:flex}
     .film .tray-min{display:grid!important}
     .film .tray-min svg{transform:rotate(90deg)}
@@ -1441,6 +1442,12 @@
   .mix-foot .mix-eye svg{width:20px; height:20px}
   .mix-foot .mix-now{width:30px; height:30px; flex:none; border:2px solid var(--ink); border-radius:8px}
   .mix-pop[hidden]{display:none}
+  /* the little x that closes a pop-out (same as the frames bar one) */
+  .pop-x{position:absolute; top:3px; right:3px; width:14px; height:14px; padding:0; display:grid; place-items:center; border:1.5px solid var(--ink); border-radius:4px; background:var(--paper); color:var(--ink); box-shadow:0 1px 0 var(--ink); cursor:pointer; z-index:2}
+  .pop-x svg{width:8px; height:8px}
+  .ghost-pop{position:fixed}
+  .mix-pop{padding-top:20px!important}
+  .ghost-pop .gp-lab:first-child{padding-right:16px}
   .mix-pop canvas{display:block; width:100%; border:2px solid var(--ink); border-radius:8px; touch-action:none; cursor:crosshair}
   .mix-pop .svw{width:min(210px, calc(100vw - 80px))} .mix-pop .sv{width:100%; height:auto; aspect-ratio:1}
   .mix-pop .huew{width:30px} .mix-pop .hue{width:30px; height:100%}
@@ -2031,6 +2038,9 @@
       if (x + pw > innerWidth - m || side.width > innerWidth * .6){ x = r.left + r.width / 2 - pw / 2; y = Math.min(r.top, side.top) - ph - m; if (y < m) y = r.bottom + m; }   // above the colour pop-out (phones)
       pop.style.left = Math.max(m, Math.min(innerWidth - pw - m, x)) + 'px'; pop.style.top = Math.max(m, Math.min(innerHeight - ph - m, y)) + 'px';
     };
+    { const x = document.createElement('button'); x.type = 'button'; x.className = 'pop-x'; x.title = 'Close'; x.setAttribute('aria-label', 'Close');
+      x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      x.onclick = () => close(); pop.appendChild(x); }
     const open = () => { [Hh, Ss, Vv] = hex2hsv(custom.value || '#8a5cf6'); if (Ss < .02) Ss = .02; nowSw.style.background = custom.value || '#8a5cf6'; pop.hidden = false; drawSV(); knobs(); place(); lab.classList.add('open'); };
     const close = () => { pop.hidden = true; lab.classList.remove('open'); };
     lab.addEventListener('click', e => { e.preventDefault(); pop.hidden ? open() : close(); });
@@ -6197,8 +6207,8 @@
     const bp = hasP ? await bmpOf(prev.blob, MW, MH) : null, bn = hasN ? await bmpOf(next.blob, MW, MH) : null;
     if (tok !== ghostSeq || playing) return;
     gctx.clearRect(0, 0, MW, MH);
-    if (bn) ghostPaint(bn, ghostCols.next, .75);   // the frame after
-    if (bp) ghostPaint(bp, bgEdit ? 'own' : ghostCols.prev, 1);   // the frame before
+    if (bn && ghostCols.next !== 'none') ghostPaint(bn, ghostCols.next, .75);   // the frame after
+    if (bp && (bgEdit || ghostCols.prev !== 'none')) ghostPaint(bp, bgEdit ? 'own' : ghostCols.prev, 1);   // the frame before
     ghost.hidden = false;
   }
 
@@ -6310,7 +6320,7 @@
   // ---------- frames settings: pick the colour of the "before" and "after" ghosts ----------
   {
     const btn = $('filmSettings');
-    const CHOICES = ['own', '#ff3b3b', '#ff8a00', '#e6b800', '#2fb84b', '#2b6fff', '#8a3cff', '#ff4fb0', '#1a1f3a'];
+    const CHOICES = ['none', 'own', '#ff3b3b', '#ff8a00', '#e6b800', '#2fb84b', '#2b6fff', '#8a3cff', '#ff4fb0', '#1a1f3a'];
     let pop = null;
     const close = () => { if (pop){ pop.remove(); pop = null; btn.setAttribute('aria-expanded', 'false'); } };
     const open = () => {
@@ -6320,9 +6330,9 @@
         const h = document.createElement('div'); h.className = 'gp-lab'; h.textContent = label; pop.appendChild(h);
         const r = document.createElement('div'); r.className = 'gp-row';
         CHOICES.forEach(col => {
-          const b = document.createElement('button'); b.type = 'button'; b.className = 'gp-sw' + (col === 'own' ? ' own' : '');
-          if (col !== 'own') b.style.background = col;
-          b.title = col === 'own' ? 'The drawing\u2019s own colours' : col; b.setAttribute('aria-label', col === 'own' ? 'Own colours' : col);
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'gp-sw' + (col === 'own' ? ' own' : col === 'none' ? ' none' : '');
+          if (col !== 'own' && col !== 'none') b.style.background = col;
+          b.title = col === 'own' ? 'The drawing\u2019s own colours' : col === 'none' ? 'No ghost' : col; b.setAttribute('aria-label', col === 'own' ? 'Own colours' : col === 'none' ? 'No ghost' : col);
           b.setAttribute('aria-pressed', ghostCols[key] === col);
           b.onclick = () => {
             ghostCols[key] = col; try { localStorage.setItem(GHOST_KEY, JSON.stringify(ghostCols)); } catch {}
@@ -6335,6 +6345,9 @@
         pop.appendChild(r);
       };
       row('prev', 'Ghost before (last frame)'); row('next', 'Ghost after (next frame)');
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'pop-x'; x.title = 'Close'; x.setAttribute('aria-label', 'Close');
+      x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      x.onclick = close; pop.appendChild(x);
       document.body.appendChild(pop); btn.setAttribute('aria-expanded', 'true');
       const r = btn.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
       pop.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.left + r.width / 2 - pw / 2)) + 'px';
