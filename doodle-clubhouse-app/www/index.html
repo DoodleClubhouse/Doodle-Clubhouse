@@ -3767,10 +3767,13 @@
   document.addEventListener('click', e => { if (pickSwallowClick){ pickSwallowClick = false; e.preventDefault(); e.stopPropagation(); } }, true);
   function paperColourAt(q){
     const x = Math.max(0, Math.min(W - 1, Math.floor(q.x))), y = Math.max(0, Math.min(H - 1, Math.floor(q.y)));
-    const d = ctx.getImageData(x, y, 1, 1).data;
-    const pd = document.getElementById('paperBg').getContext('2d').getImageData(x, y, 1, 1).data;
-    const a = d[3] / 255, mixc = i => Math.round(d[i] * a + pd[i] * (1 - a));
-    return '#' + [0, 1, 2].map(i => mixc(i).toString(16).padStart(2, '0')).join('');
+    // the colour you see there: paper, background drawing and every visible layer stacked up (not just the layer you're on)
+    const t = paperColourAt.k || (paperColourAt.k = mk(1, 1)), g = t.getContext('2d', { willReadFrequently: true });
+    g.clearRect(0, 0, 1, 1);
+    const put = el => { if (!el || el.hidden || !el.width || el.style.opacity === '0') return; const sx = el.width / W, sy = el.height / H; g.drawImage(el, x * sx, y * sy, Math.max(1, sx), Math.max(1, sy), 0, 0, 1, 1); };
+    ['paperBg', 'bgLayer', 'layBelow', 'c', 'layAbove'].forEach(id => put(document.getElementById(id)));
+    const d = g.getImageData(0, 0, 1, 1).data;
+    return '#' + [0, 1, 2].map(i => d[i].toString(16).padStart(2, '0')).join('');
   }
   function pickColour(q){
     const hex = paperColourAt(q);
