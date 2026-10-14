@@ -2698,7 +2698,7 @@
       tone(520 * k, 380 * k, .05, .06 * vol, 'sine', delay); },
     rattle:  () => { let t = 0; for (let i = 0; i < 4; i++){ SFX.clack(1 - i * .15, t); t += .062 + Math.random() * .03; } },
     // the splat sound: only the recording that was given for it
-    // yFrac: where on the page (0 = top, 1 = bottom): higher on the page = higher pitch. A touch of random pitch and a little room echo
+    // yFrac: where on the page (0 = top, 1 = bottom): higher on the page = higher pitch. A touch of random pitch
     splatBig: (vol = 1, yFrac = .5) => {
       const a = ac(); if (!a) return;
       const go = buf => {
@@ -2707,14 +2707,6 @@
         const y = Math.max(0, Math.min(1, +yFrac || 0));
         src.playbackRate.value = (1.28 - y * .48) * (1 + (Math.random() - .5) * .07);   // top ≈ 1.28x, bottom ≈ 0.8x, ±3.5% each time
         src.connect(g).connect(a.destination);
-        // a little reverb: a short made-up room, shared by every splat
-        if (!SFX._splatVerb){
-          const len = Math.round(a.sampleRate * .9), ir = a.createBuffer(2, len, a.sampleRate);
-          for (let ch = 0; ch < 2; ch++){ const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
-          const cv = a.createConvolver(); cv.buffer = ir; const wet = a.createGain(); wet.gain.value = .32;
-          cv.connect(wet).connect(a.destination); SFX._splatVerb = cv;
-        }
-        g.connect(SFX._splatVerb);
         src.start();
       };
       if (SFX._splatBuf) return go(SFX._splatBuf);
