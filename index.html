@@ -3354,6 +3354,8 @@
     secs.forEach(x => { x.style.zoom = ''; x.style.transform = ''; x.style.width = ''; x.style.marginBottom = ''; x.style.marginLeft = ''; x.style.marginRight = ''; x.style.marginTop = ''; x.style.transformOrigin = ''; });
     toolsPanel.style.width = '';
     markToolsEdge();
+    // Extra / Frames: square buttons made square by hand too (some iPad web views ignore aspect-ratio on buttons, which squashed them and pushed the star up)
+    toolsPanel.querySelectorAll('.ef-row .extra-btn').forEach(b => { b.style.height = ''; const w = b.offsetWidth; if (w) b.style.height = w + 'px'; });
     if (getComputedStyle(document.getElementById('dock')).display !== 'none') return;   // phones: the strip wraps instead of shrinking
     const tooBig = () => toolsPanel.scrollHeight > toolsPanel.clientHeight + 1;
     if (!tooBig()) return;
