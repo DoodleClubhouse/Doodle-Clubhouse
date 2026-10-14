@@ -6618,7 +6618,7 @@
   window.importPhoto = () => { const f = $('photoFile'); f.value = ''; f.click(); };
   // The photo first floats above the page: drag it to move, pull the blue corner to resize, the orange knob (or two fingers) to
   // rotate. Done (or starting to draw) lays it onto the frame; Undo takes it off again.
-  let photoT = null;
+  let photoT = null, phPlaced = null;
   const phBox = document.createElement('div'); phBox.id = 'photoBox'; phBox.hidden = true;
   phBox.innerHTML = '<canvas class="ph-img"></canvas><i class="ph-rot" title="Turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></i><i class="ph-size" title="Resize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></i>';
   const phBar = document.createElement('div'); phBar.id = 'photoBar'; phBar.hidden = true;
@@ -6641,13 +6641,29 @@
     pushUndo();
     ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     ctx.translate(t.x, t.y); ctx.rotate(t.a); ctx.drawImage(t.bmp, -t.w / 2, -t.h / 2, t.w, t.h); ctx.restore();
-    t.bmp.close && t.bmp.close();
+    // remembered, so the Move tool can pick it up again (until something else is drawn on this frame)
+    if (phPlaced && phPlaced.t.bmp !== t.bmp) try { phPlaced.t.bmp.close && phPlaced.t.bmp.close(); } catch {}
+    phPlaced = { t: { ...t }, snap: undoStack[undoStack.length - 1], frame: frames[cur] };
     onCanvasChanged(); toast('Photo added! Draw on top, or Undo to take it off');
   }
   phBar.querySelector('[data-ph="done"]').onclick = phCommit;
   phBar.querySelector('[data-ph="cancel"]').onclick = () => { const t = photoT; phClose(); t && t.bmp.close && t.bmp.close(); };
   // start drawing anywhere on the page: the photo is laid down first
   c.addEventListener('pointerdown', () => { if (photoT) phCommit(); }, true);
+  // Move tool on a photo you just placed: it lifts back off into its box (move / resize / turn again)
+  window.addEventListener('pointerdown', e => {
+    const pp = phPlaced;
+    if (e.target !== c || !moveOn || photoT || !pp || pp.frame !== frames[cur] || undoStack[undoStack.length - 1] !== pp.snap || redoStack.length) return;
+    const r = c.getBoundingClientRect(), k = W / r.width, x = (e.clientX - r.left) * k - pp.t.x, y = (e.clientY - r.top) * k - pp.t.y;
+    const ca = Math.cos(-pp.t.a), sa = Math.sin(-pp.t.a), lx = x * ca - y * sa, ly = x * sa + y * ca;
+    if (Math.abs(lx) > pp.t.w / 2 || Math.abs(ly) > pp.t.h / 2) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    restoreImg(undoStack.pop()); syncHist(); onCanvasChanged();
+    phPlaced = null; photoT = { ...pp.t };
+    phCan.width = Math.min(1200, photoT.bmp.width); phCan.height = Math.round(phCan.width * photoT.bmp.height / photoT.bmp.width);
+    phCan.getContext('2d').drawImage(photoT.bmp, 0, 0, phCan.width, phCan.height);
+    phBox.hidden = phBar.hidden = false; phLoop();
+  }, true);
   { // dragging: one finger moves (or resizes / turns from the knobs), two fingers pinch-resize and turn together
     const ptrs = new Map(); let g0 = null, mode = '';
     const toPage = e => { const r = c.getBoundingClientRect(), k = W / r.width; return { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k }; };
