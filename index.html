@@ -1539,6 +1539,26 @@
   /* the sound's source: a tiny green check in the top-right corner of the mic or music-note button */
   #micBtn, #sndImport{position:relative}
   #micBtn.snd-check::after, #sndImport.snd-check::after{content:""; position:absolute; top:-5px; right:-5px; width:13px; height:13px; border-radius:50%; background:#2FB84B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/9px no-repeat; border:1.5px solid #1A1F3A; pointer-events:none; z-index:2}
+
+  /* Layers window: floats over the page, drag it by the top, resize it from the corner */
+  #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:200px; min-height:150px}
+  #layersWin[hidden]{display:none!important}
+  #layersWin .lw-head{display:flex; align-items:center; gap:8px; padding:8px 30px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink)}
+  #layersWin .lw-frame{font:700 12px var(--body); color:var(--muted)}
+  #layersWin .lw-x{position:absolute; top:6px; right:6px}
+  #layersWin .lw-list{flex:1; overflow-y:auto; padding:2px 8px; display:flex; flex-direction:column; gap:5px}
+  #layersWin .lw-row{display:flex; align-items:center; gap:6px; padding:5px; border:2px solid var(--ink); border-radius:10px; background:var(--paper); cursor:pointer; box-shadow:0 2px 0 var(--ink)}
+  #layersWin .lw-row.on{outline:3px solid #2E9CDB; outline-offset:1px}
+  #layersWin .lw-row.off .lw-thumb, #layersWin .lw-row.off .lw-name{opacity:.4}
+  #layersWin .lw-thumb{flex:none; border:1.5px solid rgba(26,31,58,.35); border-radius:4px; background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/8px 8px}
+  #layersWin .lw-name{flex:1; min-width:56px; font:800 13px var(--body); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  #layersWin .lw-b{flex:none; width:24px; height:26px; padding:0; display:grid; place-items:center; border:0; background:none; color:var(--ink); border-radius:6px; cursor:pointer}
+  #layersWin .lw-b svg{width:17px; height:17px}
+  #layersWin .lw-b:active{background:rgba(26,31,58,.12)}
+  #layersWin .lw-foot{padding:6px 8px 10px; display:flex; gap:6px}
+  #layersWin .lw-foot .btn{flex:1; justify-content:center}
+  #layersWin .lw-note{font:700 12px var(--body); color:var(--ink); margin:6px 2px}
+  #layersWin .lw-size{position:absolute; right:0; bottom:0; width:22px; height:22px; cursor:nwse-resize; touch-action:none; background:linear-gradient(135deg, transparent 50%, rgba(26,31,58,.45) 50%, rgba(26,31,58,.45) 58%, transparent 58%, transparent 70%, rgba(26,31,58,.45) 70%, rgba(26,31,58,.45) 78%, transparent 78%)}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -1548,7 +1568,7 @@
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">File</button>
     <div class="mb-drop" hidden><button data-do="newProject"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h8l4.5 4.5v14.5H6z"/><path d="M14 2.5V7h4.5"/></svg>New</button><button data-do="openWall"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6a1.5 1.5 0 0 1 1.5-1.5h4l2 2.5h7A1.5 1.5 0 0 1 19 8.5V10"/><path d="M3 19l2.6-8a1.5 1.5 0 0 1 1.4-1h13.6a1 1 0 0 1 1 1.3L19 18a1.5 1.5 0 0 1-1.4 1z"/></svg>Projects…</button><button data-fn="importPhoto"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><circle cx="9" cy="9.5" r="1.6"/><path d="M2.5 19.5l6.5-7 3.5 3.5 3-3.5 6 6.5"/></svg>Import photo</button><button data-do="pinIt"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3.5h11.5l3.5 3.5v12.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M8 3.5V8h7.5V3.5"/><path d="M12.8 5.2v1.1"/><path d="M7 20.5v-6h10v6"/><path d="M9.5 17.5h5"/></svg>Save</button><button data-do="exportBtn"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4.5 15.5v4h15v-4"/></svg>Export</button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Edit</button>
-    <div class="mb-drop" hidden><button data-do="undo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button><button data-do="redo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button><hr><button data-do="textToolGo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7V4.5h14V7"/><path d="M12 4.5v15"/><path d="M9 19.5h6"/></svg>Text</button><hr><button data-do="soundBtn" id="mbSound"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span>Mute</span></button></div></div>
+    <div class="mb-drop" hidden><button data-do="undo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button><button data-do="redo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button><hr><button data-fn="openLayers"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>Layers</button><button data-do="textToolGo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7V4.5h14V7"/><path d="M12 4.5v15"/><path d="M9 19.5h6"/></svg>Text</button><hr><button data-do="soundBtn" id="mbSound"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span>Mute</span></button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Speed Art</button>
     <div class="mb-drop" hidden><button data-do="speedBtn"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Preview &amp; Edit</button><button data-fn="speedExport"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4.5 15.5v4h15v-4"/></svg>Download video</button></div></div>
   <span class="mb-spacer"></span>
@@ -1662,7 +1682,9 @@
       <div class="paper" id="paper">
         <canvas id="paperBg" class="layer" aria-hidden="true"></canvas>
         <canvas id="bgLayer" class="layer" aria-hidden="true" hidden></canvas>
+        <canvas id="layBelow" class="layer" aria-hidden="true" hidden></canvas>
         <canvas id="c" width="1280" height="720" aria-label="Drawing paper"></canvas>
+        <canvas id="layAbove" class="layer" aria-hidden="true" hidden></canvas>
         <canvas id="live" class="layer" width="1280" height="720" aria-hidden="true"></canvas>
         <canvas id="ghost" class="layer ghost" width="640" height="360" aria-hidden="true" hidden></canvas>
         <canvas id="player" class="layer" width="640" height="360" aria-label="Your animation playing. Tap to stop." hidden></canvas>
@@ -5070,7 +5092,7 @@
       thumb = tmp.toDataURL('image/jpeg', 0.8);
     } catch {}
     const id = rec.session || Date.now();
-    await sessPut({ id, session: true, updated: rec.ts || Date.now(), W: w, H: h, speed: rec.speed || 'medium', paperType: rec.paperType || paperType, cur: Math.min(rec.cur || 0, blobs.length - 1), blobs, speedLog: Array.isArray(rec.speedLog) ? rec.speedLog : [], thumb, pages: blobs.length, from: rec.project || 0 });
+    await sessPut({ id, session: true, updated: rec.ts || Date.now(), W: w, H: h, speed: rec.speed || 'medium', paperType: rec.paperType || paperType, cur: Math.min(rec.cur || 0, blobs.length - 1), blobs, layers: (rec.blobs || []).every(Boolean) ? (rec.layers || null) : null, speedLog: Array.isArray(rec.speedLog) ? rec.speedLog : [], thumb, pages: blobs.length, from: rec.project || 0 });
     // only the newest few stay; older unsaved sessions disappear
     const all = await sessList();
     for (const old of all.slice(KEEP_SESSIONS)) { try { await sessDel(old.id); } catch {} }
@@ -5100,7 +5122,7 @@
       if (frames[0] && frames[0].blob){ const b = await createImageBitmap(frames[0].blob); tg.drawImage(paperCanvas(tw, th), 0, 0); if (bgBlob){ const bb = await createImageBitmap(bgBlob); bgDraw(tg, bb, tw, th); bb.close && bb.close(); } tg.drawImage(b, 0, 0, tw, th); b.close && b.close(); }
       else withPaper(tg, c, tw, th);
       const id = curProject || Date.now();
-      await projPut({ id, updated: Date.now(), W, H, speed, paperType, cur, blobs: frames.map(f => f.blob), holds: frames.map(f => f.hold || 1), bg: bgBlob, bounce, audio: audioClip, speedLog: (await speedChain, speedLog.slice()), thumb: tmp.toDataURL('image/jpeg', 0.8), pages: frames.length });
+      await projPut({ id, updated: Date.now(), W, H, speed, paperType, cur, blobs: frames.map(f => f.blob), layers: frames.map(f => f.layers ? { active: f.active, list: f.layers.map(L => ({ name: L.name, vis: L.vis, blob: L.blob })) } : null), holds: frames.map(f => f.hold || 1), bg: bgBlob, bounce, audio: audioClip, speedLog: (await speedChain, speedLog.slice()), thumb: tmp.toDataURL('image/jpeg', 0.8), pages: frames.length });
       const was = curProject; setCurProject(id);
       projDirty = false;
       if (openSession){ const sid = openSession; openSession = 0; try { await sessDel(sid); } catch {} }
@@ -5146,7 +5168,8 @@
     cur = Math.min(p.cur || 0, frames.length - 1);
     speed = FPS[p.speed] && p.speed !== 'slow' ? p.speed : 'medium'; syncSpeed();
     speedReset(); speedLog = Array.isArray(p.speedLog) ? p.speedLog.filter(Boolean).map(e => e instanceof Blob ? { b: e, paths: [] } : e) : [];
-    await paintBlob(frames[cur].blob);
+    if (Array.isArray(p.layers)) p.layers.forEach((L, i) => { const f = frames[i]; if (f && L && Array.isArray(L.list) && L.list.length){ f.layers = L.list.map(x => ({ name: x.name || 'Layer', vis: x.vis !== false, blob: x.blob || null })); f.active = Math.max(0, Math.min(L.active || 0, f.layers.length - 1)); } });
+    await showFrame(frames[cur]);
     resetHistory(); renderStrip(); await drawGhost(); syncDock();
     try { window.zoomHome(); } catch {}
   }
@@ -6054,7 +6077,7 @@
     if (frames.some(f => f.refit)) return refitFrames();
     drawGhost(); schedulePersist();
   }
-  const drawThumb = f => { const g = f.thumb.getContext('2d'); g.clearRect(0, 0, TW, TH); g.drawImage(c, 0, 0, TW, TH); };
+  const drawThumb = f => { const g = f.thumb.getContext('2d'); g.clearRect(0, 0, TW, TH); g.drawImage(f === frames[cur] && !bgEdit ? flatC() : c, 0, 0, TW, TH); };
   function onCanvasChanged(){
     if (!frames.length) return;
     if (bgEdit){ bgDirty = true; paintBgThumb(); projDirty = true; canvasVer++; speedUndo = false; speedStroke = null; schedulePersist(); return; }
@@ -6065,7 +6088,7 @@
   const SPEED_MAX = 700, SPEED_SIDE = 560;
   function speedShot(){
     const k = Math.min(1, SPEED_SIDE / Math.max(W, H)), w = Math.round(W * k), h = Math.round(H * k);
-    const t = mk(w, h), tg = t.getContext('2d'); tg.drawImage(paperCanvas(w, h), 0, 0); if (!bgLayer.hidden) tg.drawImage(bgLayer, 0, 0, w, h); tg.drawImage(c, 0, 0, w, h);
+    const t = mk(w, h), tg = t.getContext('2d'); tg.drawImage(paperCanvas(w, h), 0, 0); if (!bgLayer.hidden) tg.drawImage(bgLayer, 0, 0, w, h); tg.drawImage(flatC(), 0, 0, w, h);
     return new Promise(r => t.toBlob(r, 'image/jpeg', 0.72));
   }
   // entries: { b: picture after the change, paths: [strokes that made it] } — a stroke is { pts:[[x,y],...] (0..1 of the paper), w: width (0..1 of the long side), mir }
@@ -6146,14 +6169,21 @@
     const f = frames[cur];
     if (f && (f.dirty || !f.blob)){
       f.dirty = false;
+      if (f.layers && LC){   // layers: keep the layer you're on, and the whole frame (all layers together) for thumbnails, playing and export
+        const al = mk(W, H); al.getContext('2d').drawImage(c, 0, 0); f.layers[f.active].blob = al; LC[f.active] = al;
+      }
+      const snap = flatC() === c ? (() => { const k = mk(c.width, c.height); k.getContext('2d').drawImage(c, 0, 0); return k; })() : flatC();
       if (fast){
-        const snap = mk(c.width, c.height); snap.getContext('2d').drawImage(c, 0, 0); f.blob = snap;
+        f.blob = snap;
         encQ = encQ.then(async () => { const b = await packCanvas(snap); if (b && f.blob === snap) f.blob = b; });
-      } else f.blob = await canvasBlob();
+      } else f.blob = await packCanvas(snap);
     }
     if (!fast){
       await encQ;
-      for (const fr of frames) if (fr.blob && !(fr.blob instanceof Blob)) fr.blob = await packCanvas(fr.blob);
+      for (const fr of frames){
+        if (fr.blob && !(fr.blob instanceof Blob)) fr.blob = await packCanvas(fr.blob);
+        if (fr.layers) for (const L of fr.layers) if (L.blob && !(L.blob instanceof Blob)) L.blob = await packCanvas(L.blob);
+      }
     }
   }
   async function bmpOf(blob, w, h){
@@ -6296,7 +6326,7 @@
     if (playing) stopPlay();
     busy = true;
     await commit(); bgEdit = true; bgDirty = false; document.body.classList.add('bg-edit');
-    await paintBlob(bgBlob);
+    await paintBlob(bgBlob); try { renderLayerStack(); syncLayersWin(); } catch {}
     resetHistory(); await drawBgLayer(); renderStrip(); await drawGhost();
     busy = false;
     toast('Drawing the background: it shows behind every frame. Tap a frame to go back.');
@@ -6305,7 +6335,7 @@
     if (busy || !bgEdit) return;
     busy = true;
     await commit(); bgEdit = false; document.body.classList.remove('bg-edit');
-    cur = Math.max(0, Math.min(i, frames.length - 1)); await paintBlob(frames[cur].blob);
+    cur = Math.max(0, Math.min(i, frames.length - 1)); await showFrame(frames[cur]);
     resetHistory(); await drawBgLayer(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
   }
@@ -6342,7 +6372,7 @@
     if (playing) stopPlay();
     if (i === cur) return;
     busy = true;
-    await commit(true); cur = i; await paintBlob(frames[cur].blob);
+    await commit(true); cur = i; await showFrame(frames[cur]);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     busy = false; schedulePersist();
   }
@@ -6354,13 +6384,14 @@
     busy = true;
     await commit(true);
     const f = newFrame();
-    if (copy === 'paste'){ f.blob = frameClip; f.dirty = false; await paintBlob(frameClip); }
-    else if (copy){ f.blob = frames[cur].blob; f.dirty = false; }
+    if (copy === 'paste'){ f.blob = frameClip; f.dirty = false; LC = null; await paintBlob(frameClip); }
+    else if (copy){ f.blob = frames[cur].blob; f.dirty = false; const sf = frames[cur]; if (sf.layers){ f.layers = sf.layers.map(L => ({ ...L })); f.active = sf.active; } }
+    else LC = null;
     projDirty = true;
     const pos = at === undefined ? cur + 1 : Math.max(0, Math.min(at, frames.length));
     frames.splice(pos, 0, f); cur = pos;
     if (!copy) blank();
-    drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
+    drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut(); try { renderLayerStack(); syncLayersWin(); } catch {}
     busy = false; schedulePersist();
     toast(copy === 'paste' ? `Pasted as frame ${cur+1}` : copy ? `Copied to frame ${cur+1}. Now change it a little!` : `Frame ${cur+1}. The ghost shows the one before${cur < frames.length - 1 ? ' (and the next one)' : ''}.`);
   }
@@ -6373,7 +6404,7 @@
     await commit(true);   // keep what's on the frame being deleted, so Undo can bring it back
     delFrames.push({ f: frames[cur], at: cur, arr: frames }); if (delFrames.length > 60) delFrames.shift();
     frames.splice(cur, 1); cur = Math.min(cur, frames.length - 1);
-    await paintBlob(frames[cur].blob);
+    await showFrame(frames[cur]);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
     projDirty = true; busy = false; schedulePersist(); toast('Frame deleted');
   }
@@ -6387,15 +6418,152 @@
       await commit(true);
       const at = Math.max(0, Math.min(d.at, frames.length));
       frames.splice(at, 0, d.f); cur = at;
-      await paintBlob(d.f.blob); drawThumb(d.f);
+      await showFrame(d.f); drawThumb(d.f);
       resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
       projDirty = true; schedulePersist(); toast(`Frame ${cur + 1} is back`);
     } finally { busy = false; syncHist(); }
   }
+  // ---------- LAYERS: every frame can have its own stack of layers ----------
+  // The layer you're on is the drawing canvas itself (so every tool just works); the layers under it and over it are
+  // shown on two see-through canvases around it. Each frame keeps its own layers (and which one you're on).
+  // The frame's normal picture (thumbnail, playing, ghost, export) is always all its visible layers put together.
+  const layBelow = $('layBelow'), layAbove = $('layAbove');
+  let LC = null;                                      // the current frame's layer pictures (index = layer)
+  const curF = () => (bgEdit ? null : frames[cur]);
+  const copyC = src => { const k = mk(W, H); k.getContext('2d').drawImage(src, 0, 0); return k; };
+  function renderLayerStack(){
+    const f = curF(), on = !!(f && f.layers && LC);
+    for (const k of [layBelow, layAbove]){ if (k.width !== W || k.height !== H){ k.width = W; k.height = H; } k.getContext('2d').clearRect(0, 0, W, H); k.hidden = !on; }
+    c.style.opacity = '';
+    if (!on) return;
+    const gb = layBelow.getContext('2d'), ga = layAbove.getContext('2d');
+    f.layers.forEach((L, i) => { if (i === f.active){ if (!L.vis) c.style.opacity = '0'; return; } if (L.vis && LC[i]) (i < f.active ? gb : ga).drawImage(LC[i], 0, 0); });
+  }
+  function flatC(){
+    const f = curF(); if (!f || !f.layers || !LC) return c;
+    const k = mk(W, H), g = k.getContext('2d');
+    f.layers.forEach((L, i) => { if (L.vis) g.drawImage(i === f.active ? c : LC[i], 0, 0); });
+    return k;
+  }
+  async function showFrame(f){
+    LC = null;
+    if (f && f.layers){
+      LC = await Promise.all(f.layers.map(async L => { const k = mk(W, H); if (L.blob){ try { const b = await createImageBitmap(L.blob); fitDraw(k.getContext('2d'), b, b.width, b.height, W, H); b.close && b.close(); } catch {} } return k; }));
+      blank(); ctx.drawImage(LC[f.active], 0, 0);
+    } else await paintBlob(f ? f.blob : null);
+    renderLayerStack(); syncLayersWin();
+  }
+  function ensureLayers(){
+    const f = curF(); if (!f) return null;
+    if (!f.layers){ f.layers = [{ name: 'Layer 1', vis: true, blob: null }]; f.active = 0; LC = [copyC(c)]; }
+    else if (!LC) LC = f.layers.map(() => mk(W, H));
+    return f;
+  }
+  function layersChanged(){ resetHistory(); renderLayerStack(); onCanvasChanged(); syncLayersWin(); }
+  function selectLayer(i){
+    const f = ensureLayers(); if (!f || i === f.active || i < 0 || i >= f.layers.length) { syncLayersWin(); return; }
+    LC[f.active] = copyC(c); f.active = i; blank(); ctx.drawImage(LC[i], 0, 0);
+    resetHistory(); renderLayerStack(); syncLayersWin();
+  }
+  function addLayer(){
+    const f = ensureLayers(); if (!f) return toast('Pick a frame first');
+    LC[f.active] = copyC(c);
+    let n = f.layers.length + 1; const names = new Set(f.layers.map(L => L.name)); while (names.has('Layer ' + n)) n++;
+    f.layers.splice(f.active + 1, 0, { name: 'Layer ' + n, vis: true, blob: null }); LC.splice(f.active + 1, 0, mk(W, H));
+    f.active++; blank(); layersChanged(); toast('New layer: draw on it');
+  }
+  function deleteLayer(i){
+    const f = ensureLayers(); if (!f) return;
+    if (f.layers.length < 2){ toast('A frame needs at least one layer'); return; }
+    LC[f.active] = copyC(c);
+    f.layers.splice(i, 1); LC.splice(i, 1);
+    if (i < f.active) f.active--; f.active = Math.max(0, Math.min(f.active, f.layers.length - 1));
+    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged();
+  }
+  function moveLayer(i, dir){   // dir +1 = up (in front), -1 = down (behind)
+    const f = ensureLayers(); if (!f) return;
+    const j = i + dir; if (j < 0 || j >= f.layers.length) return;
+    LC[f.active] = copyC(c);
+    [f.layers[i], f.layers[j]] = [f.layers[j], f.layers[i]]; [LC[i], LC[j]] = [LC[j], LC[i]];
+    if (f.active === i) f.active = j; else if (f.active === j) f.active = i;
+    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged();
+  }
+  function toggleLayer(i){ const f = ensureLayers(); if (!f) return; LC[f.active] = copyC(c); f.layers[i].vis = !f.layers[i].vis; renderLayerStack(); onCanvasChanged(); syncLayersWin(); }
+  // Move tool: touching a drawing that's on another layer jumps to that layer first (then moves it like normal)
+  window.addEventListener('pointerdown', e => {
+    if (e.target !== c || !moveOn) return;
+    const f = curF(); if (!f || !f.layers || !LC || f.layers.length < 2) return;
+    const r = c.getBoundingClientRect(), k = W / r.width, x = Math.round((e.clientX - r.left) * k), y = Math.round((e.clientY - r.top) * k);
+    const rad = Math.max(2, Math.round(10 * k)), x0 = Math.max(0, x - rad), y0 = Math.max(0, y - rad), w = Math.min(W, x + rad + 1) - x0, h = Math.min(H, y + rad + 1) - y0;
+    if (w <= 0 || h <= 0) return;
+    const hasInk = g => { const d = g.getImageData(x0, y0, w, h).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 12) return true; return false; };
+    if (f.layers[f.active].vis && hasInk(ctx)) return;   // something on this layer right there: stay on it
+    for (let i = f.layers.length - 1; i >= 0; i--){
+      if (i === f.active || !f.layers[i].vis || !LC[i]) continue;
+      if (hasInk(LC[i].getContext('2d'))){ selectLayer(i); toast(f.layers[i].name); return; }
+    }
+  }, true);
+  // ---------- the Layers window: drag it by its top, resize it from the corner ----------
+  const LW_KEY = 'doodle-clubhouse-layers-win';
+  const lw = document.createElement('div'); lw.id = 'layersWin'; lw.hidden = true; lw.setAttribute('role', 'dialog'); lw.setAttribute('aria-label', 'Layers');
+  lw.innerHTML = '<div class="lw-head"><b>Layers</b><span class="lw-frame"></span><button type="button" class="pop-x lw-x" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
+    + '<div class="lw-list"></div><div class="lw-foot"><button type="button" class="btn sm lw-add">+ Add layer</button></div><i class="lw-size" title="Resize"></i>';
+  document.body.appendChild(lw);
+  const lwList = lw.querySelector('.lw-list');
+  function lwPlace(){
+    let st = null; try { st = JSON.parse(localStorage.getItem(LW_KEY)); } catch {}
+    const w = Math.max(200, Math.min(innerWidth - 16, (st && st.w) || 320)), h = Math.max(170, Math.min(innerHeight - 16, (st && st.h) || 300));
+    const x = st && isFinite(st.x) ? st.x : innerWidth - w - 24, y = st && isFinite(st.y) ? st.y : 70;
+    Object.assign(lw.style, { width: w + 'px', height: h + 'px', left: Math.max(4, Math.min(innerWidth - w - 4, x)) + 'px', top: Math.max(4, Math.min(innerHeight - 60, y)) + 'px' });
+  }
+  const lwSave = () => { try { const r = lw.getBoundingClientRect(); localStorage.setItem(LW_KEY, JSON.stringify({ x: r.left, y: r.top, w: r.width, h: r.height })); } catch {} };
+  function syncLayersWin(){
+    if (lw.hidden) return;
+    const f = curF();
+    lw.querySelector('.lw-frame').textContent = bgEdit ? 'Background' : `Frame ${cur + 1}`;
+    lwList.innerHTML = '';
+    if (!f){ lwList.innerHTML = '<p class="lw-note">The background has one layer. Tap a frame to use layers.</p>'; return; }
+    const list = f.layers || [{ name: 'Layer 1', vis: true }], act = f.layers ? f.active : 0, tw = 40, th = Math.max(20, Math.round(tw * H / W));
+    for (let i = list.length - 1; i >= 0; i--){
+      const L = list[i], row = document.createElement('div'); row.className = 'lw-row' + (i === act ? ' on' : '') + (L.vis ? '' : ' off');
+      const tc = document.createElement('canvas'); tc.width = tw * 2; tc.height = th * 2; tc.className = 'lw-thumb'; tc.style.width = tw + 'px'; tc.style.height = th + 'px';
+      const src = i === act ? c : (LC && LC[i]); if (src) tc.getContext('2d').drawImage(src, 0, 0, tc.width, tc.height);
+      const nm = document.createElement('span'); nm.className = 'lw-name'; nm.textContent = L.name;
+      const mkb = (cls, title, svg, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lw-b ' + cls; b.title = title; b.setAttribute('aria-label', title); b.innerHTML = svg; b.onclick = ev => { ev.stopPropagation(); fn(); }; return b; };
+      const SV = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+      row.append(tc, nm,
+        mkb('lw-eye', L.vis ? 'Hide layer' : 'Show layer', SV(L.vis ? '<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M3 3l18 18"/><path d="M10.6 5.6A10 10 0 0 1 12 5.5c6.5 0 10 6.5 10 6.5a17 17 0 0 1-3.2 3.9M6.6 6.6C3.7 8.4 2 12 2 12s3.5 6.5 10 6.5a9.6 9.6 0 0 0 4.3-1"/>'), () => toggleLayer(i)),
+        mkb('lw-up', 'Move layer up', SV('<path d="M12 19V5M6 11l6-6 6 6"/>'), () => moveLayer(i, 1)),
+        mkb('lw-dn', 'Move layer down', SV('<path d="M12 5v14M6 13l6 6 6-6"/>'), () => moveLayer(i, -1)),
+        mkb('lw-del', 'Delete layer', SV('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'), () => deleteLayer(i)));
+      row.onclick = () => selectLayer(i);
+      nm.ondblclick = ev => { ev.stopPropagation(); const v = prompt('Layer name', L.name); if (v && f.layers){ f.layers[i].name = v.slice(0, 24); syncLayersWin(); schedulePersist(); } };
+      lwList.appendChild(row);
+    }
+  }
+  let lwThumbT = 0;   // keep the little pictures up to date while you draw (not every stroke point)
+  const lwThumbs = () => { if (lw.hidden || lwThumbT) return; lwThumbT = setTimeout(() => { lwThumbT = 0; syncLayersWin(); }, 400); };
+  c.addEventListener('pointerup', lwThumbs); addEventListener('pointerup', lwThumbs);
+  window.openLayers = () => { lw.hidden = false; lwPlace(); syncLayersWin(); };
+  lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; };
+  lw.querySelector('.lw-add').onclick = () => { addLayer(); };
+  { // drag by the title bar
+    const head = lw.querySelector('.lw-head'); let d = null;
+    head.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; const r = lw.getBoundingClientRect(); d = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top }; try { head.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); });
+    head.addEventListener('pointermove', e => { if (!d || e.pointerId !== d.id) return; lw.style.left = Math.max(0, Math.min(innerWidth - 60, e.clientX - d.dx)) + 'px'; lw.style.top = Math.max(0, Math.min(innerHeight - 40, e.clientY - d.dy)) + 'px'; });
+    const end = e => { if (d && e.pointerId === d.id){ d = null; lwSave(); } };
+    head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
+    // resize from the bottom-right corner
+    const grip = lw.querySelector('.lw-size'); let g = null;
+    grip.addEventListener('pointerdown', e => { const r = lw.getBoundingClientRect(); g = { id: e.pointerId, x: e.clientX, y: e.clientY, w: r.width, h: r.height }; try { grip.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); e.stopPropagation(); });
+    grip.addEventListener('pointermove', e => { if (!g || e.pointerId !== g.id) return; lw.style.width = Math.max(200, Math.min(innerWidth - 8, g.w + e.clientX - g.x)) + 'px'; lw.style.height = Math.max(150, Math.min(innerHeight - 8, g.h + e.clientY - g.y)) + 'px'; });
+    const gend = e => { if (g && e.pointerId === g.id){ g = null; lwSave(); } };
+    grip.addEventListener('pointerup', gend); grip.addEventListener('pointercancel', gend);
+  }
   function startOver(){
     if (playing) stopPlay();
     bgEdit = false; bgBlob = null; bgDirty = false; document.body.classList.remove('bg-edit'); bounce = false; syncBounce(); setAudio(null); drawBgLayer();
-    frames = [newFrame()]; cur = 0; blank(); drawThumb(frames[0]); speedReset();
+    frames = [newFrame()]; cur = 0; LC = null; blank(); try { renderLayerStack(); syncLayersWin(); } catch {} drawThumb(frames[0]); speedReset();
     projDirty = false; openSession = 0;
     resetHistory(); renderStrip(); drawGhost(); schedulePersist(); toast('New animation ready');
   }
@@ -6897,7 +7065,7 @@
   }
   let persistT = 0;
   // what's on the go right now; "unsaved" means there are changes that never went into Projects
-  const curRecord = () => ({ v: 2, cur, speed, W, H, paperType, blobs: frames.map(f => f.blob), holds: frames.map(f => f.hold || 1), bg: bgBlob, bounce, audio: audioClip, speedLog, unsaved: projDirty, project: curProject, session: openSession, ts: Date.now() });
+  const curRecord = () => ({ v: 2, cur, speed, W, H, paperType, blobs: frames.map(f => f.blob), layers: frames.map(f => f.layers ? { active: f.active, list: f.layers.map(L => ({ name: L.name, vis: L.vis, blob: L.blob })) } : null), holds: frames.map(f => f.hold || 1), bg: bgBlob, bounce, audio: audioClip, speedLog, unsaved: projDirty, project: curProject, session: openSession, ts: Date.now() });
   function schedulePersist(){
     clearTimeout(persistT);
     persistT = setTimeout(async () => {
@@ -7169,8 +7337,8 @@
   $('exJpg').onclick = () => runExport(async () => {
     exStatus('Getting your picture ready…');
     if (logoImg && logoImg.decode) await logoImg.decode().catch(() => {});
-    let src = c;
-    if (bgBlob && !bgEdit && !bgLayer.hidden){ src = mk(W, H); const sg = src.getContext('2d'); sg.drawImage(bgLayer, 0, 0); sg.drawImage(c, 0, 0); }
+    let src = flatC();
+    if (bgBlob && !bgEdit && !bgLayer.hidden){ const fl = src; src = mk(W, H); const sg = src.getContext('2d'); sg.drawImage(bgLayer, 0, 0); sg.drawImage(fl, 0, 0); }
     const out = mk(W, H); exportPaint(out.getContext('2d'), src, W, H);
     const blob = await new Promise(r => out.toBlob(r, 'image/jpeg', 0.92));
     await offer(`doodle-${fileStamp()}.jpg`, blob);
