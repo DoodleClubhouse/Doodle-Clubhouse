@@ -178,6 +178,8 @@
   }
   .export-opt b{font:800 16px var(--body); color:var(--ink)}
   .export-opt:disabled{opacity:.5; cursor:default}
+  #closeExport.sq-x{width:38px; height:38px; min-width:38px; padding:0!important; display:grid; place-items:center; flex:none; border-radius:10px}
+  #closeExport.sq-x svg{width:18px; height:18px}
   /* each export choice has its picture on the left, beside the words (all icons drawn with the same line width) */
   .export-opt{display:grid; grid-template-columns:auto 1fr; column-gap:12px; row-gap:2px; align-items:center}
   .export-opt > .ex-ico{grid-row:1 / span 2; width:46px; height:46px; color:var(--ink); flex:none}
@@ -1837,7 +1839,7 @@
         <h2 id="exportTitle">Export</h2>
         <p id="exportSub">Save your work to this device.</p>
       </div>
-      <button class="btn" id="closeExport">Close</button>
+      <button class="btn sq-x" id="closeExport" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="export-list">
       <button class="export-opt" id="exJpg"><svg class="ex-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><circle cx="9" cy="9.5" r="1.6"/><path d="M2.5 19.5l6.5-7 3.5 3.5 3-3.5 6 6.5"/></svg><b>Drawing (JPG)</b><span id="exJpgNote">A picture of the frame you're on</span></button>
