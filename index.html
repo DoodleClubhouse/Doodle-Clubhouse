@@ -2655,13 +2655,18 @@
       return audioCtx;
     } catch { return null; }
   }
+  // every sound goes through one volume knob, so a finger pinch-zoom can stay silent
+  let sfxGate = null;
+  function sfxOut(a){ if (!sfxGate || sfxGate.context !== a){ sfxGate = a.createGain(); sfxGate.connect(a.destination); } return sfxGate; }
+  let sfxHoldT = 0;
+  function sfxMute(on){ if (sfxGate) sfxGate.gain.value = on ? 0 : 1; }
   // one rounded "bloop": a pitch glide with a quick fade, plus a soft octave on top for sparkle
   function tone(f0, f1, dur, vol = .16, type = 'sine', delay = 0){
     const a = ac(); if (!a) return;
     const t = a.currentTime + delay, o = a.createOscillator(), g = a.createGain();
     o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur * .8);
     g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+    o.connect(g).connect(sfxOut(a)); o.start(t); o.stop(t + dur + .02);
   }
   function noiseBurst(dur, freq, q, vol, delay = 0, type = 'bandpass', sweepTo){
     const a = ac(); if (!a) return;
@@ -2670,7 +2675,7 @@
     const src = a.createBufferSource(); src.buffer = buf;
     const f = a.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur); f.Q.value = q;
     const g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + dur * .25); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    src.connect(f).connect(g).connect(a.destination); src.start(t);
+    src.connect(f).connect(g).connect(sfxOut(a)); src.start(t);
   }
   // a sound that keeps going while you draw; volume and tone follow how fast you move
   const noiseBufs = {};
@@ -2706,7 +2711,7 @@
     else if (kind === 'fur'){ f1.type = 'bandpass'; f1.frequency.value = 1000; f1.Q.value = .6; f2.type = 'lowpass'; f2.frequency.value = 2600; f2.Q.value = .3; }   // soft, fluffy 'fff'
     else { f1.type = 'highpass'; f1.frequency.value = 700; f2.type = 'lowpass'; f2.frequency.value = 5200; f2.Q.value = .3; }
     g.gain.value = 0.0001; let idle = 0, stopped = false;
-    src.connect(f1).connect(f2).connect(g).connect(a.destination); src.start();
+    src.connect(f1).connect(f2).connect(g).connect(sfxOut(a)); src.start();
     return {
       level(v, freq, tc = .03){ const t = a.currentTime; clearTimeout(idle); idle = setTimeout(() => { try { g.gain.setTargetAtTime(.0001, a.currentTime, .05); } catch {} }, 90); g.gain.setTargetAtTime(Math.max(.0001, v), t, tc); if (freq) f1.frequency.setTargetAtTime(freq, t, .05); },
       stop(rel = .12){ if (stopped) return; stopped = true; clearTimeout(idle); const t = a.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(.0001, t, rel / 3); try { src.stop(t + rel + .05); } catch {} }
@@ -2742,7 +2747,7 @@
     const dust = a.createBiquadFilter(); dust.type = 'peaking'; dust.frequency.value = 2800; dust.Q.value = .6; dust.gain.value = 3;
     const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4500; lp.Q.value = .4;
     const g = a.createGain(); g.gain.value = .0001;
-    src.connect(hp).connect(dust).connect(lp).connect(g).connect(a.destination);
+    src.connect(hp).connect(dust).connect(lp).connect(g).connect(sfxOut(a));
     src.start(0, Math.random() * 2.5);
     let travelled = 0, dist = 0, lastNote = 0, lastIdx = -1, idle = 0, stopped = false;
     const puff = (f, dur, vol, delay = 0) => noiseBurst(dur, f, .8, vol, delay, 'bandpass', f * .6);
@@ -2752,7 +2757,7 @@
       [[1, vol, 'sine', .9], [2, vol * .12, 'sine', .45]].forEach(([m, v, type, dur]) => {
         const o = a.createOscillator(), gg = a.createGain(); o.type = type; o.frequency.setValueAtTime(f * m, t);
         gg.gain.setValueAtTime(.0001, t); gg.gain.linearRampToValueAtTime(v, t + .025); gg.gain.exponentialRampToValueAtTime(.0001, t + dur);   // soft, slow bloom
-        o.connect(gg).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+        o.connect(gg).connect(sfxOut(a)); o.start(t); o.stop(t + dur + .02);
       });
     };
     const SCALE = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25, 783.99, 880];   // calm pentatonic, a little lower
@@ -2805,7 +2810,7 @@
         src.buffer = buf; g.gain.value = .85 * vol;
         const y = Math.max(0, Math.min(1, +yFrac || 0));
         src.playbackRate.value = (1.28 - y * .48) * (1 + (Math.random() - .5) * .07);   // top ≈ 1.28x, bottom ≈ 0.8x, ±3.5% each time
-        src.connect(g).connect(a.destination);
+        src.connect(g).connect(sfxOut(a));
         src.start();
       };
       if (SFX._splatBuf) return go(SFX._splatBuf);
@@ -2853,7 +2858,7 @@
         const src = a.createBufferSource(); src.buffer = buf;
         const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.6;
         const g = a.createGain(); g.gain.value = vol;
-        src.connect(f).connect(g).connect(a.destination); src.start(a.currentTime + delay);
+        src.connect(f).connect(g).connect(sfxOut(a)); src.start(a.currentTime + delay);
       };
       rub(0, .07, 2300, .22); rub(.075, .065, 1900, .2); rub(.15, .07, 2300, .18);
       noiseBurst(.2, 2600, .6, .05, .23, 'lowpass', 600);                   // brushing the shavings off the page
@@ -2883,7 +2888,7 @@
       const g = a.createGain(), now = a.currentTime;
       g.gain.setValueAtTime(.0001, now); g.gain.linearRampToValueAtTime(.08, now + .08);
       g.gain.setValueAtTime(.08, now + dur * .8); g.gain.linearRampToValueAtTime(.0001, now + dur);
-      src.connect(bp).connect(g).connect(a.destination); src.start();
+      src.connect(bp).connect(g).connect(sfxOut(a)); src.start();
       for (let k = 0; k < 4; k++) tone(1500 + Math.random() * 900, 2200, .06, .025, 'sine', .15 + k * dur / 4.5);
     } catch {}
   }
@@ -2970,7 +2975,7 @@
       lfo.frequency.setValueAtTime(5, t); lfo.frequency.linearRampToValueAtTime(11, t + 1.5); lg.gain.value = 22;
       lfo.connect(lg).connect(o.frequency);
       g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.045, t + .12); g.gain.setValueAtTime(.045, t + 1.1); g.gain.exponentialRampToValueAtTime(.0001, t + 1.6);
-      o.connect(g).connect(a.destination); o.start(t); lfo.start(t); o.stop(t + 1.65); lfo.stop(t + 1.65);
+      o.connect(g).connect(sfxOut(a)); o.start(t); lfo.start(t); o.stop(t + 1.65); lfo.stop(t + 1.65);
       // soft airy swish
       noiseBurst(1.3, 900, .7, .025, .05, 'bandpass', 300);
       // bubbly blips, closer and closer together
@@ -3248,7 +3253,7 @@
       const src = a.createBufferSource(), g = a.createGain(), t = a.currentTime, RATE = 1.32;
       src.buffer = flushBuf; src.playbackRate.value = RATE;
       g.gain.setValueAtTime(.9, t); g.gain.setValueAtTime(.9, t + 1.1); g.gain.linearRampToValueAtTime(0, t + 2.4);
-      src.connect(g).connect(a.destination); src.start(t); src.stop(t + 2.5);
+      src.connect(g).connect(sfxOut(a)); src.start(t); src.stop(t + 2.5);
       // cute bubbly bloops riding along with the water
       [.25, .42, .58, .71, .86, 1.02, 1.18].forEach((d, i) => { const f = 520 + Math.random() * 380; tone(f, f * 1.9, .09, .045 - i * .003, 'sine', d); });
       tone(880, 1400, .12, .04, 'sine', 1.35);   // a last happy 'plip'
@@ -3583,6 +3588,8 @@
     if (e.pointerType === 'pen'){ touches.clear(); gesture = null; return; }
     if (e.pointerType === 'touch' && penRecent()){ touches.delete(e.pointerId); e.stopImmediatePropagation(); return; }   // the hand resting while you write with the Pencil   // the Pencil never starts a pinch
     if (drawing && activeType === 'pen'){ e.stopImmediatePropagation(); return; }   // a palm resting while the Pencil draws: ignore it
+    // a finger on the paper: sounds wait a moment, so if a second finger joins (pinch zoom) nothing is heard
+    if (e.pointerType === 'touch'){ sfxMute(true); clearTimeout(sfxHoldT); sfxHoldT = setTimeout(() => { if (!gesture) sfxMute(false); }, 90); }
     if (e.isPrimary){ touches.clear(); gesture = null; }
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (touches.size === 1){ firstDownAt = performance.now(); return; }
@@ -3608,7 +3615,7 @@
   const liftTouch = e => {
     if (!touches.delete(e.pointerId)) return;
     if (gesture){ e.stopImmediatePropagation(); if (touches.size < 2) gesture = touches.size ? { done: true } : null; }
-    if (!touches.size) gesture = null;
+    if (!touches.size){ gesture = null; clearTimeout(sfxHoldT); sfxMute(false); }
   };
   board.addEventListener('pointerup', liftTouch, true); board.addEventListener('pointercancel', liftTouch, true);
   window.addEventListener('pointerup', e => { if (!board.contains(e.target)) liftTouch(e); }, true);
@@ -4249,7 +4256,7 @@
       const t = a.currentTime + d, g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.05, t + .03); g.gain.setValueAtTime(.05, t + len - .06); g.gain.exponentialRampToValueAtTime(.0001, t + len);
       const lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 7; lg.gain.value = 6; lfo.connect(lg);
       for (const f of [587.33, 739.99, 880]){ const o = a.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(f * .97, t); o.frequency.linearRampToValueAtTime(f, t + .05); lg.connect(o.frequency); o.connect(g); o.start(t); o.stop(t + len + .05); }
-      lfo.start(t); lfo.stop(t + len + .05); g.connect(a.destination);
+      lfo.start(t); lfo.stop(t + len + .05); g.connect(sfxOut(a));
     }
   }
   function drawCar(g, x, y, a, L, Wd, body, roof, kind, hg){
@@ -4424,7 +4431,7 @@
     const body = a.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 220 + Math.random() * 80; body.Q.value = 1.2; body.gain.value = 9;
     const g = a.createGain(), v = .07 * Math.min(1.6, .6 + size * .6);
     g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .003); g.gain.exponentialRampToValueAtTime(v * .35, t + .04); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    src.connect(lp).connect(body).connect(g).connect(a.destination); src.start(t); src.stop(t + dur + .02);
+    src.connect(lp).connect(body).connect(g).connect(sfxOut(a)); src.start(t); src.stop(t + dur + .02);
     // the slap of it landing
     noiseBurst(.012, 1800 + Math.random() * 1200, .9, .03 * size + .01, delay, 'bandpass');
     // droplets flying off and hitting around it
@@ -4479,7 +4486,7 @@
     const body = a.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 1600; body.Q.value = .8; body.gain.value = 5;
     const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800; lp.Q.value = .5;
     const g = a.createGain(); g.gain.value = .0001;
-    src.connect(hp).connect(body).connect(lp).connect(g).connect(a.destination); src.start(0, Math.random() * 2.5);
+    src.connect(hp).connect(body).connect(lp).connect(g).connect(sfxOut(a)); src.start(0, Math.random() * 2.5);
     const tock = (v) => { noiseBurst(.018, 1300, 1.5, v, 0, 'bandpass', 700); noiseBurst(.008, 3200, 1, v * .5, 0, 'bandpass'); };
     let idle = 0, stopped = false;
     tock(.05);   // chalk hits the board
