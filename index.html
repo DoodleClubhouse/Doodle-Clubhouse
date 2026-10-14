@@ -398,14 +398,19 @@
     html body .film .film-side .seg{border-radius:10px!important}
     /* slimmer bar: row 1 = frame buttons + Ghost + Bounce, row 2 = speeds + Mic + Settings (shorter row) */
     html body .film .film-side{grid-template-rows:var(--fb, 40px) calc(var(--fb, 40px) * .66)!important; grid-auto-rows:auto!important; gap:7px 6px!important}
-    html body .film{padding:1px 22px 1px 8px!important; top:var(--boardTop, 50px)!important}
+    html body .film{padding:13px 24px 13px 13px!important; top:var(--boardTop, 50px)!important}
     html body .film #insFrame{order:1} html body .film #dupFrame{order:2} html body .film #pasteFrame{order:3} html body .film #delFrame{order:4}
     html body .film #ghostBtn{order:5} html body .film #bounceBtn{order:6}
     html body .film .film-side .seg{order:7; height:100%!important}
     html body .film #micBtn{order:8} html body .film #filmSettings{order:9}
     html body .film #micBtn svg, html body .film #filmSettings svg{width:calc(var(--fb, 40px) * .45)!important; height:calc(var(--fb, 40px) * .45)!important}
     /* Play 50% bigger */
-    html body .film .btn.play{width:47px!important; height:calc(var(--fb, 40px) * 1.5)!important}
+    html body .film .btn.play{width:calc(var(--tileH, 60px) * var(--arn, 1.5))!important; height:var(--tileH, 60px)!important; flex:none!important}
+    html body .film .btn.play{border:var(--tbBorder)!important; border-radius:var(--tbRad)!important; box-shadow:var(--tbShadow)!important; box-sizing:border-box!important}
+    /* frames buttons: an exact copy of a tool bar button's square (size, border, corners, shadow), read from the tool bar itself */
+    html body .film .film-side .btn.sm{width:var(--fb)!important; height:var(--fb)!important; border:var(--tbBorder)!important; border-radius:var(--tbRad)!important; box-shadow:var(--tbShadow)!important; box-sizing:border-box!important}
+    html body .film .film-side #micBtn, html body .film .film-side #filmSettings{height:100%!important}
+    html body .film .film-side .seg{border:var(--tbBorder)!important; border-radius:var(--tbRad)!important; box-shadow:var(--tbShadow)!important; box-sizing:border-box!important}
     html body .film .btn.play svg{width:26px!important; height:26px!important}
   }
   html body.dock-bottom .tools, html body.dock-bottom .film, html body.dock-bottom .extras, html body.dock-bottom .more-sheet,
@@ -1985,7 +1990,7 @@
     if ((!filling || pan === 'frames') && trayEl && getComputedStyle(trayEl).position === 'fixed' && getComputedStyle(trayEl).display !== 'none'){
       const br = board.getBoundingClientRect(), tr = trayEl.getBoundingClientRect();
       if (tr.height && tr.right > br.left + 8 && tr.top < br.top + br.height * .3 && tr.bottom > br.top){   // a pop-out along the TOP (iPad frames): the paper sits under it
-        topOff = tr.bottom - br.top + 2; availH = Math.max(140, (board.clientHeight || br.height) - topOff + (pan === 'frames' ? 4 + Math.max(0, innerHeight - br.bottom - 3) : 0));
+        topOff = tr.bottom - br.top + (pan === 'frames' ? 10 : 2); availH = Math.max(140, (board.clientHeight || br.height) - topOff + (pan === 'frames' ? 4 + Math.max(0, innerHeight - br.bottom - 3) : 0));
       }
       else if (tr.height && tr.right > br.left + 8 && tr.top < br.bottom && tr.top > br.top) availH = Math.max(140, tr.top - br.top - 4);
     }
@@ -7330,6 +7335,10 @@
   function syncFrameBtnSize(){
     const t = document.querySelector('#toolGrid .tool[data-tool="pencil"]'), r = t && t.getBoundingClientRect();
     if (r && r.width) document.body.style.setProperty('--fb', r.width + 'px');
+    const plain = [...document.querySelectorAll('#toolGrid .tool')].find(b => b.offsetParent && b.getAttribute('aria-pressed') !== 'true');
+    if (plain){ const c = getComputedStyle(plain), bs = document.body.style;
+      bs.setProperty('--tbBorder', c.borderTopWidth + ' ' + c.borderTopStyle + ' ' + c.borderTopColor);
+      bs.setProperty('--tbRad', c.borderTopLeftRadius); bs.setProperty('--tbShadow', c.boxShadow); }
   }
   addEventListener('resize', () => requestAnimationFrame(syncFrameBtnSize));
   setTimeout(syncFrameBtnSize, 300); setTimeout(syncFrameBtnSize, 1200);
