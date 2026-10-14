@@ -1541,6 +1541,7 @@
   #micBtn.snd-check::after, #sndImport.snd-check::after{content:""; position:absolute; top:-5px; right:-5px; width:13px; height:13px; border-radius:50%; background:#2FB84B url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/9px no-repeat; border:1.5px solid #1A1F3A; pointer-events:none; z-index:2}
 
   /* Layers window: floats over the page; drag it by the bar, resize from either corner, minimize to the bar */
+  .menubar:has(.mb-item[aria-expanded="true"]){z-index:46!important}   /* an open menu drops down over the Layers panel */
   #layersWin{position:fixed; z-index:45; display:flex; flex-direction:column; background:var(--plank); border:2.5px solid var(--ink); border-radius:12px; box-shadow:0 4px 0 var(--plank-edge), 0 12px 26px rgba(0,0,0,.3); overflow:hidden; min-width:84px; min-height:0}
   #layersWin[hidden]{display:none!important}
   #layersWin .lw-head{display:flex; align-items:center; gap:6px; min-height:36px; padding:6px 66px 6px 12px; cursor:move; touch-action:none; user-select:none; font:800 14px var(--body); color:var(--ink); position:relative; flex:none}
