@@ -1615,6 +1615,10 @@
   #layersWin .lw-foot{flex-wrap:wrap}
   #layersWin .lw-foot #selBar{flex:1 1 100%; justify-content:center}
   #layersWin .lw-foot #selBar[hidden]{display:none}
+  #layersWin .lw-foot #selBar{white-space:nowrap; overflow:hidden; padding-left:2px; padding-right:2px}
+  #layersWin.lw-narrow .lw-foot #selBar em{display:inline}   /* always says Deselect, even on a skinny panel */
+  #layersWin.lw-noname .lw-foot #selBar .sx{display:none}
+  #layersWin.lw-noname .lw-foot #selBar{font-size:12px}
   #layersWin .lw-foot .lw-add span{font-size:24px; line-height:0; font-weight:900; display:inline-block; margin:-8px 0}
   #layersWin .lw-foot .lw-trash.drop-del{background:#E5484D; color:#fff; box-shadow:0 0 0 3px #E5484D, 0 2px 0 var(--ink); transform:scale(1.12)}
   #layersWin .lw-foot .lw-add.drop-dup{background:#2E9CDB; color:#fff; box-shadow:0 0 0 3px #2E9CDB, 0 2px 0 var(--ink); transform:scale(1.05)}
@@ -6835,7 +6839,7 @@
   const selOv = $('selOv');
   // the red Deselect button sits under + Add layer, only while something is selected
   const selBar = document.createElement('button'); selBar.type = 'button'; selBar.id = 'selBar'; selBar.className = 'btn sm primary'; selBar.hidden = true;
-  selBar.innerHTML = '✕ <em>Deselect</em>';
+  selBar.innerHTML = '<span class="sx">✕&nbsp;</span><em>Deselect</em>';
   lw.querySelector('.lw-foot').appendChild(selBar);
   selBar.onclick = () => clearSelection();
   function placeSelBar(){}
