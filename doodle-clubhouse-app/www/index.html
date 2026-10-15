@@ -3866,10 +3866,15 @@
     ctx.clearRect(0, 0, W, H); ctx.drawImage(t, -Math.floor((img.width - W) / 2), -Math.floor((img.height - H) / 2));
   }
   // deleted frames can come back: once a frame's own drawing undos run out, Undo brings back the last frame deleted (then the one before...)
-  const delFrames = [];
-  function undo(){ if(!undoStack.length){ while (delFrames.length && delFrames[delFrames.length - 1].arr !== frames) delFrames.pop(); if (delFrames.length && typeof undeleteFrame === 'function') undeleteFrame(); return; } try { lastTrack = null; } catch {} redoStack.push(snapshot()); restoreImg(undoStack.pop()); syncHist(); speedUndo = true; onCanvasChanged(); }
+  const delFrames = [], delLayers = [];   // deleted frames / layers, so Undo can bring them back
+  function undo(){ if(!undoStack.length){ while (delFrames.length && delFrames[delFrames.length - 1].arr !== frames) delFrames.pop();
+      // the most recent delete comes back first: a layer on this frame, or a frame
+      let li = -1; for (let j = delLayers.length - 1; j >= 0; j--) if (delLayers[j].f === frames[cur]){ li = j; break; }
+      const ft = delFrames.length ? (delFrames[delFrames.length - 1].t || 0) : -1, lt = li >= 0 ? delLayers[li].t : -1;
+      if (li >= 0 && lt >= ft && typeof window.__undeleteLayer === 'function'){ window.__undeleteLayer(li); return; }
+      if (delFrames.length && typeof undeleteFrame === 'function') undeleteFrame(); return; } try { lastTrack = null; } catch {} redoStack.push(snapshot()); restoreImg(undoStack.pop()); syncHist(); speedUndo = true; onCanvasChanged(); }
   function redo(){ if(!redoStack.length) return; undoStack.push(snapshot()); restoreImg(redoStack.pop()); syncHist(); onCanvasChanged(); }
-  function syncHist(){ undoBtn.disabled = !undoStack.length && !delFrames.some(d => d.arr === frames); redoBtn.disabled = !redoStack.length; }
+  function syncHist(){ undoBtn.disabled = !undoStack.length && !delFrames.some(d => d.arr === frames) && !delLayers.some(d => d.f === frames[cur]); redoBtn.disabled = !redoStack.length; }
   undoBtn.onclick = undo; redoBtn.onclick = redo;
 
   // ---------- drawing ----------
@@ -6731,7 +6736,7 @@
     if (frames.length === 1){ pushUndo(); blank(); onCanvasChanged(); toast('Frame cleared'); return; }
     busy = true;
     await commit(true);   // keep what's on the frame being deleted, so Undo can bring it back
-    delFrames.push({ f: frames[cur], at: cur, arr: frames }); if (delFrames.length > 60) delFrames.shift();
+    delFrames.push({ f: frames[cur], at: cur, arr: frames, t: performance.now() }); if (delFrames.length > 60) delFrames.shift();
     frames.splice(cur, 1); cur = Math.min(cur, frames.length - 1);
     await showFrame(frames[cur]);
     resetHistory(); renderStrip(); await drawGhost(); speedPageCut();
@@ -6808,10 +6813,18 @@
     const f = ensureLayers(); if (!f) return;
     if (f.layers.length < 2){ toast('A frame needs at least one layer'); return; }
     LC[f.active] = copyC(c);
+    delLayers.push({ f, i, L: f.layers[i], k: LC[i], t: performance.now() }); if (delLayers.length > 30) delLayers.shift();   // Undo brings it back
     f.layers.splice(i, 1); LC.splice(i, 1);
     if (i < f.active) f.active--; f.active = Math.max(0, Math.min(f.active, f.layers.length - 1));
-    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged();
+    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged(); syncHist();
   }
+  window.__undeleteLayer = j => {
+    const d = delLayers.splice(j, 1)[0], f = ensureLayers(); if (!d || !f || f !== d.f) return;
+    LC[f.active] = copyC(c);
+    const at = Math.max(0, Math.min(d.i, f.layers.length));
+    f.layers.splice(at, 0, d.L); LC.splice(at, 0, d.k); f.active = at;
+    blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged(); toast('Layer back');
+  };
   function moveLayer(i, dir){   // dir +1 = up (in front), -1 = down (behind)
     const f = ensureLayers(); if (!f) return;
     const j = i + dir; if (j < 0 || j >= f.layers.length) return;
