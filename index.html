@@ -4198,10 +4198,17 @@
     const st = pencilS, k = st.kind === 'brush' ? 0.62 : 0.26;   // the paint brush follows the pen more tightly
     // Brush settings > Smoothing: the line follows the pen on an invisible string (longer string = smoother line), like StreamLine
     if (brushSmooth > 0){
-      const R = brushSmooth * 42 * (st.scr || 1), lz = st.lz || (st.lz = { x: st.raw.x, y: st.raw.y });
+      // the string is short when you draw slowly (small careful shapes stay accurate) and longer when you sweep fast;
+      // and the line always eases on toward the pen, so it never sits behind it
+      const lz = st.lz || (st.lz = { x: st.raw.x, y: st.raw.y, t: p.t || performance.now(), v: 0 });
+      const now = p.t || performance.now(), lp = st.lzp || p, dtm = Math.max(4, now - (lz.t || now - 16)); lz.t = now; st.lzp = p;
+      const sv = Math.hypot(p.x - lp.x, p.y - lp.y) / (st.scr || 1) / dtm;   // screen px per ms
+      lz.v = lz.v * .8 + sv * .2;
+      const R = brushSmooth * 30 * (st.scr || 1) * Math.max(.12, Math.min(1, lz.v / 1.2));
       const dx = p.x - lz.x, dy = p.y - lz.y, d = Math.hypot(dx, dy);
-      if (d <= R){ st.rawEnd = p; return; }
-      lz.x += dx * (d - R) / d; lz.y += dy * (d - R) / d; st.rawEnd = p;
+      if (d <= R){ const c = 1 - Math.exp(-dtm / (40 + 260 * brushSmooth)); lz.x += dx * c; lz.y += dy * c; }   // eases on by time, the same with any pen
+      else { lz.x += dx * (d - R) / d; lz.y += dy * (d - R) / d; }
+      st.rawEnd = p;
       p = Object.assign({}, p, { x: lz.x, y: lz.y });
     }
     if (pencilSnd){
@@ -4237,11 +4244,8 @@
   }
   function pencilEnd(){
     const st = pencilS; pencilS = null;
-    if (st && st.rawEnd && st.lz){   // smoothing: the line glides the rest of the way to where the pen lifted
-      const e = st.rawEnd, d = Math.hypot(e.x - st.lz.x, e.y - st.lz.y), n = Math.ceil(d / 3);
-      for (let i = 1; i <= n; i++){ const q = Object.assign({}, e, { x: st.lz.x + (e.x - st.lz.x) * i / n, y: st.lz.y + (e.y - st.lz.y) * i / n });
-        const sp = { x: st.s.x + (q.x - st.s.x) * .26, y: st.s.y + (q.y - st.s.y) * .26 }; sp.k = brushK(st, sp, q); st.s = sp; st.raw = q;
-        const lq = st.pts[st.pts.length - 1]; if (Math.hypot(sp.x - lq.x, sp.y - lq.y) >= Math.max(2.5, size * 0.22)) st.pts.push(sp); }
+    if (st && st.lz){   // smoothing: lifting the pen leaves the line exactly where you saw it (no jump to catch up)
+      st.raw = Object.assign({}, st.raw, { x: st.s.x, y: st.s.y });
     }
     if (pencilSnd){ try { pencilSnd.stop(); } catch {} pencilSnd = null; }
     cancelAnimationFrame(pencilRaf); pencilRaf = 0;
@@ -5711,7 +5715,7 @@
 
   // ---------- finger taps on the paper: 2 fingers = undo, 3 fingers = redo ----------
   {
-    let tapStart = 0, tapMax = 0, tapMoved = false, tapPen = false; const tapPts = new Map();
+    let tapStart = 0, tapMax = 0, tapMoved = false, tapPen = false, tapPalm = false; const tapPts = new Map();
     // is the Pencil on the glass right now? (a missed Pencil "lift" must never swallow the next undo tap)
     let penDownNow = false, penUpAt = -1e9;
     window.addEventListener('pointerdown', e => { if (e.pointerType === 'pen') penDownNow = true; }, true);
@@ -5721,16 +5725,20 @@
       if (e.target !== c) return;
       if (e.pointerType === 'pen') tapPen = true;
       if (e.pointerType !== 'touch') return;
-      if (penDownNow || performance.now() - penUpAt < 200) return;   // a hand resting while the Pencil writes is never an undo tap
-      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = false; }
+      if (penDownNow || performance.now() - penUpAt < 1500) return;   // a hand resting while the Pencil writes is never an undo tap
+      if (Math.max(e.width || 0, e.height || 0) > 40) tapPalm = true;     // the side of a hand / palm is never an undo tap
+      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = false; tapPalm = Math.max(e.width || 0, e.height || 0) > 40; }
       tapPts.set(e.pointerId, { x: e.clientX, y: e.clientY }); tapMax = Math.max(tapMax, tapPts.size);
     }, true);
     window.addEventListener('pointermove', e => { const q = tapPts.get(e.pointerId); if (q && Math.hypot(e.clientX - q.x, e.clientY - q.y) > 18) tapMoved = true; }, true);
     const lift = e => {
       if (!tapPts.delete(e.pointerId) || tapPts.size) return;
       const quick = performance.now() - tapStart < 400;
-      if (tapMax >= 2 && quick && !tapMoved && !tapPen){
-        setTimeout(() => { try { if (drawing && activeType === 'pen' && !penDownNow) end(); } catch {} try { if (tapMax === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 0);
+      if (tapMax >= 2 && quick && !tapMoved && !tapPen && !tapPalm){
+        // wait a moment: if the Pencil comes down right after (hand put down to draw), it wasn't an undo tap
+        const n = tapMax, t0 = performance.now();
+        setTimeout(() => { if (penDownNow || penUpAt > t0) return;
+          try { if (drawing && activeType === 'pen' && !penDownNow) end(); } catch {} try { if (n === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 220);
       }
       tapPen = false;
     };
