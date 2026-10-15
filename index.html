@@ -3629,7 +3629,7 @@
       cancelStroke();
       const [a, b] = [...touches.values()];
       const [mx, my] = boardPoint((a.x + b.x) / 2, (a.y + b.y) / 2);
-      gesture = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: zoom, ux: (mx - panX) / zoom, uy: (my - panY) / zoom };
+      gesture = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: zoom, ux: (mx - panX) / zoom, uy: (my - panY) / zoom, live: false, sa: { ...a }, sb: { ...b } };
     }
   }, true);
   board.addEventListener('pointermove', e => {
@@ -3640,6 +3640,11 @@
     if (gesture.done || touches.size < 2) return;          // one finger left after a pinch: don't draw until it lifts
     const [a, b] = [...touches.values()];
     const [mx, my] = boardPoint((a.x + b.x) / 2, (a.y + b.y) / 2);
+    // a 2-finger tap (undo) wobbles a little: the page only zooms / moves once the fingers really travel
+    if (!gesture.live){
+      if (Math.hypot(a.x - gesture.sa.x, a.y - gesture.sa.y) < 18 && Math.hypot(b.x - gesture.sb.x, b.y - gesture.sb.y) < 18) return;
+      gesture.live = true; gesture.d0 = Math.hypot(a.x - b.x, a.y - b.y) || 1; gesture.z0 = zoom; gesture.ux = (mx - panX) / zoom; gesture.uy = (my - panY) / zoom;   // start from here: no jump
+    }
     zoom = Math.max(ZMIN, Math.min(ZMAX, gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0));
     panX = mx - gesture.ux * zoom; panY = my - gesture.uy * zoom; applyZoom();
   }, true);
