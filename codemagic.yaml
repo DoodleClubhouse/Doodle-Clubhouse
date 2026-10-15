@@ -65,8 +65,12 @@ workflows:
       - name: Build number
         script: |
           cd ios/App
-          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
-          agvtool new-version -all $((LATEST + 1))
+          # always bigger than any build before it (Apple's "latest" can miss one that's still processing)
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          STAMP=$(date -u +%y%m%d%H%M)
+          NEXT=$((LATEST + 1)); [ "$STAMP" -gt "$NEXT" ] && NEXT=$STAMP
+          echo "Build number: $NEXT"
+          agvtool new-version -all $NEXT
       - name: Build the app
         script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
       - name: Upload to App Store Connect (gives up instead of hanging)
