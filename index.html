@@ -7342,8 +7342,14 @@
     photoT = { bmp: obj.piece, x: obj.x + dx + pw / 2, y: obj.y + dy + ph / 2, w: pw, h: ph, a: 0, lift: { base, top: null }, art: true };
     phCan.width = Math.max(1, Math.min(1200, pw)); phCan.height = Math.max(1, Math.round(phCan.width * ph / pw));
     phCan.getContext('2d').clearRect(0, 0, phCan.width, phCan.height); phCan.getContext('2d').drawImage(obj.piece, 0, 0, phCan.width, phCan.height);
-    phBox.hidden = phBar.hidden = false; phLoop();
+    phBox.hidden = false; phBar.hidden = true; phLoop();   // no Done/Cancel: touching anywhere else puts it down (Undo to take it back)
   };
+  // moved art: a touch anywhere off the box (another tool, the menus, around the page) puts it down
+  window.addEventListener('pointerdown', e => {
+    if (!(photoT && photoT.art)) return;
+    if (e.target === c || (e.target.closest && e.target.closest('#photoBox'))) return;   // on the page: the Move tool handles it
+    phCommit();
+  }, true);
   // start drawing anywhere on the page: the photo is laid down first
   c.addEventListener('pointerdown', () => { if (photoT) phCommit(); }, true);
   const phHit = (pp, e) => {
