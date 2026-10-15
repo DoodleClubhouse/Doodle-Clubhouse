@@ -1608,8 +1608,10 @@
   #bsSmooth::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:30px; height:30px; margin-top:-9px; border-radius:50%; background:#fff; border:3px solid var(--ink); box-shadow:0 2px 0 var(--ink)}
   #bsSmooth::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid var(--ink)}
   #selOv{image-rendering:pixelated; z-index:2}
-  #selBar{position:fixed; z-index:41; left:50%; transform:translateX(-50%); display:flex; gap:8px}
-  #selBar[hidden]{display:none}
+  #layersWin .lw-foot{flex-wrap:wrap}
+  #layersWin .lw-foot #selBar{flex:1 1 100%; justify-content:center}
+  #layersWin .lw-foot #selBar[hidden]{display:none}
+  #layersWin .lw-foot .lw-add span{font-size:24px; line-height:.8; font-weight:900}
   #layersWin .lw-foot .lw-add.drop-dup{background:#2E9CDB; color:#fff; box-shadow:0 0 0 3px #2E9CDB, 0 2px 0 var(--ink); transform:scale(1.05)}
 </style>
 
@@ -6667,11 +6669,12 @@
   // Then you can switch layers or add a new one and paint: only the inside of the selection takes paint.
   let selMask = null, selBefore = null, selAnts = null, selAntsT = 0;
   const selOv = $('selOv');
-  const selBar = document.createElement('div'); selBar.id = 'selBar'; selBar.hidden = true;
-  selBar.innerHTML = '<button type="button" class="btn sm primary">✕ Deselect</button>';
-  document.body.appendChild(selBar);
-  selBar.querySelector('button').onclick = () => clearSelection();
-  function placeSelBar(){ const mb = document.getElementById('menubar'), r = mb && mb.offsetHeight ? mb.getBoundingClientRect() : { bottom: 10 }; selBar.style.top = Math.round(r.bottom + 58) + 'px'; }
+  // the red Deselect button sits under + Add layer, only while something is selected
+  const selBar = document.createElement('button'); selBar.type = 'button'; selBar.id = 'selBar'; selBar.className = 'btn sm primary'; selBar.hidden = true;
+  selBar.innerHTML = '✕ <em>Deselect</em>';
+  lw.querySelector('.lw-foot').appendChild(selBar);
+  selBar.onclick = () => clearSelection();
+  function placeSelBar(){}
   function clearSelection(){ selMask = null; selBefore = null; selOv.hidden = true; selBar.hidden = true; clearInterval(selAntsT); selAntsT = 0; selAnts = null; }
   window.clearSelection = clearSelection;
   function selectLayerShape(i){
@@ -6828,7 +6831,7 @@
           const now = performance.now(), dbl = lwTap && lwTap.i === dd.from && now - lwTap.t < 380;
           lwTap = dbl ? null : { i: dd.from, t: now };
           selectLayer(dd.from);
-          if (dbl) selectLayerShape(dd.from);   // double-tap: select what's drawn on that layer
+          if (dbl){ if (selMask) clearSelection(); else selectLayerShape(dd.from); }   // double-tap: select what's drawn on that layer (again: deselect)
         }
         return; }
       if (dd.fl) dd.fl.remove(); dd.row.classList.remove('lifted'); dd.rows.forEach(r => r.classList.remove('drop-at'));
@@ -7008,6 +7011,7 @@
   window.__moveOff = () => { if (moveOn) setMove(false); };
   moveBtn.onclick = () => setMove(!moveOn);
   let mv = null;
+  $('paper').addEventListener('pointerdown', e => { if (moveOn) try { window.clearSelection && window.clearSelection(); } catch {} }, true);   // Move tool: a tap anywhere deselects
   $('paper').addEventListener('pointerdown', e => {
     if (!moveOn || e.target !== c) return;
     e.stopPropagation(); e.preventDefault();
