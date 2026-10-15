@@ -7192,7 +7192,7 @@
     if (on && picking) setPicking(false);
     moveOn = on; moveBtn.setAttribute('aria-pressed', on); document.body.classList.toggle('move-on', on);
     toolBtns.forEach(b => b.setAttribute('aria-pressed', !on && b.dataset.tool === tool && (b.dataset.stamp || null) === stamp));
-    if (on) toast('Drag a drawing to move it. Pick a tool to draw again.');
+    if (on) toast('Drag to move everything on this layer. Pick a tool to draw again.');
   }
   window.__moveOff = () => { if (moveOn) setMove(false); };
   moveBtn.onclick = () => setMove(!moveOn);
@@ -7206,43 +7206,22 @@
     if (playing){ stopPlay(); return; }
     if (busy) return;
     const q = pt(e), obj = pickObject(q);
-    if (!obj){ toast('Touch a drawing to move it'); return; }
+    if (!obj){ toast('Nothing drawn on this layer to move'); return; }
     pushUndo();
     mv = { id: e.pointerId, x: q.x, y: q.y, obj, moved: false };
     try { c.setPointerCapture(e.pointerId); } catch {}
   }, true);
-  // the one drawing under your finger: every inked pixel joined to it (tiny gaps of a couple of pixels still count as joined)
+  // the Move tool picks up everything drawn on the layer you're on
   function pickObject(q){
     const img = ctx.getImageData(0, 0, W, H), d = img.data, N = W * H, INK = 12;
     const U = window.__pickUnder || null; window.__pickUnder = null;   // drawing over a placed photo: the photo isn't part of it
     const diff = n => { const i = n * 4; return d[i] !== U[i] || d[i + 1] !== U[i + 1] || d[i + 2] !== U[i + 2] || d[i + 3] !== U[i + 3]; };
     const ink = n => d[n * 4 + 3] > INK && (!U || diff(n));
-    let sx = Math.round(q.x), sy = Math.round(q.y), seed = -1;
-    const inked = (x, y) => x >= 0 && y >= 0 && x < W && y < H && ink(y * W + x);
-    if (inked(sx, sy)) seed = sy * W + sx;
-    else {   // a little off the line: take the nearest bit of drawing close by
-      const reach = Math.round(26 * W / (c.getBoundingClientRect().width || W));
-      let best = Infinity;
-      for (let y = Math.max(0, sy - reach); y <= Math.min(H - 1, sy + reach); y++)
-        for (let x = Math.max(0, sx - reach); x <= Math.min(W - 1, sx + reach); x++){
-          if (!ink(y * W + x)) continue;
-          const dd = (x - sx) * (x - sx) + (y - sy) * (y - sy); if (dd < best && dd <= reach * reach){ best = dd; seed = y * W + x; }
-        }
-    }
-    if (seed < 0) return null;
-    const seen = new Uint8Array(N), queue = new Int32Array(N);
-    const offs = []; for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) if (ox || oy) offs.push([ox, oy]);
-    let head = 0, tail = 0, x0 = W, y0 = H, x1 = 0, y1 = 0;
-    seen[seed] = 1; queue[tail++] = seed;
-    while (head < tail){
-      const p = queue[head++], x = p % W, y = (p - x) / W;
-      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
-      for (const o of offs){
-        const nx = x + o[0], ny = y + o[1]; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        const n = ny * W + nx; if (seen[n] || !ink(n)) continue;
-        seen[n] = 1; queue[tail++] = n;
-      }
-    }
+    // everything drawn on this layer moves together (a circle and the dot inside it, even if they don't touch)
+    const seen = new Uint8Array(N); let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++){ const row = y * W;
+      for (let x = 0; x < W; x++){ const n = row + x; if (d[n * 4 + 3] && (!U || diff(n))){ seen[n] = 1; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } } }
+    if (x1 < 0) return null;
     // take it in a slightly bigger box, so its soft edges come along too
     x0 = Math.max(0, x0 - 2); y0 = Math.max(0, y0 - 2); x1 = Math.min(W - 1, x1 + 2); y1 = Math.min(H - 1, y1 + 2);
     const bw = x1 - x0 + 1, bh = y1 - y0 + 1, piece = new ImageData(bw, bh), pd = piece.data;
