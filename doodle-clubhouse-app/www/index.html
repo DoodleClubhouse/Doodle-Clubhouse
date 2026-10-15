@@ -2281,6 +2281,7 @@
     document.querySelectorAll('.tool.pro').forEach(b => b.title = b.title.replace(/ — locked$/, '') + (unlocked ? '' : ' — locked'));
   }
 
+  const sizeKey = t => t === 'brush' ? 'pencil' : t;   // pencil and paint brush always use the same size
   function setTool(t, s){
     try { window.__moveOff && window.__moveOff(); } catch {}
     if (t !== 'stamp') try { stampPop.hidden = true; } catch {}
@@ -2288,12 +2289,12 @@
     if (t !== 'text') try { typeFinish(); } catch {}
     if (PREMIUM.has(t) && !unlocked){ openPaywall(t); return; }
     // every tool keeps its own size: the spray starts at 15px, everything else at 10px, and a size you set stays with that tool
-    const SZ_KEY = 'doodle-clubhouse-tool-sizes';
+    const SZ_KEY = 'doodle-clubhouse-tool-sizes';   // (the paint brush shares the pencil's size)
     const sizes = setTool.sizes || (setTool.sizes = (() => { try { return JSON.parse(localStorage.getItem(SZ_KEY)) || {}; } catch { return {}; } })());
-    if (tool){ sizes[tool] = size; try { localStorage.setItem(SZ_KEY, JSON.stringify(sizes)); } catch {} }
+    if (tool){ sizes[sizeKey(tool)] = size; try { localStorage.setItem(SZ_KEY, JSON.stringify(sizes)); } catch {} }
     tool = t; stamp = s || null;
     if (t === 'text') try { toast('Tap the page to type'); } catch {}
-    try { const want = sizes[t] !== undefined ? sizes[t] : (t === 'spray' ? 15 : t === 'brush' ? 25 : 10); if (want !== size){ size = want; sizeIn.value = sliderFromSize(size); updateDot(); } } catch {}
+    try { const want = sizes[sizeKey(t)] !== undefined ? sizes[sizeKey(t)] : (t === 'spray' ? 15 : 10); if (want !== size){ size = want; sizeIn.value = sliderFromSize(size); updateDot(); } } catch {}
     try { if (picking) setPicking(false); } catch {}   // choosing any tool turns the eyedropper off
     toolBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t && (b.dataset.stamp || null) === stamp));
     c.style.cursor = cursorFor(t);
@@ -2397,7 +2398,7 @@
   // the slider is curved: small sizes get lots of room so every size (like 10 px) is easy to land on
   const sizeFromSlider = v => { const r = 2 + 78 * Math.pow(v / 200, 2), m = Math.round(r / 5) * 5; return r >= 9 && Math.abs(r - m) <= 0.9 ? m : Math.round(r); };   // 10, 15, 20, 25... are a little magnetic, so a slide never skips them
   const sliderFromSize = s => Math.round(Math.sqrt(Math.max(0, s - 2) / 78) * 200);
-  sizeIn.addEventListener('input', () => { size = sizeFromSlider(+sizeIn.value); updateDot(); sizeTick(); try { if (tool){ const z = setTool.sizes || {}; z[tool] = size; setTool.sizes = z; clearTimeout(sizeIn._sv); sizeIn._sv = setTimeout(() => { try { localStorage.setItem('doodle-clubhouse-tool-sizes', JSON.stringify(z)); } catch {} }, 400); } } catch {} });
+  sizeIn.addEventListener('input', () => { size = sizeFromSlider(+sizeIn.value); updateDot(); sizeTick(); try { if (tool){ const z = setTool.sizes || {}; z[sizeKey(tool)] = size; setTool.sizes = z; clearTimeout(sizeIn._sv); sizeIn._sv = setTimeout(() => { try { localStorage.setItem('doodle-clubhouse-tool-sizes', JSON.stringify(z)); } catch {} }, 400); } } catch {} });
   // the size slider plays little notes as it slides: higher to the right (bigger), lower to the left (smaller)
   // little wooden marimba notes that snap to a happy (pentatonic) scale, so any slide sounds like a tune
   let sizeSndV = null, sizeSndT = 0;
