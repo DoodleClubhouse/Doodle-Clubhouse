@@ -1603,6 +1603,9 @@
   #brushSet .bs-x svg{width:14px; height:14px}
   #brushSet .bs-lab{display:flex; justify-content:space-between; font:800 14px/1 var(--body); color:var(--ink); margin-top:4px}
   #brushSet .bs-note{font:700 12px/1.3 var(--body); color:var(--ink); opacity:.7}
+  #bsPress{-webkit-appearance:none; appearance:none; width:100%; height:34px; background:transparent; margin:0; cursor:pointer; touch-action:none}
+  #bsPress::-webkit-slider-runnable-track{height:12px; border-radius:8px; background:var(--ink)}
+  #bsPress::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:30px; height:30px; margin-top:-9px; border-radius:50%; background:#fff; border:3px solid var(--ink); box-shadow:0 2px 0 var(--ink)}
   #bsSmooth{-webkit-appearance:none; appearance:none; width:100%; height:34px; background:transparent; margin:0; cursor:pointer; touch-action:none}
   #bsSmooth::-webkit-slider-runnable-track{height:12px; border-radius:8px; background:var(--ink); box-shadow:inset 0 0 0 2px var(--ink)}
   #bsSmooth::-moz-range-track{height:12px; border-radius:8px; background:var(--ink)}
@@ -2621,7 +2624,7 @@
       if (pts.length === 1){ const n = sides[0]; g.fillStyle = col; g.beginPath(); g.moveTo(pts[0].x + n.nx, pts[0].y + n.ny); g.lineTo(pts[0].x - n.nx, pts[0].y - n.ny); g.lineWidth = w * .4; g.strokeStyle = col; g.stroke(); }
       g.restore(); return;
     }
-    if (kind === 'chalk' && pts.some(q => q.pen)){
+    if (kind === 'chalk' && pts.some(q => q.pen || (pressAmt > 0 && q.v !== undefined))){
       // Apple Pencil: each little piece of the stroke takes its own width from the pressure
       g.strokeStyle = col;
       const pieces = (scale, dx, dy) => { for (let i = 1; i < pts.length; i++){ const a = pts[i - 1], b = pts[i]; g.lineWidth = w * scale * pw(b); g.beginPath(); g.moveTo(a.x + dx * pw(a), a.y + dy * pw(a)); g.lineTo(b.x + dx * pw(b), b.y + dy * pw(b)); g.stroke(); } };
@@ -3868,7 +3871,12 @@
   // Apple Pencil: press harder for a slightly wider line (about 75% to 125% of the brush size).
   // Fingers and mice don't report pressure, so they always get the normal width.
   let penP = .5;
-  const pw = q => !widthLocked && q && q.pen ? .25 + Math.min(1, Math.max(0, q.p)) * 1.6 : 1;   // Pencil: light = thin (25%), normal ≈ 100%, hard = up to 185%
+  // Brush settings > Pressure: 0% = the pencil's gentle feel (light .86x .. hard 1.14x); 100% = big swings (.15x .. 2x).
+  // Fingers have no pressure, so above 0% they use speed instead: slow = fat, fast = thin.
+  let pressAmt = 0; try { pressAmt = Math.max(0, Math.min(1, (+localStorage.getItem('doodle-clubhouse-pressure') || 0) / 100)); } catch {}
+  const pressK = p => { p = Math.min(1, Math.max(0, p)); return (1 - pressAmt) * (.86 + p * .28) + pressAmt * (.15 + p * 1.85); };
+  const speedK = v => (1 - pressAmt) + pressAmt * Math.max(.3, Math.min(1.9, 1.9 - v * 1.7));
+  const pw = q => widthLocked || !q ? 1 : q.pen ? pressK(q.p) : (pressAmt > 0 && q.v !== undefined ? speedK(q.v) : 1);   // chalk
   function smoothPressure(q){ if (q.pen){ penP = penP * .6 + q.p * .4; q.p = penP; } return q; }
   function strokeStyle(){
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -4103,23 +4111,22 @@
   }
   let pencilSnd = null, pencilT = 0, pencilDir = null;
   // pencil: a steady, even line. With the Apple Pencil (and "lock width" off) it varies only a little with pressure.
-  const pencilK = p => !widthLocked && p && p.pen ? .86 + Math.min(1, Math.max(0, p.p)) * .28 : 1;
+  const pencilK = p => !widthLocked && p && p.pen ? pressK(p.p) : 1;
   // paintbrush (Brush Pack): a clean, smooth calligraphy stroke - thick and thin depending on the direction you
   // draw (like a flat nib held at 45°), and with the Apple Pencil, pressing harder makes it even bolder.
   const NIB = -Math.PI / 4;
   // paint brush: an even line like the pencil (no thick/thin by direction or speed);
   // with the Apple Pencil, pressing harder makes it bolder - a gentle range, light and heavy not too far apart
-  const brushPr = p => .45 + Math.min(1, Math.max(0, p)) * 1.1;   // light .45x .. heavy 1.55x
+  // pencil, paint brush and rainbow brush share the same width rules (see Brush settings > Pressure)
   function brushK(st, p, raw){
     if (widthLocked) return 1;
-    // speed: slow = a bit fatter, fast = a bit thinner (smoothed, so it swells and thins gently)
+    if (raw.pen) return pressK(raw.p);
+    if (pressAmt <= 0) return 1;
     const t = raw.t || performance.now(), pr = st.lp || raw, dt = Math.max(4, t - (st.lt || t - 16)); st.lt = t; st.lp = raw;
     const v = Math.hypot(raw.x - pr.x, raw.y - pr.y) / dt * (1000 / Math.max(W, H));
     st.v = st.v === undefined ? v : st.v * .7 + v * .3;
-    const sf = Math.max(.65, Math.min(1.3, 1.3 - st.v * .45));
-    return (raw.pen ? brushPr(raw.p) : 1) * sf;
+    return speedK(st.v);
   }
-  // the paintbrush starts from a fine point and swells into the stroke
   // it starts from a fine point and (when you lift) thins back to a point, measured along the line so it looks the same at any speed
   function brushTaper(pts, base, ends){
     const T = Math.max(10, (base || size) * 2.2), n = pts.length; if (!n) return pts;
@@ -4135,11 +4142,17 @@
     const box = document.createElement('div'); box.id = 'brushSet'; box.className = 'mic-pop';
     box.innerHTML = '<div class="bs-head">Brush settings<button type="button" class="bs-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
       + '<div class="bs-lab"><span>Smoothing</span><span class="bs-val"></span></div><input type="range" id="bsSmooth" min="0" max="100" step="1" aria-label="Smoothing">'
-      + '<div class="bs-note">Pencil, paint brush and rainbow brush</div>';
+      + '<div class="bs-note">Pencil, paint brush and rainbow brush</div>'
+      + '<div class="bs-lab"><span>Pressure</span><span class="bs-val2"></span></div><input type="range" id="bsPress" min="0" max="100" step="1" aria-label="Pressure">'
+      + '<div class="bs-note">Press harder = thicker (fingers: slower = thicker). Pencil, paint brush, rainbow, chalk</div>';
     document.body.appendChild(box);
     const inp = box.querySelector('input'), val = box.querySelector('.bs-val');
     const sync = () => { val.textContent = Math.round(brushSmooth * 100) + '%'; };
     inp.value = Math.round(brushSmooth * 100); sync();
+    const inp2 = box.querySelector('#bsPress'), val2 = box.querySelector('.bs-val2');
+    const sync2 = () => { val2.textContent = Math.round(pressAmt * 100) + '%'; };
+    inp2.value = Math.round(pressAmt * 100); sync2();
+    inp2.oninput = () => { pressAmt = (+inp2.value || 0) / 100; sync2(); try { localStorage.setItem('doodle-clubhouse-pressure', String(Math.round(pressAmt * 100))); } catch {} };
     inp.oninput = () => { brushSmooth = (+inp.value || 0) / 100; sync(); try { localStorage.setItem('doodle-clubhouse-smoothing', String(Math.round(brushSmooth * 100))); } catch {} };
     box.querySelector('.bs-x').onclick = () => box.remove();
     const mb = document.getElementById('menubar'), r = mb && mb.offsetHeight ? mb.getBoundingClientRect() : { bottom: 60 };
@@ -4148,7 +4161,7 @@
   function pencilStart(p){
     const kind = tool === 'brush' ? 'brush' : tool === 'rainbow' ? 'rainbow' : 'pencil', base = size;
     pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, scr: W / (c.getBoundingClientRect().width || W), rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null, ta: Math.random() * 360 };
-    const k0 = kind === 'brush' ? (widthLocked || !p.pen ? 1 : brushPr(p.p)) : pencilK(p);
+    const k0 = pencilK(p);
     pencilS.pts.push({ x: p.x, y: p.y, k: k0 }); pencilS.s.k = k0;
     if (kind === 'pencil') try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
     pencilRender();
@@ -4188,7 +4201,7 @@
       } }
     // light steadying, then only keep points that moved a little, so the curve has no tiny wiggles
     const sp = { x: st.s.x + (p.x - st.s.x) * k, y: st.s.y + (p.y - st.s.y) * k };
-    sp.k = st.kind === 'brush' ? brushK(st, sp, p) : pencilK(p);
+    sp.k = brushK(st, sp, p);
     st.s = sp; st.raw = p;
     const q = st.pts[st.pts.length - 1];
     if (Math.hypot(sp.x - q.x, sp.y - q.y) >= (st.kind === 'brush' ? Math.max(1.5, size * 0.08) : Math.max(2.5, size * 0.22))) st.pts.push(sp);
@@ -4199,7 +4212,7 @@
     if (st && st.rawEnd && st.lz){   // smoothing: the line glides the rest of the way to where the pen lifted
       const e = st.rawEnd, d = Math.hypot(e.x - st.lz.x, e.y - st.lz.y), n = Math.ceil(d / 3);
       for (let i = 1; i <= n; i++){ const q = Object.assign({}, e, { x: st.lz.x + (e.x - st.lz.x) * i / n, y: st.lz.y + (e.y - st.lz.y) * i / n });
-        const sp = { x: st.s.x + (q.x - st.s.x) * .26, y: st.s.y + (q.y - st.s.y) * .26 }; sp.k = st.kind === 'brush' ? brushK(st, sp, q) : pencilK(q); st.s = sp; st.raw = q;
+        const sp = { x: st.s.x + (q.x - st.s.x) * .26, y: st.s.y + (q.y - st.s.y) * .26 }; sp.k = brushK(st, sp, q); st.s = sp; st.raw = q;
         const lq = st.pts[st.pts.length - 1]; if (Math.hypot(sp.x - lq.x, sp.y - lq.y) >= Math.max(2.5, size * 0.22)) st.pts.push(sp); }
     }
     if (pencilSnd){ try { pencilSnd.stop(); } catch {} pencilSnd = null; }
@@ -4911,7 +4924,7 @@
         drawShape(ctx, start, p);
       } else if (tool === 'marker'){ markerPts.push(p); }
       else if (tool === 'spray'){ sprayPt = p; }
-      else if (TEX.has(tool)){ const q = tx.pts[tx.pts.length-1]; if (Math.hypot(p.x-q.x, p.y-q.y) > 2) tx.pts.push(p); }
+      else if (TEX.has(tool)){ const q = tx.pts[tx.pts.length-1], dd = Math.hypot(p.x-q.x, p.y-q.y); if (dd > 2){ const dt = Math.max(4, (p.t || 0) - (q.t || 0) || 16), v = dd / dt * (1000 / Math.max(W, H)); p.v = q.v === undefined ? v : q.v * .7 + v * .3; tx.pts.push(p); } }
       else if ((tool === 'pencil' || tool === 'brush' || tool === 'rainbow') && pencilS){ pencilMove(p); }
       else if (tool === 'soft' && softS){ softMove(p); }
       else if (tool === 'train' && trainS){ trainMove(p); }
