@@ -5718,16 +5718,19 @@
     let tapStart = 0, tapMax = 0, tapMoved = false, tapPen = false, tapPalm = false; const tapPts = new Map();
     // is the Pencil on the glass right now? (a missed Pencil "lift" must never swallow the next undo tap)
     let penDownNow = false, penUpAt = -1e9;
-    window.addEventListener('pointerdown', e => { if (e.pointerType === 'pen') penDownNow = true; }, true);
+    let penSeenAt = -1e9;   // a Pencil that's really on the glass keeps sending events; if it went quiet, its "lift" was missed
+    window.addEventListener('pointerdown', e => { if (e.pointerType === 'pen'){ penDownNow = true; penSeenAt = performance.now(); } }, true);
+    window.addEventListener('pointermove', e => { if (e.pointerType === 'pen') penSeenAt = performance.now(); }, true);
+    const penOn = () => penDownNow && performance.now() - penSeenAt < 700;
     const penLift = e => { if (e.pointerType === 'pen'){ penDownNow = false; penUpAt = performance.now(); } };
     window.addEventListener('pointerup', penLift, true); window.addEventListener('pointercancel', penLift, true);
     window.addEventListener('pointerdown', e => {
       if (e.target !== c) return;
       if (e.pointerType === 'pen') tapPen = true;
       if (e.pointerType !== 'touch') return;
-      if (penDownNow || performance.now() - penUpAt < 1500) return;   // a hand resting while the Pencil writes is never an undo tap
-      if (Math.max(e.width || 0, e.height || 0) > 40) tapPalm = true;     // the side of a hand / palm is never an undo tap
-      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = false; tapPalm = Math.max(e.width || 0, e.height || 0) > 40; }
+      if (penOn() || performance.now() - penUpAt < 600) return;   // a hand resting while the Pencil writes is never an undo tap
+      const big = Math.max(e.width || 0, e.height || 0) > 110;          // a palm (fingertips are well under this)
+      if (!tapPts.size){ tapStart = performance.now(); tapMax = 0; tapMoved = false; tapPen = false; tapPalm = big; } else if (big) tapPalm = true;
       tapPts.set(e.pointerId, { x: e.clientX, y: e.clientY }); tapMax = Math.max(tapMax, tapPts.size);
     }, true);
     window.addEventListener('pointermove', e => { const q = tapPts.get(e.pointerId); if (q && Math.hypot(e.clientX - q.x, e.clientY - q.y) > 18) tapMoved = true; }, true);
@@ -5737,8 +5740,8 @@
       if (tapMax >= 2 && quick && !tapMoved && !tapPen && !tapPalm){
         // wait a moment: if the Pencil comes down right after (hand put down to draw), it wasn't an undo tap
         const n = tapMax, t0 = performance.now();
-        setTimeout(() => { if (penDownNow || penUpAt > t0) return;
-          try { if (drawing && activeType === 'pen' && !penDownNow) end(); } catch {} try { if (n === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 220);
+        setTimeout(() => { if (penOn() || penUpAt > t0) return;
+          try { if (drawing && activeType === 'pen' && !penOn()) end(); } catch {} try { if (n === 2){ undo(); toast('Undo'); } else { redo(); toast('Redo'); } } catch {} }, 220);
       }
       tapPen = false;
     };
