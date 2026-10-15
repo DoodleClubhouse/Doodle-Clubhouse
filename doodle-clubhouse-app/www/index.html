@@ -6501,12 +6501,15 @@
     busy = true;
     await commit(true);
     const f = newFrame();
-    if (copy === 'paste'){ f.blob = frameClip; f.dirty = false; LC = null; await paintBlob(frameClip); }
+    if (copy === 'paste'){ f.blob = frameClip; f.dirty = false; LC = null;
+      if (frameLayersClip){ f.layers = frameLayersClip.list.map(L => ({ ...L, blob: L.blob && !(L.blob instanceof Blob) ? copyC(L.blob) : L.blob })); f.active = frameLayersClip.active; }
+      else await paintBlob(frameClip); }
     else if (copy){ f.blob = frames[cur].blob; f.dirty = false; const sf = frames[cur]; if (sf.layers){ f.layers = sf.layers.map(L => ({ ...L })); f.active = sf.active; } }
     else LC = null;
     projDirty = true;
     const pos = at === undefined ? cur + 1 : Math.max(0, Math.min(at, frames.length));
     frames.splice(pos, 0, f); cur = pos;
+    if (copy === 'paste' && f.layers) await showFrame(f);   // pasted with its layers: load each one
     if (!copy) blank();
     drawThumb(f); resetHistory(); renderStrip(); await drawGhost(); speedPageCut(); try { renderLayerStack(); syncLayersWin(); } catch {}
     busy = false; schedulePersist();
@@ -6930,7 +6933,7 @@
   playBtn.onclick = () => playing ? stopPlay() : play();
   player.onclick = stopPlay;
   // copy a frame, then paste it after any frame (great for long timelines)
-  let frameClip = null;
+  let frameClip = null, frameLayersClip = null;
   const pasteBtn = $('pasteFrame');
   $('dupFrame').onclick = async () => {
     if (busy) return;
@@ -6938,6 +6941,8 @@
     if (playing) stopPlay();
     await commit();
     frameClip = frames[cur].blob || await canvasBlob();
+    // the frame's layers are copied too (each kept as its own layer, not squashed into one)
+    { const sf = frames[cur]; frameLayersClip = sf.layers ? { active: sf.active, list: sf.layers.map(L => ({ ...L, blob: L.blob && !(L.blob instanceof Blob) ? copyC(L.blob) : L.blob })) } : null; }
     pasteBtn.disabled = false;
     toast(`COPY: Frame ${cur + 1}. Tap any frame, then Paste to put it after that one`);
   };
