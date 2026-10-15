@@ -4021,8 +4021,8 @@
     const kg = k.getContext('2d'); kg.setTransform(1, 0, 0, 1, 0, 0); kg.globalAlpha = 1; kg.globalCompositeOperation = 'source-over'; kg.clearRect(x0, y0, x1 - x0, y1 - y0);
     kg.save(); kg.beginPath(); kg.rect(x0, y0, x1 - x0, y1 - y0); kg.clip();
     kg.lineCap = 'round'; kg.lineJoin = 'round'; kg.strokeStyle = g.strokeStyle;
-    pencilDraw(kg, pts, w * .52, rb);
-    const D = brushDense(pts), n = D.length;
+    pencilDraw(kg, pts, w * .56, rb);
+    const D = brushDense(pts), n = D.length; if (n > 1) brushNormals(D, w);
     if (n > 1){
       const seed = Math.floor((ang || 0) * 977) + 13, scl = sc || 1;
       const hash = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7 + seed * 74.7) * 43758.5453; return v - Math.floor(v); };
@@ -4040,7 +4040,7 @@
           const p = D[i], q = D[i + 1];
           if (noise((p.s + q.s) / 2) < thr){ if (open){ kg.stroke(); open = false; } continue; }
           const wd = Math.max(.5, Math.round((ao > .3 ? hw * Math.min(1.3, (p.k + q.k) / 2) : hw * (p.k + q.k) / 2) * 2) / 2);
-          const ox1 = p.nx * o * w * p.k, oy1 = p.ny * o * w * p.k, ox2 = q.nx * o * w * q.k, oy2 = q.ny * o * w * q.k;
+          const ox1 = p.nx * o * w * p.k * p.f, oy1 = p.ny * o * w * p.k * p.f, ox2 = q.nx * o * w * q.k * q.f, oy2 = q.ny * o * w * q.k * q.f;
           if (!open || wd !== lw){ if (open) kg.stroke(); kg.beginPath(); kg.lineWidth = wd; lw = wd; kg.moveTo(p.x + ox1, p.y + oy1); open = true; }
           kg.lineTo(q.x + ox2, q.y + oy2);
         }
@@ -4054,9 +4054,27 @@
     const pat = kg.createPattern(grainTile('core'), 'repeat');
     try { pat.setTransform(new DOMMatrix().rotate(ang || 0).scale(sc || 1)); } catch {}
     kg.fillStyle = pat; kg.fillRect(x0, y0, x1 - x0, y1 - y0); kg.globalCompositeOperation = 'source-over';
+    // the middle stays solid paint (about 70% of the brush, thinner when the brush is thinner)
+    kg.save(); kg.beginPath(); kg.rect(x0, y0, x1 - x0, y1 - y0); kg.clip(); kg.lineCap = 'round'; kg.lineJoin = 'round'; kg.strokeStyle = g.strokeStyle; pencilDraw(kg, pts, w * .7, rb); kg.restore();
     g.save(); g.globalAlpha = 1; g.drawImage(k, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0); g.restore();
   }
   // the stroke's centre line as small even steps (same curve the pencil draws), with direction and distance along it
+  // which way the brush is facing at each point, averaged over about half a brush width. Where you zig-zag or turn
+  // back, the directions cancel out, and the hairs gather toward the middle there: round, organic turns, never spikes.
+  function brushNormals(D, w){
+    const n = D.length, tx = new Float64Array(n + 1), ty = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++){
+      const a = D[Math.max(0, i - 1)], b = D[Math.min(n - 1, i + 1)], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+      tx[i + 1] = tx[i] + dx / d; ty[i + 1] = ty[i] + dy / d;
+    }
+    const find = v => { let lo = 0, hi = n - 1; while (lo < hi){ const m = (lo + hi) >> 1; if (D[m].s < v) lo = m + 1; else hi = m; } return lo; };
+    for (let i = 0; i < n; i++){
+      const R = Math.max(3, w * Math.max(.3, D[i].k) * .6), a = find(D[i].s - R), b = Math.max(a, find(D[i].s + R));
+      const cnt = b - a + 1, ax = (tx[b + 1] - tx[a]) / cnt, ay = (ty[b + 1] - ty[a]) / cnt, m = Math.hypot(ax, ay);
+      D[i].nx = m > 1e-6 ? -ay / m : 0; D[i].ny = m > 1e-6 ? ax / m : 0;
+      D[i].f = Math.max(.62, Math.min(1, .62 + (m - .2) * .6));   // 1 on smooth curves, gathered in a little where it turns back on itself
+    }
+  }
   function brushDense(pts){
     const P = pencilSoften(pts), K = q => q.k === undefined ? 1 : q.k, out = [];
     const add = q => { const l = out[out.length - 1]; if (l && Math.hypot(q.x - l.x, q.y - l.y) < 1.5) return; out.push({ x: q.x, y: q.y, k: q.k, s: l ? l.s + Math.hypot(q.x - l.x, q.y - l.y) : 0 }); };
@@ -4071,10 +4089,6 @@
         P0 = M;
       }
       const L = P[P.length - 1]; add({ x: L.x, y: L.y, k: K(L) });
-    }
-    for (let i = 0; i < out.length; i++){
-      const a = out[Math.max(0, i - 2)], b = out[Math.min(out.length - 1, i + 2)];
-      let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1; out[i].nx = -dy / d; out[i].ny = dx / d;
     }
     return out;
   }
