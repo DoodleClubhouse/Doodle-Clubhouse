@@ -4157,6 +4157,7 @@
   }
   // it starts from a fine point and (when you lift) thins back to a point, measured along the line so it looks the same at any speed
   function brushTaper(pts, base, ends){
+    return pts;   // no automatic thinning at the start or end: the brush only gets thinner from pressure (Brush settings > Pressure)
     const T = Math.max(10, (base || size) * 2.2), n = pts.length; if (!n) return pts;
     const d = new Float32Array(n); for (let i = 1; i < n; i++) d[i] = d[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
     const L = d[n - 1], f = x => .08 + .92 * Math.sin(Math.min(1, x) * Math.PI / 2);
