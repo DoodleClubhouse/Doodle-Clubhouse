@@ -3978,37 +3978,49 @@
   const grainTiles = {};
   function grainTile(kind){
     if (grainTiles[kind]) return grainTiles[kind];
-    const S = 384, t = mk(S, S), g = t.getContext('2d');
-    let seed = kind === 'rim' ? 7 : 31; const R = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-    const n = kind === 'rim' ? 26000 : 5200;
-    g.lineCap = 'round';
-    for (let i = 0; i < n; i++){
-      const x = R() * S, y = R() * S, a = R() * Math.PI, L = .8 + R() * (kind === 'rim' ? 4.5 : 3), lw = .6 + R() * 1.1;
-      g.globalAlpha = kind === 'rim' ? .45 + R() * .55 : .35 + R() * .5; g.lineWidth = lw; g.strokeStyle = '#000';
-      const dx = Math.cos(a) * L / 2, dy = Math.sin(a) * L / 2;
+    const S = 512, t = mk(S, S), g = t.getContext('2d');
+    let seed = kind === 'rim' ? 7 : kind === 'fringe' ? 53 : 31; const R = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    g.lineCap = 'round'; g.strokeStyle = '#000';
+    const line = (x, y, a, L, lw, al) => { g.globalAlpha = al; g.lineWidth = lw; const dx = Math.cos(a) * L / 2, dy = Math.sin(a) * L / 2;
       for (const ox of [0, -S, S]) for (const oy of [0, -S, S]){
-        if ((ox && x > 8 && x < S - 8) || (oy && y > 8 && y < S - 8)) continue;
-        g.beginPath(); g.moveTo(x - dx + ox, y - dy + oy); g.lineTo(x + dx + ox, y + dy + oy); g.stroke();
-      }
+        if ((ox && x > L && x < S - L) || (oy && y > L && y < S - L)) continue;
+        g.beginPath(); g.moveTo(x - dx + ox, y - dy + oy); g.lineTo(x + dx + ox, y + dy + oy); g.stroke(); } };
+    // dry bristle scratches criss-crossing at two angles (like a scrubbed brush), plus a fine dusting of specks
+    const n = kind === 'rim' ? 2600 : kind === 'fringe' ? 3400 : 700;
+    for (let i = 0; i < n; i++){
+      const a = (R() < .5 ? .62 : -.78) + (R() - .5) * .35;
+      line(R() * S, R() * S, a, kind === 'core' ? 4 + R() * 9 : 7 + R() * 18, .5 + R() * 1.1, kind === 'core' ? .25 + R() * .4 : .5 + R() * .5);
     }
+    if (kind === 'fringe') return grainTiles[kind] = t;   // the fringe is only bristle hairs
+    const m = kind === 'rim' ? 7000 : 1800;
+    for (let i = 0; i < m; i++) line(R() * S, R() * S, R() * Math.PI, .6 + R() * 1.6, .5 + R() * .8, .35 + R() * .5);
     return grainTiles[kind] = t;
   }
-  const texK = [null, null];
-  function brushTexDraw(g, pts, w, rb){
+  const texK = [null, null, null];
+  function brushTexDraw(g, pts, w, rb, ang, sc){
     const cw = g.canvas.width, ch = g.canvas.height;
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const q of pts){ if (q.x < x0) x0 = q.x; if (q.y < y0) y0 = q.y; if (q.x > x1) x1 = q.x; if (q.y > y1) y1 = q.y; }
-    const pad = w * 1.6 + 4; x0 = Math.max(0, Math.floor(x0 - pad)); y0 = Math.max(0, Math.floor(y0 - pad)); x1 = Math.min(cw, Math.ceil(x1 + pad)); y1 = Math.min(ch, Math.ceil(y1 + pad));
+    const pad = w * 1.8 + 6; x0 = Math.max(0, Math.floor(x0 - pad)); y0 = Math.max(0, Math.floor(y0 - pad)); x1 = Math.min(cw, Math.ceil(x1 + pad)); y1 = Math.min(ch, Math.ceil(y1 + pad));
     if (x1 <= x0 || y1 <= y0) return;
-    const layer = (i, width, kind) => {
+    const layer = (i, width, kind, keep) => {
       let k = texK[i]; if (!k || k.width !== cw || k.height !== ch){ k = texK[i] = mk(cw, ch); }
       const kg = k.getContext('2d'); kg.setTransform(1, 0, 0, 1, 0, 0); kg.globalAlpha = 1; kg.globalCompositeOperation = 'source-over'; kg.clearRect(x0, y0, x1 - x0, y1 - y0);
       kg.lineCap = 'round'; kg.lineJoin = 'round'; kg.strokeStyle = g.strokeStyle;
       kg.save(); kg.beginPath(); kg.rect(x0, y0, x1 - x0, y1 - y0); kg.clip(); pencilDraw(kg, pts, width, rb); kg.restore();
-      kg.globalCompositeOperation = 'destination-out'; kg.fillStyle = kg.createPattern(grainTile(kind), 'repeat'); kg.fillRect(x0, y0, x1 - x0, y1 - y0);
+      kg.globalCompositeOperation = keep ? 'destination-in' : 'destination-out';
+      const pat = kg.createPattern(grainTile(kind), 'repeat');
+      // each stroke turns the bristle grain a random way, so lines never look stamped from the same pattern
+      try { pat.setTransform(new DOMMatrix().rotate(ang || 0).scale(sc || 1)); } catch {}
+      kg.fillStyle = pat; kg.fillRect(x0, y0, x1 - x0, y1 - y0);
       kg.globalCompositeOperation = 'source-over';
       return k;
     };
-    const a = layer(0, w, 'rim'), b = layer(1, w * .6, 'core');
+    // hairs of the bristles poking out past the edge, the body with scratchy gaps, and a fuller middle
+    const fr = layer(2, w * 1.28, 'fringe', true);
+    g.save(); g.globalAlpha = 1;
+    g.drawImage(fr, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
+    g.restore();
+    const a = layer(0, w, 'rim'), b = layer(1, w * .62, 'core');
     g.save(); g.globalAlpha = 1;
     g.drawImage(a, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
     g.drawImage(b, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
@@ -4021,7 +4033,7 @@
   function pencilRender(){
     pencilRaf = 0; const st = pencilS; if (!st) return;
     if (live.width !== W || live.height !== H){ live.width = W; live.height = H; }
-    lctx.clearRect(0, 0, W, H); pencilInk(lctx); if (st.kind === 'brush') brushTexDraw(lctx, brushTaper(st.pts), st.base, st.rb); else pencilDraw(lctx, st.pts, st.base, st.rb);
+    lctx.clearRect(0, 0, W, H); pencilInk(lctx); if (st.kind === 'brush') brushTexDraw(lctx, brushTaper(st.pts, st.base, false), st.base, st.rb, st.ta); else pencilDraw(lctx, st.pts, st.base, st.rb);
   }
   let pencilSnd = null, pencilT = 0, pencilDir = null;
   // pencil: a steady, even line. With the Apple Pencil (and "lock width" off) it varies only a little with pressure.
@@ -4029,23 +4041,22 @@
   // paintbrush (Brush Pack): a clean, smooth calligraphy stroke - thick and thin depending on the direction you
   // draw (like a flat nib held at 45°), and with the Apple Pencil, pressing harder makes it even bolder.
   const NIB = -Math.PI / 4;
+  // paint brush: an even line like the pencil (no thick/thin by direction or speed);
+  // with the Apple Pencil, pressing harder makes it bolder - a gentle range, light and heavy not too far apart
+  const brushPr = p => .62 + Math.min(1, Math.max(0, p)) * .76;
   function brushK(st, p, raw){
-    const q = st.pts[st.pts.length - 1], dx = p.x - q.x, dy = p.y - q.y;
-    if (Math.hypot(dx, dy) > .5){ const nib = Math.abs(Math.sin(Math.atan2(dy, dx) - NIB)); st.nk = st.nk * .7 + nib * .3; }
-    if (widthLocked) return 1;
-    // brush-pen feel: slow = fat and juicy, fast = a fine hairline; the Pencil's pressure swells it even more
-    const t = raw.t || performance.now(), pr = st.lp || raw, dt = Math.max(4, t - (st.lt || t - 16)); st.lt = t; st.lp = raw;
-    const v = Math.hypot(raw.x - pr.x, raw.y - pr.y) / dt * (1000 / Math.max(W, H));   // speed, page-independent
-    st.v = st.v === undefined ? v : st.v * .55 + v * .45;
-    const nibF = .6 + .4 * st.nk;
-    if (raw.pen){
-      const pf = .1 + Math.min(1, Math.max(0, raw.p)) * 1.75;                       // light = hairline, hard = bold
-      return pf * Math.max(.5, Math.min(1.25, 1.25 - st.v * .55)) * nibF;
-    }
-    return Math.max(.24, Math.min(3.5, 3.5 - st.v * 3.2)) * nibF;   // slow: up to ~3.5x, fast: thin but never a hairline
+    if (widthLocked || !raw.pen) return 1;
+    return brushPr(raw.p);
   }
   // the paintbrush starts from a fine point and swells into the stroke
-  const brushTaper = pts => pts.map((q, i) => i < 9 ? { x: q.x, y: q.y, k: q.k * (.08 + .92 * Math.sin(i / 9 * Math.PI / 2)) } : q);
+  // it starts from a fine point and (when you lift) thins back to a point, measured along the line so it looks the same at any speed
+  function brushTaper(pts, base, ends){
+    const T = Math.max(10, (base || size) * 2.2), n = pts.length; if (!n) return pts;
+    const d = new Float32Array(n); for (let i = 1; i < n; i++) d[i] = d[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+    const L = d[n - 1], f = x => .08 + .92 * Math.sin(Math.min(1, x) * Math.PI / 2);
+    const Te = Math.min(T, L * .45), Ts = Math.min(T, ends ? L * .45 : T);
+    return pts.map((q, i) => { let k = q.k === undefined ? 1 : q.k; if (Ts > 0 && d[i] < Ts) k *= f(d[i] / Ts); if (ends && Te > 0 && L - d[i] < Te) k *= f((L - d[i]) / Te); return { x: q.x, y: q.y, k, c: q.c }; });
+  }
   // Brush settings: one Smoothing slider for the pencil, paint brush and rainbow brush (remembered)
   let brushSmooth = 0; try { brushSmooth = Math.max(0, Math.min(1, (+localStorage.getItem('doodle-clubhouse-smoothing') || 0) / 100)); } catch {}
   window.openBrushSet = () => {
@@ -4064,15 +4075,15 @@
     box.style.left = Math.max(8, (innerWidth - box.offsetWidth) / 2) + 'px'; box.style.top = Math.round(r.bottom + 12) + 'px';
   };
   function pencilStart(p){
-    const kind = tool === 'brush' ? 'brush' : tool === 'rainbow' ? 'rainbow' : 'pencil', base = kind === 'brush' ? size * 1.5 : size;
-    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, scr: W / (c.getBoundingClientRect().width || W), rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null };
-    const k0 = kind === 'brush' ? (widthLocked ? 1 : .6 * (p.pen ? .45 + p.p * 1.25 : 1)) : pencilK(p);
+    const kind = tool === 'brush' ? 'brush' : tool === 'rainbow' ? 'rainbow' : 'pencil', base = size;
+    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, scr: W / (c.getBoundingClientRect().width || W), rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null, ta: Math.random() * 360 };
+    const k0 = kind === 'brush' ? (widthLocked || !p.pen ? 1 : brushPr(p.p)) : pencilK(p);
     pencilS.pts.push({ x: p.x, y: p.y, k: k0 }); pencilS.s.k = k0;
     if (kind === 'pencil') try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
     pencilRender();
   }
   function pencilMove(p){
-    const st = pencilS, k = 0.26;
+    const st = pencilS, k = st.kind === 'brush' ? 0.62 : 0.26;   // the paint brush follows the pen more tightly
     // Brush settings > Smoothing: the line follows the pen on an invisible string (longer string = smoother line), like StreamLine
     if (brushSmooth > 0){
       const R = brushSmooth * 42 * (st.scr || 1), lz = st.lz || (st.lz = { x: st.raw.x, y: st.raw.y });
@@ -4109,7 +4120,7 @@
     sp.k = st.kind === 'brush' ? brushK(st, sp, p) : pencilK(p);
     st.s = sp; st.raw = p;
     const q = st.pts[st.pts.length - 1];
-    if (Math.hypot(sp.x - q.x, sp.y - q.y) >= Math.max(2.5, size * 0.22)) st.pts.push(sp);
+    if (Math.hypot(sp.x - q.x, sp.y - q.y) >= (st.kind === 'brush' ? Math.max(1.5, size * 0.08) : Math.max(2.5, size * 0.22))) st.pts.push(sp);
     if (!pencilRaf) pencilRaf = requestAnimationFrame(pencilRender);
   }
   function pencilEnd(){
@@ -4130,8 +4141,8 @@
       if ([...st.pts, st.raw].every(q => Math.hypot(q.x - o.x, q.y - o.y) < far)){
         const k = st.kind === 'brush' ? (widthLocked ? 1 : (st.raw.pen ? .45 + Math.min(1, st.raw.p || .5) * .9 : 1)) : (o.k || 1);
         st.pts = [{ x: o.x - .4, y: o.y, k }, { x: o.x + .4, y: o.y, k }];
-        pencilInk(ctx); (st.kind === 'brush' ? brushTexDraw : pencilDraw)(ctx, st.pts, st.base, st.rb);
-        if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, br: st.kind === 'brush' ? 1 : 0, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
+        pencilInk(ctx); (st.kind === 'brush' ? brushTexDraw : pencilDraw)(ctx, st.pts, st.base, st.rb, st.ta);
+        if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, br: st.kind === 'brush' ? 1 : 0, ta: st.ta || 0, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
         return;
       }
     }
@@ -4140,12 +4151,11 @@
     let s2 = st.s; for (let i = 0; i < 5; i++){ s2 = { x: s2.x + (st.raw.x - s2.x) * .45, y: s2.y + (st.raw.y - s2.y) * .45, k: kEnd }; st.pts.push(s2); }
     st.pts.push({ x: st.raw.x, y: st.raw.y, k: kEnd });
     // the brush tapers off as you lift, like a real calligraphy stroke
-    if (st.kind === 'brush'){ const n = st.pts.length; for (let i = Math.max(1, n - 9); i < n; i++) st.pts[i].k *= .05 + .95 * Math.sin((n - 1 - i) / 9 * Math.PI / 2); }
-    if (st.kind === 'brush') st.pts = brushTaper(st.pts);
-    pencilInk(ctx); (st.kind === 'brush' ? brushTexDraw : pencilDraw)(ctx, st.pts, st.base, st.rb);
+    if (st.kind === 'brush') st.pts = brushTaper(st.pts, st.base, true);
+    pencilInk(ctx); (st.kind === 'brush' ? brushTexDraw : pencilDraw)(ctx, st.pts, st.base, st.rb, st.ta);
     if (st.rb){ let d = 0; const sp = pencilSoften(st.pts); for (let i = 1; i < sp.length; i++) d += Math.hypot(sp[i].x - sp[i - 1].x, sp[i].y - sp[i - 1].y); hue = (st.rb.h0 + d * .6) % 360; }   // next stroke carries on through the rainbow
     // speed art redraws this exact curve (no masking), so crossings never show bits of the line early
-    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, br: st.kind === 'brush' ? 1 : 0, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
+    if (speedStroke){ const L = Math.max(W, H); speedStroke.vec = { pts: st.pts.map(q => [q.x / W, q.y / H, q.k || 1]), col: color, w: st.base / L, br: st.kind === 'brush' ? 1 : 0, ta: st.ta || 0, rb: st.rb ? { h0: st.rb.h0, rate: st.rb.rate * W } : null }; }
   }
 
 
@@ -7855,7 +7865,7 @@
           const n = Math.min(stk.pts.length, left); left -= n;
           const v = stk.vec, m = Math.max(1, Math.min(v.pts.length, Math.round(n / stk.pts.length * v.pts.length)));
           out.strokeStyle = v.col;
-          (v.br ? brushTexDraw : pencilDraw)(out, v.pts.slice(0, m).map(q => ({ x: q[0] * iw, y: q[1] * ih, k: q[2] || 1 })), Math.max(1, v.w * L2), v.rb ? { h0: v.rb.h0, rate: v.rb.rate / iw } : null);
+          (v.br ? brushTexDraw : pencilDraw)(out, v.pts.slice(0, m).map(q => ({ x: q[0] * iw, y: q[1] * ih, k: q[2] || 1 })), Math.max(1, v.w * L2), v.rb ? { h0: v.rb.h0, rate: v.rb.rate / iw } : null, v.ta || 0, iw / W);
         }
         return scratch;
       }
