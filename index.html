@@ -4154,6 +4154,7 @@
   // with the Apple Pencil, pressing harder makes it bolder - a gentle range, light and heavy not too far apart
   // pencil, paint brush and rainbow brush share the same width rules (see Brush settings > Pressure)
   function brushK(st, p, raw){
+    if (st.kind === 'pencil') return 1;   // the pencil is always one even width (pressure and speed never change it)
     if (widthLocked) return 1;
     if (raw.pen) return pressK(raw.p);
     if (pressAmt <= 0) return 1;
@@ -4180,7 +4181,7 @@
       + '<div class="bs-lab"><span>Smoothing</span><span class="bs-val"></span></div><input type="range" id="bsSmooth" min="0" max="100" step="1" aria-label="Smoothing">'
       + '<div class="bs-note">Pencil, paint brush and rainbow brush</div>'
       + '<div class="bs-lab"><span>Pressure</span><span class="bs-val2"></span></div><input type="range" id="bsPress" min="0" max="100" step="1" aria-label="Pressure">'
-      + '<div class="bs-note">Press harder = thicker (fingers: slower = thicker). Pencil, paint brush, rainbow, chalk</div>';
+      + '<div class="bs-note">Press harder = thicker (fingers: slower = thicker). Paint brush, rainbow, chalk (the pencil stays one width)</div>';
     document.body.appendChild(box);
     const inp = box.querySelector('input'), val = box.querySelector('.bs-val');
     const sync = () => { val.textContent = Math.round(brushSmooth * 100) + '%'; };
@@ -4197,7 +4198,7 @@
   function pencilStart(p){
     const kind = tool === 'brush' ? 'brush' : tool === 'rainbow' ? 'rainbow' : 'pencil', base = size;
     pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, scr: W / (c.getBoundingClientRect().width || W), rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null, ta: Math.random() * 360 };
-    const k0 = pencilK(p);
+    const k0 = kind === 'pencil' ? 1 : pencilK(p);
     pencilS.pts.push({ x: p.x, y: p.y, k: k0 }); pencilS.s.k = k0;
     if (kind === 'pencil') try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
     pencilRender();
