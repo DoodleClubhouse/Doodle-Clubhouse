@@ -1596,6 +1596,7 @@
   #layersWin .lw-row.lw-float{position:fixed; z-index:90; pointer-events:none; margin:0; transform:scale(1.08) rotate(-3deg); box-shadow:0 12px 24px rgba(0,0,0,.35); outline:3px solid #2E9CDB; animation:lwLift .14s ease-out}
   @keyframes lwLift{from{transform:scale(1) rotate(0)} to{transform:scale(1.08) rotate(-3deg)}}
   #layersWin .lw-row.lifted{opacity:.3}
+  #layersWin .lw-row.lw-float.over-btn{opacity:.35; transform:scale(.9) rotate(-3deg); transition:opacity .12s, transform .12s}
   #brushSet{z-index:61; width:260px; gap:8px; padding:12px}
   #brushSet .bs-head{display:flex; align-items:center; justify-content:space-between; font:900 16px/1 var(--body); color:var(--ink)}
   #brushSet .bs-x{width:28px; height:28px; padding:0; display:grid; place-items:center; border:2px solid var(--ink); border-radius:7px; background:#fff; color:var(--ink); box-shadow:0 2px 0 var(--ink); cursor:pointer}
@@ -1612,6 +1613,7 @@
   #layersWin .lw-foot #selBar{flex:1 1 100%; justify-content:center}
   #layersWin .lw-foot #selBar[hidden]{display:none}
   #layersWin .lw-foot .lw-add span{font-size:24px; line-height:0; font-weight:900; display:inline-block; margin:-8px 0}
+  #layersWin .lw-foot .lw-trash.drop-del{background:#E5484D; color:#fff; box-shadow:0 0 0 3px #E5484D, 0 2px 0 var(--ink); transform:scale(1.12)}
   #layersWin .lw-foot .lw-add.drop-dup{background:#2E9CDB; color:#fff; box-shadow:0 0 0 3px #2E9CDB, 0 2px 0 var(--ink); transform:scale(1.05)}
 </style>
 
@@ -6816,9 +6818,15 @@
       let k = d.rects.length - 1; for (let j = 0; j < d.rects.length; j++){ if (e.clientY < d.rects[j].top + d.rects[j].height / 2){ k = j; break; } }
       // over the + (Add layer) button: drop it there to make a copy
       const ab = lw.querySelector('.lw-add'), ar = ab.getBoundingClientRect();
-      d.dup = e.clientY > lwList.getBoundingClientRect().bottom && e.clientX >= ar.left - 4 && e.clientX <= ar.right + 4 && e.clientY >= ar.top - 4 && e.clientY <= ar.bottom + 8;
+      const below = e.clientY > lwList.getBoundingClientRect().bottom;
+      const over = (r, m) => below && e.clientX >= r.left - m && e.clientX <= r.right + m && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 8;
+      d.dup = over(ar, 4);
       ab.classList.toggle('drop-dup', d.dup);
-      if (d.dup){ d.rows.forEach(r => r.classList.remove('drop-at')); return; }
+      // over the trash can: drop it there to delete the layer
+      const tb = lw.querySelector('.lw-trash'); d.del = !d.dup && over(tb.getBoundingClientRect(), 6);
+      tb.classList.toggle('drop-del', d.del);
+      if (d.fl) d.fl.classList.toggle('over-btn', d.dup || d.del);   // see-through, so the button underneath shows it's ready
+      if (d.dup || d.del){ d.rows.forEach(r => r.classList.remove('drop-at')); return; }
       d.k = k; d.rows.forEach((r, j) => r.classList.toggle('drop-at', j === k && r !== d.row));
     });
     // while dragging a row, the finger must not scroll the list (iPad)
@@ -6835,6 +6843,8 @@
         }
         return; }
       if (dd.fl) dd.fl.remove(); dd.row.classList.remove('lifted'); dd.rows.forEach(r => r.classList.remove('drop-at'));
+      lw.querySelector('.lw-trash').classList.remove('drop-del');
+      if (dd.del){ deleteLayer(dd.from); return; }   // dropped on the trash can: that layer is deleted
       if (dd.dup){ lw.querySelector('.lw-add').classList.remove('drop-dup'); dupLayer(dd.from); toast('Layer copied'); return; }   // dropped on + : a copy goes right above it
       if (dd.k === undefined){ syncLayersWin(); return; }
       const n = dd.rects.length, to = n - 1 - dd.k;   // rows are listed top layer first
