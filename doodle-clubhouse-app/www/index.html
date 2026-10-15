@@ -7201,6 +7201,7 @@
   $('paper').addEventListener('pointerdown', e => {
     if (!moveOn || e.target !== c) return;
     e.stopPropagation(); e.preventDefault();
+    if (window.__artOpen && window.__artOpen()){ window.__artDone(); return; }   // a tap off the box: puts the art down
     if (e.pointerType === 'touch' && typeof penRecent === 'function' && penRecent()) return;
     if (mv) return;
     if (playing){ stopPlay(); return; }
@@ -7244,7 +7245,7 @@
     if (!mv || e.pointerId !== mv.id) return;
     e.stopPropagation();
     const q = pt(e), dx = Math.round(q.x - mv.x), dy = Math.round(q.y - mv.y);
-    if (dx || dy) mv.moved = true;
+    if (dx || dy) mv.moved = true; mv.dx = dx; mv.dy = dy;
     ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, W, H); ctx.drawImage(mv.obj.rest, 0, 0); ctx.drawImage(mv.obj.piece, mv.obj.x + dx, mv.obj.y + dy); ctx.restore();
   }, true);
@@ -7252,7 +7253,9 @@
     if (!mv || e.pointerId !== mv.id) return;
     e.stopPropagation();
     const m = mv; mv = null;
-    if (m.moved) onCanvasChanged(); else { undoStack.pop(); syncHist(); }
+    // then it sits in a box, like an imported photo: drag to move, blue corner to resize, orange knob (or two fingers) to turn
+    ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, H); ctx.drawImage(m.obj.rest, 0, 0); ctx.restore();
+    window.__artTransform(m.obj, m.dx || 0, m.dy || 0);
   };
   window.addEventListener('pointerup', mvEnd, true); window.addEventListener('pointercancel', mvEnd, true);
 
@@ -7314,20 +7317,33 @@
   const phKey = () => bgEdit ? 'bg' : frames[cur];
   function phCommit(){
     const t = photoT; if (!t) return; phClose();
-    pushUndo();
+    if (!t.art) pushUndo();   // moved art: its undo was saved when it was picked up
     // the layers: what was under the photo (base), the photo, then anything drawn over it later (top)
     const base = t.lift ? t.lift.base : undoStack[undoStack.length - 1], top = t.lift ? t.lift.top : null;
     if (t.lift) ctx.putImageData(base, 0, 0);
     ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     ctx.translate(t.x, t.y); ctx.rotate(t.a); ctx.drawImage(t.bmp, -t.w / 2, -t.h / 2, t.w, t.h); ctx.restore();
     if (top){ const tc = mk(W, H); tc.getContext('2d').putImageData(top, 0, 0); ctx.drawImage(tc, 0, 0); }
+    if (t.art){ onCanvasChanged(); return; }
     const keep = { ...t }; delete keep.lift;
     const list = phPlacedMap.get(phKey()) || []; list.push({ t: keep, base, top, c0: snapshot() }); phPlacedMap.set(phKey(), list);
     let total = 0; for (const [k, l] of [...phPlacedMap].reverse()) for (let i = l.length - 1; i >= 0; i--) if (++total > 8){ l.splice(i, 1); }   // keep memory in check
     onCanvasChanged(); toast('Photo added! Pick it up any time with the Move tool');
   }
   phBar.querySelector('[data-ph="done"]').onclick = phCommit;
-  phBar.querySelector('[data-ph="cancel"]').onclick = () => { const t = photoT; phClose(); };
+  phBar.querySelector('[data-ph="cancel"]').onclick = () => { const t = photoT; phClose();
+    if (t && t.art && undoStack.length){ restoreImg(undoStack.pop()); syncHist(); }   // moved art: back exactly where it was
+  };
+  // Move tool: everything on the layer, lifted into the same box as a photo (resize / turn / move), Done puts it down
+  window.__artOpen = () => !!(photoT && photoT.art);
+  window.__artDone = () => phCommit();
+  window.__artTransform = (obj, dx, dy) => {
+    const base = obj.rest.getContext('2d').getImageData(0, 0, W, H), pw = obj.piece.width, ph = obj.piece.height;
+    photoT = { bmp: obj.piece, x: obj.x + dx + pw / 2, y: obj.y + dy + ph / 2, w: pw, h: ph, a: 0, lift: { base, top: null }, art: true };
+    phCan.width = Math.max(1, Math.min(1200, pw)); phCan.height = Math.max(1, Math.round(phCan.width * ph / pw));
+    phCan.getContext('2d').clearRect(0, 0, phCan.width, phCan.height); phCan.getContext('2d').drawImage(obj.piece, 0, 0, phCan.width, phCan.height);
+    phBox.hidden = phBar.hidden = false; phLoop();
+  };
   // start drawing anywhere on the page: the photo is laid down first
   c.addEventListener('pointerdown', () => { if (photoT) phCommit(); }, true);
   const phHit = (pp, e) => {
