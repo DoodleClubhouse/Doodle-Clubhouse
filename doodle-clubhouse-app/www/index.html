@@ -3536,7 +3536,7 @@
   // so writing quickly with your hand resting on the screen never draws blobs, zooms, or undoes (2-finger tap) your last letter
   let lastPenAt = -1e9;
   ['pointerdown', 'pointermove', 'pointerup'].forEach(t => window.addEventListener(t, e => { if (e.pointerType === 'pen') lastPenAt = performance.now(); }, true));
-  const penRecent = () => performance.now() - lastPenAt < 3000;   // fingers draw again 3 seconds after the Pencil was last used
+  const penRecent = () => performance.now() - lastPenAt < 500;   // fingers draw again half a second after the Pencil was last used
   // iPad: stop the screen itself from zooming in (which hid the tool bars), and put it right if it ever happens
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
   document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
