@@ -1607,6 +1607,10 @@
   #bsSmooth::-moz-range-track{height:12px; border-radius:8px; background:var(--ink)}
   #bsSmooth::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:30px; height:30px; margin-top:-9px; border-radius:50%; background:#fff; border:3px solid var(--ink); box-shadow:0 2px 0 var(--ink)}
   #bsSmooth::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid var(--ink)}
+  #selOv{image-rendering:pixelated; z-index:2}
+  #selBar{position:fixed; z-index:41; left:50%; transform:translateX(-50%); display:flex; gap:8px}
+  #selBar[hidden]{display:none}
+  #layersWin .lw-foot .lw-add.drop-dup{background:#2E9CDB; color:#fff; box-shadow:0 0 0 3px #2E9CDB, 0 2px 0 var(--ink); transform:scale(1.05)}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -1733,6 +1737,7 @@
         <canvas id="layBelow" class="layer" aria-hidden="true" hidden></canvas>
         <canvas id="c" width="1280" height="720" aria-label="Drawing paper"></canvas>
         <canvas id="layAbove" class="layer" aria-hidden="true" hidden></canvas>
+        <canvas id="selOv" class="layer" aria-hidden="true" hidden></canvas>
         <canvas id="live" class="layer" width="1280" height="720" aria-hidden="true"></canvas>
         <canvas id="ghost" class="layer ghost" width="640" height="360" aria-hidden="true" hidden></canvas>
         <canvas id="player" class="layer" width="640" height="360" aria-label="Your animation playing. Tap to stop." hidden></canvas>
@@ -5262,7 +5267,7 @@
     try { await refitP; await commit(); await speedChain; return await stashSession(curRecord()); } catch { return false; }
   }
   async function loadRecord(p){
-    if (playing) stopPlay();
+    if (playing) stopPlay(); try { window.clearSelection && window.clearSelection(); } catch {}
     await refitP;
     paperSetDims(p.W, p.H);
     if (p.paperType) setPaper(p.paperType);
@@ -6187,6 +6192,7 @@
   function onCanvasChanged(){
     if (!frames.length) return;
     if (bgEdit){ bgDirty = true; paintBgThumb(); projDirty = true; canvasVer++; speedUndo = false; speedStroke = null; schedulePersist(); return; }
+    try { window.__selClip && window.__selClip(); } catch {}
     const f = frames[cur]; f.dirty = true; f.edited = true; if (f.layers && f.layers[f.active]) f.layers[f.active].edited = true; drawThumb(f); projDirty = true; canvasVer++; schedulePersist(); speedRecord();
   }
   // ---------- speed art recorder: a small picture of the page after each change ----------
@@ -6657,6 +6663,70 @@
     if (f.active > i) f.active++;
     blank(); ctx.drawImage(LC[f.active], 0, 0); layersChanged();
   }
+  // ---------- selection: double-tap a layer to select what's drawn on it (its shapes, holes inside included).
+  // Then you can switch layers or add a new one and paint: only the inside of the selection takes paint.
+  let selMask = null, selBefore = null, selAnts = null, selAntsT = 0;
+  const selOv = $('selOv');
+  const selBar = document.createElement('div'); selBar.id = 'selBar'; selBar.hidden = true;
+  selBar.innerHTML = '<button type="button" class="btn sm primary">✕ Deselect</button>';
+  document.body.appendChild(selBar);
+  selBar.querySelector('button').onclick = () => clearSelection();
+  function placeSelBar(){ const mb = document.getElementById('menubar'), r = mb && mb.offsetHeight ? mb.getBoundingClientRect() : { bottom: 10 }; selBar.style.top = Math.round(r.bottom + 58) + 'px'; }
+  function clearSelection(){ selMask = null; selBefore = null; selOv.hidden = true; selBar.hidden = true; clearInterval(selAntsT); selAntsT = 0; selAnts = null; }
+  window.clearSelection = clearSelection;
+  function selectLayerShape(i){
+    const f = ensureLayers(); if (!f) return;
+    const src = i === f.active ? c : LC[i]; if (!src) return;
+    const a = src.getContext('2d').getImageData(0, 0, W, H).data, N = W * H, out = new Uint8Array(N);
+    let any = false; for (let p = 0; p < N; p++) if (a[p * 4 + 3] > 8){ any = true; break; }
+    if (!any){ toast('Nothing drawn on that layer to select'); return; }
+    // everything the empty space around the edges can't reach = the shapes and their insides
+    const solid = p => a[p * 4 + 3] > 8, st = [];
+    const push = p => { if (!out[p] && !solid(p)){ out[p] = 1; st.push(p); } };
+    for (let x = 0; x < W; x++){ push(x); push((H - 1) * W + x); }
+    for (let y = 0; y < H; y++){ push(y * W); push(y * W + W - 1); }
+    while (st.length){ const p = st.pop(), x = p % W; if (x > 0) push(p - 1); if (x < W - 1) push(p + 1); if (p >= W) push(p - W); if (p < N - W) push(p + W); }
+    const m = mk(W, H), mg = m.getContext('2d'), md = mg.createImageData(W, H), d = md.data;
+    for (let p = 0; p < N; p++) if (!out[p]){ d[p * 4 + 3] = 255; }
+    mg.putImageData(md, 0, 0);
+    selMask = m; drawSelAnts(); selBar.hidden = false; placeSelBar();
+    toast('Selected! Paint stays inside the shape');
+  }
+  // the dotted "marching ants" outline, drawn at screen size so it stays thin and sharp
+  function drawSelAnts(){
+    if (!selMask) return;
+    const r = c.getBoundingClientRect(), s = Math.max(1, W / Math.max(1, r.width));
+    const w = Math.max(1, Math.round(W / s)), h = Math.max(1, Math.round(H / s));
+    const t = mk(w, h), tg = t.getContext('2d'); tg.drawImage(selMask, 0, 0, w, h);
+    const a = tg.getImageData(0, 0, w, h).data, ins = p => a[p * 4 + 3] > 127;
+    const frames2 = [0, 1].map(ph => { const im = tg.createImageData(w, h), d = im.data;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ const p = y * w + x; if (!ins(p)) continue;
+        if (x > 0 && x < w - 1 && y > 0 && y < h - 1 && ins(p - 1) && ins(p + 1) && ins(p - w) && ins(p + w)) continue;
+        const v = (((x + y) >> 2) + ph) & 1 ? 255 : 0, o = p * 4; d[o] = d[o + 1] = d[o + 2] = v; d[o + 3] = 255; }
+      return im; });
+    selOv.width = w; selOv.height = h; selOv.hidden = false; selAnts = frames2;
+    let k = 0; const g = selOv.getContext('2d'); g.putImageData(frames2[0], 0, 0);
+    clearInterval(selAntsT); selAntsT = setInterval(() => { if (!selAnts || selOv.hidden) return; k ^= 1; g.putImageData(selAnts[k], 0, 0); }, 300);
+  }
+  addEventListener('resize', () => { if (selMask) setTimeout(drawSelAnts, 60); });
+  // before a stroke: remember the layer as it was; after it: anything outside the selection goes back to how it was
+  c.addEventListener('pointerdown', e => {
+    if (!selMask) return;
+    if (selMask.width !== W || selMask.height !== H){ clearSelection(); return; }
+    if (document.body.classList.contains('move-on') || document.body.classList.contains('picking') || tool === 'text') { selBefore = null; return; }
+    const f = curF(); if (!f) { selBefore = null; return; }
+    selBefore = { img: ctx.getImageData(0, 0, W, H), f, L: f.layers ? f.layers[f.active] : null };
+  }, true);
+  window.__selClip = () => {
+    const sb = selBefore; if (!sb || !selMask) return;
+    const f = curF(); if (!f || f !== sb.f || (f.layers ? f.layers[f.active] : null) !== sb.L || selMask.width !== W || selMask.height !== H){ selBefore = null; return; }
+    if (drawing) return;   // wait for the end of the stroke
+    selBefore = null;
+    const inside = mk(W, H), ig = inside.getContext('2d'); ig.drawImage(c, 0, 0); ig.globalCompositeOperation = 'destination-in'; ig.drawImage(selMask, 0, 0);
+    const outside = mk(W, H), og = outside.getContext('2d'); og.putImageData(sb.img, 0, 0); og.globalCompositeOperation = 'destination-out'; og.drawImage(selMask, 0, 0);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H); ctx.drawImage(outside, 0, 0); ctx.drawImage(inside, 0, 0); ctx.restore();
+  };
   // Rename: a little box of its own (with OK), so nothing in the layer list can close it by accident
   function renameLayer(i){
     const f = ensureLayers(); if (!f) return;
@@ -6724,6 +6794,7 @@
       lw.appendChild(fl); d.fl = fl; d.top0 = r.top;
       d.row.classList.add('lifted'); try { navigator.vibrate && navigator.vibrate(12); } catch {}
     };
+    let lwTap = null;
     lwList.addEventListener('pointerdown', e => {
       const row = e.target.closest('.lw-row'); if (!row || e.target.closest('button, input')) return;
       const rows = [...lwList.querySelectorAll('.lw-row')];
@@ -6740,6 +6811,11 @@
       }
       e.preventDefault(); if (d.fl) d.fl.style.top = (d.top0 + dy) + 'px';
       let k = d.rects.length - 1; for (let j = 0; j < d.rects.length; j++){ if (e.clientY < d.rects[j].top + d.rects[j].height / 2){ k = j; break; } }
+      // over the + (Add layer) button: drop it there to make a copy
+      const ab = lw.querySelector('.lw-add'), ar = ab.getBoundingClientRect();
+      d.dup = e.clientX >= ar.left - 6 && e.clientX <= ar.right + 6 && e.clientY >= ar.top - 10 && e.clientY <= ar.bottom + 10;
+      ab.classList.toggle('drop-dup', d.dup);
+      if (d.dup){ d.rows.forEach(r => r.classList.remove('drop-at')); return; }
       d.k = k; d.rows.forEach((r, j) => r.classList.toggle('drop-at', j === k && r !== d.row));
     });
     // while dragging a row, the finger must not scroll the list (iPad)
@@ -6747,8 +6823,16 @@
     const end = e => {
       if (!d || e.pointerId !== d.id) return;
       const dd = d; d = null; clearTimeout(dd.t);
-      if (!dd.armed){ if (e.type === 'pointerup') selectLayer(dd.from); return; }
+      if (!dd.armed){
+        if (e.type === 'pointerup'){
+          const now = performance.now(), dbl = lwTap && lwTap.i === dd.from && now - lwTap.t < 380;
+          lwTap = dbl ? null : { i: dd.from, t: now };
+          selectLayer(dd.from);
+          if (dbl) selectLayerShape(dd.from);   // double-tap: select what's drawn on that layer
+        }
+        return; }
       if (dd.fl) dd.fl.remove(); dd.row.classList.remove('lifted'); dd.rows.forEach(r => r.classList.remove('drop-at'));
+      if (dd.dup){ lw.querySelector('.lw-add').classList.remove('drop-dup'); dupLayer(dd.from); toast('Layer copied'); return; }   // dropped on + : a copy goes right above it
       if (dd.k === undefined){ syncLayersWin(); return; }
       const n = dd.rects.length, to = n - 1 - dd.k;   // rows are listed top layer first
       if (to === dd.from) syncLayersWin(); else moveLayerTo(dd.from, Math.max(0, Math.min(n - 1, to)));
@@ -6790,7 +6874,7 @@
     });
   }
   function startOver(){
-    if (playing) stopPlay();
+    if (playing) stopPlay(); try { window.clearSelection && window.clearSelection(); } catch {}
     bgEdit = false; bgBlob = null; bgDirty = false; document.body.classList.remove('bg-edit'); bounce = false; syncBounce(); setAudio(null); drawBgLayer();
     frames = [newFrame()]; cur = 0; LC = null; blank(); try { renderLayerStack(); syncLayersWin(); } catch {} drawThumb(frames[0]); speedReset();
     projDirty = false; openSession = 0;
