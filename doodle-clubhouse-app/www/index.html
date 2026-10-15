@@ -4866,6 +4866,12 @@
     const p = smoothPressure(pt(e));
     pushUndo(); speedStrokeStart(p);
     if (tool === 'eraser'){ eraserSnd = { dist: 0, last: 0 }; eraserT = performance.now(); try { eraserBubble(1.1); } catch {} }   // bubbly eraser: a little 'bloop' as it lands
+    if (tool === 'fill' && e.pointerType === 'touch'){
+      // a finger: fill when it lifts (a second finger arriving means a pinch-zoom, so nothing gets filled)
+      undoStack.pop(); syncHist(); activePointer = null; drawing = false;
+      fillTap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      return;
+    }
     if (tool === 'fill'){
       const fx0 = Math.floor(p.x), fy0 = Math.floor(p.y);
       if (filling || fx0 < 0 || fy0 < 0 || fx0 >= W || fy0 >= H){ undoStack.pop(); syncHist(); activePointer = null; return; }
@@ -4948,6 +4954,20 @@
     tone(f, f * 2.7, .065, .05, 'sine', delay);
     tone(f * 2, f * 4.5, .04, .008, 'sine', delay + .005);
   }
+  let fillTap = null;
+  window.addEventListener('pointerdown', e => { if (fillTap && e.pointerId !== fillTap.id) fillTap = null; }, true);   // second finger: it's a pinch
+  window.addEventListener('pointermove', e => { if (fillTap && e.pointerId === fillTap.id && Math.hypot(e.clientX - fillTap.x, e.clientY - fillTap.y) > 18) fillTap = null; }, true);
+  window.addEventListener('pointercancel', e => { if (fillTap && e.pointerId === fillTap.id) fillTap = null; }, true);
+  window.addEventListener('pointerup', e => {
+    const f = fillTap; if (!f || e.pointerId !== f.id) return; fillTap = null;
+    if (tool !== 'fill' || filling || busy) return;
+    const p = pt({ clientX: f.x, clientY: f.y, pointerType: 'touch' }), fx0 = Math.floor(p.x), fy0 = Math.floor(p.y);
+    if (fx0 < 0 || fy0 < 0 || fx0 >= W || fy0 >= H) return;
+    pushUndo(); filling = true;
+    try { floodFill(fx0, fy0, color); SFX.splash(); } catch (err){ if (undoStack.length){ try { restoreImg(undoStack.pop()); } catch {} syncHist(); } }
+    finally { filling = false; }
+    onCanvasChanged();
+  });
   c.addEventListener('pointermove', e => {
     if (!drawing || e.pointerId !== activePointer) return;
     const moveFrom = last;
