@@ -4172,7 +4172,7 @@
     return pts.map((q, i) => { let k = q.k === undefined ? 1 : q.k; if (Ts > 0 && d[i] < Ts) k *= f(d[i] / Ts); if (ends && Te > 0 && L - d[i] < Te) k *= f((L - d[i]) / Te); return { x: q.x, y: q.y, k, c: q.c }; });
   }
   // Brush settings: one Smoothing slider for the pencil, paint brush and rainbow brush (remembered)
-  let brushSmooth = 0; try { brushSmooth = Math.max(0, Math.min(1, (+localStorage.getItem('doodle-clubhouse-smoothing') || 0) / 100)); } catch {}
+  let brushSmooth = .2; try { const v = localStorage.getItem('doodle-clubhouse-smoothing2'); if (v !== null) brushSmooth = Math.max(0, Math.min(1, (+v || 0) / 100)); } catch {}   // starts at 20% (until you change it)
   window.openBrushSet = () => {
     const old = document.getElementById('brushSet'); if (old){ old.remove(); return; }
     const box = document.createElement('div'); box.id = 'brushSet'; box.className = 'mic-pop';
@@ -4189,7 +4189,7 @@
     const sync2 = () => { val2.textContent = Math.round(pressAmt * 100) + '%'; };
     inp2.value = Math.round(pressAmt * 100); sync2();
     inp2.oninput = () => { pressAmt = (+inp2.value || 0) / 100; sync2(); try { localStorage.setItem('doodle-clubhouse-pressure', String(Math.round(pressAmt * 100))); } catch {} };
-    inp.oninput = () => { brushSmooth = (+inp.value || 0) / 100; sync(); try { localStorage.setItem('doodle-clubhouse-smoothing', String(Math.round(brushSmooth * 100))); } catch {} };
+    inp.oninput = () => { brushSmooth = (+inp.value || 0) / 100; sync(); try { localStorage.setItem('doodle-clubhouse-smoothing2', String(Math.round(brushSmooth * 100))); } catch {} };
     box.querySelector('.bs-x').onclick = () => box.remove();
     const mb = document.getElementById('menubar'), r = mb && mb.offsetHeight ? mb.getBoundingClientRect() : { bottom: 60 };
     box.style.left = Math.max(8, (innerWidth - box.offsetWidth) / 2) + 'px'; box.style.top = Math.round(r.bottom + 12) + 'px';
