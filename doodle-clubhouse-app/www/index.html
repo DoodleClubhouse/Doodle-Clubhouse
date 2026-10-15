@@ -2130,7 +2130,7 @@
     const m = filling ? (document.body.dataset.panel === 'frames' ? 1 : 3) : 10, bw = Math.max(40, board.clientWidth - m * 2);
     // an open pop-out along the bottom (tools strip, colours, extra, pages) shouldn't cover the paper: fit above it
     let availH = board.clientHeight || board.clientWidth;
-    const pan = document.body.dataset.panel, trayEl = pan === 'tools' || pan === 'colors' ? document.querySelector('.tools') : pan === 'extras' ? document.getElementById('extras') : pan === 'frames' ? document.querySelector('.film') : null;
+    const pan = document.body.dataset.panel, trayEl = pan === 'tools' || pan === 'colors' ? document.querySelector('.tools') : pan === 'extras' ? null /* Extra floats over the page: the paper keeps its size */ : pan === 'frames' ? document.querySelector('.film') : null;
     let topOff = 0;
     try { document.documentElement.style.setProperty('--boardTop', Math.round(board.getBoundingClientRect().top) + 'px'); } catch {}
     if ((!filling || pan === 'frames') && trayEl && getComputedStyle(trayEl).position === 'fixed' && getComputedStyle(trayEl).display !== 'none'){
