@@ -127,8 +127,8 @@
   }
   .paper-opt[aria-pressed="true"]{background:var(--ink); color:var(--plank)}
   .pv{display:block; width:28px; height:20px; border-radius:4px; border:1.5px solid rgba(0,0,0,.25)}
-  .pv-white{background:#FFFDF7}
-  .pv-lined{background:linear-gradient(90deg, transparent 22%, #F29B9B 22% 28%, transparent 28%), repeating-linear-gradient(#FFFEFA 0 3px, #A9CBEA 3px 4px)}
+  .pv-white{background:#FFFFFF}
+  .pv-lined{background:linear-gradient(90deg, transparent 22%, #F29B9B 22% 28%, transparent 28%), repeating-linear-gradient(#FFFFFF 0 3px, #A9CBEA 3px 4px)}
   .pv-chalk{background:#2E3A34; box-shadow:inset 0 0 0 2px #A0703F}
   .wall-opts{display:grid; grid-template-columns:repeat(5,1fr); gap:6px}
   .paper.is-chalk{background:#2E3A34; box-shadow:0 0 0 9px #A0703F, 0 0 0 11px #6E4A26, 0 12px 30px rgba(0,0,0,.35)}
@@ -198,7 +198,7 @@
   .zoom-ctl button svg{width:16px; height:16px}
   .zoom-ctl #zoomReset{border-inline:2px solid var(--ink)}
   .paper{
-    position:relative; background:var(--paper); border-radius:4px; max-width:100%; max-height:100%;
+    position:relative; background:#FFFFFF; border-radius:4px; max-width:100%; max-height:100%;
     aspect-ratio:var(--ar, 3/2); width:100%; box-shadow:0 12px 30px rgba(0,0,0,.35);
   }
   .paper::before,.paper::after{ /* tape */
@@ -254,7 +254,7 @@
   #speedOverlay .sheet h2{font-size:22px}
   #speedOverlay .sheet p{margin-bottom:8px}
   .speed-stage{position:relative; flex:1 1 0; min-height:90px; background:#2a3150; border-radius:10px; padding:8px; display:flex; align-items:center; justify-content:center; overflow:hidden}
-  #speedCanvas{display:block; max-width:100%; max-height:100%; border-radius:6px; cursor:default; touch-action:auto; background:#FFFDF7}
+  #speedCanvas{display:block; max-width:100%; max-height:100%; border-radius:6px; cursor:default; touch-action:auto; background:#FFFFFF}
   .tl-row, .cut-row, .cut-note, .speed-ctl, #speedStatus{flex:none}
   #speedStatus{margin:6px 0 0!important; min-height:0}
   @media (max-height:740px){ #speedNote{display:none} }
@@ -1997,7 +1997,7 @@
 (() => {
   // true inside the iPhone/iPad app (Capacitor); false on the web preview
   const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  const PAPER = '#FFFDF7';
+  const PAPER = '#FFFFFF';   // true white paper
   // 12 crayons (3 rows of 4 on the side tool bar): black, grey, white, brown / red, orange, yellow, green / blue, indigo, purple, pink
   const COLORS = ['#111111','#A8A8A8','#FFFFFF','#8B5A2B','#FF5A5F','#FF9F1C','#FFD84D','#8CC63F','#2E9CDB','#6C4DF6','#A539FE','#F279B8'];
   const c = document.getElementById('c');
@@ -2031,7 +2031,7 @@
     const k = document.createElement('canvas'); k.width = w; k.height = h;
     const g = k.getContext('2d'), m = Math.min(w, h);
     if (type === 'lined'){
-      g.fillStyle = '#FFFEFA'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, w, h);
       const gap = Math.max(4, m / 26), lw = Math.max(1, m / 500);
       g.strokeStyle = '#A9CBEA'; g.lineWidth = lw;
       for (let y = gap * 2; y < h; y += gap){ g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
