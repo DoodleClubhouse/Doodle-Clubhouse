@@ -3946,7 +3946,8 @@
   // extra smoothing: each point is averaged with its neighbours (twice) before the curve goes through them
   function pencilSoften(pts){
     let a = pts;
-    for (let pass = 0; pass < 2 && a.length > 2; pass++){
+    const passes = brushSmooth <= 0 ? 0 : brushSmooth < .3 ? 1 : 2;   // no rounding-off at Smoothing 0%
+    for (let pass = 0; pass < passes && a.length > 2; pass++){
       const b = [a[0]];
       for (let i = 1; i < a.length - 1; i++) if (a[i].c) b.push(a[i]); else b.push({ x: (a[i - 1].x + 2 * a[i].x + a[i + 1].x) / 4, y: (a[i - 1].y + 2 * a[i].y + a[i + 1].y) / 4, k: ((a[i - 1].k || 1) + 2 * (a[i].k || 1) + (a[i + 1].k || 1)) / 4 });
       b.push(a[a.length - 1]); a = b;
@@ -4120,6 +4121,11 @@
       let P0 = { x: P[0].x, y: P[0].y, k: K(P[0]) }; add(P0);
       for (let i = 1; i < P.length - 1; i++){
         const c = P[i], nn = P[i + 1], M = { x: (c.x + nn.x) / 2, y: (c.y + nn.y) / 2, k: (K(c) + K(nn)) / 2 };
+        if (c.c){   // a turn-around point: the brush goes right to the tip (no rounding off), like the pencil
+          const cc = { x: c.x, y: c.y, k: K(c) }, n2 = Math.max(1, Math.ceil(Math.hypot(cc.x - P0.x, cc.y - P0.y) / 2));
+          for (let j = 1; j <= n2; j++) add({ x: P0.x + (cc.x - P0.x) * j / n2, y: P0.y + (cc.y - P0.y) * j / n2, k: P0.k + (cc.k - P0.k) * j / n2 });
+          P0 = cc; continue;
+        }
         const steps = Math.max(2, Math.ceil((Math.hypot(c.x - P0.x, c.y - P0.y) + Math.hypot(M.x - c.x, M.y - c.y)) / 2));
         for (let j = 1; j <= steps; j++){ const t = j / steps, u = 1 - t;
           add({ x: u * u * P0.x + 2 * u * t * c.x + t * t * M.x, y: u * u * P0.y + 2 * u * t * c.y + t * t * M.y, k: u * u * P0.k + 2 * u * t * K(c) + t * t * M.k }); }
@@ -4197,7 +4203,7 @@
     pencilRender();
   }
   function pencilMove(p){
-    const st = pencilS, k = st.kind === 'brush' ? 0.62 : 0.26;   // the paint brush follows the pen more tightly
+    const st = pencilS, k = 1 - .74 * brushSmooth;   // Smoothing 0% = the line goes exactly where the pen goes
     // Brush settings > Smoothing: the line follows the pen on an invisible string (longer string = smoother line), like StreamLine
     if (brushSmooth > 0){
       // the string is short when you draw slowly (small careful shapes stay accurate) and longer when you sweep fast;
@@ -4241,7 +4247,7 @@
     sp.k = brushK(st, sp, p);
     st.s = sp; st.raw = p;
     const q = st.pts[st.pts.length - 1];
-    if (Math.hypot(sp.x - q.x, sp.y - q.y) >= (st.kind === 'brush' ? Math.max(1.5, size * 0.08) : Math.max(2.5, size * 0.22))) st.pts.push(sp);
+    if (Math.hypot(sp.x - q.x, sp.y - q.y) >= Math.max(1, size * .22 * brushSmooth)) st.pts.push(sp);
     if (!pencilRaf) pencilRaf = requestAnimationFrame(pencilRender);
   }
   function pencilEnd(){
