@@ -6813,7 +6813,7 @@
       let k = d.rects.length - 1; for (let j = 0; j < d.rects.length; j++){ if (e.clientY < d.rects[j].top + d.rects[j].height / 2){ k = j; break; } }
       // over the + (Add layer) button: drop it there to make a copy
       const ab = lw.querySelector('.lw-add'), ar = ab.getBoundingClientRect();
-      d.dup = e.clientX >= ar.left - 6 && e.clientX <= ar.right + 6 && e.clientY >= ar.top - 10 && e.clientY <= ar.bottom + 10;
+      d.dup = e.clientY > lwList.getBoundingClientRect().bottom && e.clientX >= ar.left - 4 && e.clientX <= ar.right + 4 && e.clientY >= ar.top - 4 && e.clientY <= ar.bottom + 8;
       ab.classList.toggle('drop-dup', d.dup);
       if (d.dup){ d.rows.forEach(r => r.classList.remove('drop-at')); return; }
       d.k = k; d.rows.forEach((r, j) => r.classList.toggle('drop-at', j === k && r !== d.row));
