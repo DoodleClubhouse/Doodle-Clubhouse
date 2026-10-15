@@ -6990,8 +6990,9 @@
     m.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.right - pw)) + 'px';
     m.style.top = (r.bottom + 6 + ph < innerHeight ? r.bottom + 6 : Math.max(8, r.top - ph - 6)) + 'px';
   }
+  let lwDragging = false;   // a layer is being dragged: the list isn't rebuilt under your finger
   function syncLayersWin(){
-    if (lw.hidden) return;
+    if (lw.hidden || lwDragging) return;
     const f = curF();
     lw.querySelector('.lw-frame').textContent = bgEdit ? 'BG' : `Frame ${cur + 1}`;
     lwList.innerHTML = '';
@@ -7017,7 +7018,7 @@
     let d = null;
     // picked up: the layer lifts off the list (tilted, bigger, with a shadow) and follows your finger, like dragging a frame
     const arm = () => {
-      if (!d || d.armed) return; d.armed = true;
+      if (!d || d.armed) return; d.armed = true; lwDragging = true;
       const r = d.row.getBoundingClientRect(), fl = d.row.cloneNode(true); fl.className = 'lw-row lw-float';
       const src = d.row.querySelector('canvas'), dst = fl.querySelector('canvas'); if (src && dst) dst.getContext('2d').drawImage(src, 0, 0);
       Object.assign(fl.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
@@ -7058,7 +7059,7 @@
     lwList.addEventListener('touchmove', e => { if (d && d.armed) e.preventDefault(); }, { passive: false });
     const end = e => {
       if (!d || e.pointerId !== d.id) return;
-      const dd = d; d = null; clearTimeout(dd.t);
+      const dd = d; d = null; clearTimeout(dd.t); lwDragging = false; lw.querySelectorAll('.lw-float').forEach(x => { if (x !== dd.fl) x.remove(); });
       if (!dd.armed){
         if (e.type === 'pointerup'){
           const now = performance.now(), dbl = lwTap && lwTap.i === dd.from && now - lwTap.t < 380;
@@ -7076,11 +7077,14 @@
       if (to === dd.from) syncLayersWin(); else moveLayerTo(dd.from, Math.max(0, Math.min(n - 1, to)));
     };
     lwList.addEventListener('pointerup', end); lwList.addEventListener('pointercancel', end);
+    // the finger can lift anywhere (over the + or the trash can): the drag always finishes
+    window.addEventListener('pointerup', e => { if (d && e.pointerId === d.id) end(e); }, true);
+    window.addEventListener('pointercancel', e => { if (d && e.pointerId === d.id) end(e); }, true);
   }
   let lwThumbT = 0;   // keep the little pictures up to date while you draw (not every stroke point)
   const lwThumbs = () => { if (lw.hidden || lwThumbT) return; lwThumbT = setTimeout(() => { lwThumbT = 0; syncLayersWin(); }, 400); };
   addEventListener('pointerup', lwThumbs);
-  window.openLayers = () => { lw.hidden = false; lwPlace(); syncLayersWin(); };
+  window.openLayers = () => { lw.querySelectorAll('.lw-float').forEach(x => x.remove()); lw.querySelectorAll('.lifted').forEach(x => x.classList.remove('lifted')); lw.hidden = false; lwPlace(); syncLayersWin(); };
   lw.querySelector('.lw-x').onclick = () => { lw.hidden = true; lwCloseMenu(); };
   // the minimize button shows – when open and an expand sign when it's tucked down to just the bar
   const MIN_SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>';
