@@ -1596,6 +1596,17 @@
   #layersWin .lw-row.lw-float{position:fixed; z-index:90; pointer-events:none; margin:0; transform:scale(1.08) rotate(-3deg); box-shadow:0 12px 24px rgba(0,0,0,.35); outline:3px solid #2E9CDB; animation:lwLift .14s ease-out}
   @keyframes lwLift{from{transform:scale(1) rotate(0)} to{transform:scale(1.08) rotate(-3deg)}}
   #layersWin .lw-row.lifted{opacity:.3}
+  #brushSet{z-index:61; width:260px; gap:8px; padding:12px}
+  #brushSet .bs-head{display:flex; align-items:center; justify-content:space-between; font:900 16px/1 var(--body); color:var(--ink)}
+  #brushSet .bs-x{width:28px; height:28px; padding:0; display:grid; place-items:center; border:2px solid var(--ink); border-radius:7px; background:#fff; color:var(--ink); box-shadow:0 2px 0 var(--ink); cursor:pointer}
+  #brushSet .bs-x svg{width:14px; height:14px}
+  #brushSet .bs-lab{display:flex; justify-content:space-between; font:800 14px/1 var(--body); color:var(--ink); margin-top:4px}
+  #brushSet .bs-note{font:700 12px/1.3 var(--body); color:var(--ink); opacity:.7}
+  #bsSmooth{-webkit-appearance:none; appearance:none; width:100%; height:34px; background:transparent; margin:0; cursor:pointer; touch-action:none}
+  #bsSmooth::-webkit-slider-runnable-track{height:12px; border-radius:8px; background:var(--ink); box-shadow:inset 0 0 0 2px var(--ink)}
+  #bsSmooth::-moz-range-track{height:12px; border-radius:8px; background:var(--ink)}
+  #bsSmooth::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:30px; height:30px; margin-top:-9px; border-radius:50%; background:#fff; border:3px solid var(--ink); box-shadow:0 2px 0 var(--ink)}
+  #bsSmooth::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid var(--ink)}
 </style>
 
 <input type="file" id="sndFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden><input type="file" id="photoFile" accept="image/*" hidden>
@@ -1605,7 +1616,7 @@
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">File</button>
     <div class="mb-drop" hidden><button data-do="newProject"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h8l4.5 4.5v14.5H6z"/><path d="M14 2.5V7h4.5"/></svg>New</button><button data-do="openWall"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6a1.5 1.5 0 0 1 1.5-1.5h4l2 2.5h7A1.5 1.5 0 0 1 19 8.5V10"/><path d="M3 19l2.6-8a1.5 1.5 0 0 1 1.4-1h13.6a1 1 0 0 1 1 1.3L19 18a1.5 1.5 0 0 1-1.4 1z"/></svg>Projects…</button><button data-fn="importPhoto"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><circle cx="9" cy="9.5" r="1.6"/><path d="M2.5 19.5l6.5-7 3.5 3.5 3-3.5 6 6.5"/></svg>Import photo</button><button data-do="pinIt"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3.5h11.5l3.5 3.5v12.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M8 3.5V8h7.5V3.5"/><path d="M12.8 5.2v1.1"/><path d="M7 20.5v-6h10v6"/><path d="M9.5 17.5h5"/></svg>Save</button><button data-do="exportBtn"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4.5 15.5v4h15v-4"/></svg>Export</button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Edit</button>
-    <div class="mb-drop" hidden><button data-do="undo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button><button data-do="redo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button><hr><button data-fn="openLayers"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>Layers</button><button data-do="textToolGo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7V4.5h14V7"/><path d="M12 4.5v15"/><path d="M9 19.5h6"/></svg>Text</button><hr><button data-do="soundBtn" id="mbSound"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span>Mute</span></button></div></div>
+    <div class="mb-drop" hidden><button data-do="undo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button><button data-do="redo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button><hr><button data-fn="openLayers"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>Layers</button><button data-fn="openBrushSet"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Brush settings</button><button data-do="textToolGo"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7V4.5h14V7"/><path d="M12 4.5v15"/><path d="M9 19.5h6"/></svg>Text</button><hr><button data-do="soundBtn" id="mbSound"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span>Mute</span></button></div></div>
   <div class="mb-menu"><button class="mb-item" aria-haspopup="true" aria-expanded="false">Speed Art</button>
     <div class="mb-drop" hidden><button data-do="speedBtn"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Preview &amp; Edit</button><button data-fn="speedExport"><svg class="mbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4.5 15.5v4h15v-4"/></svg>Download video</button></div></div>
   <span class="mb-spacer"></span>
@@ -3985,9 +3996,26 @@
   }
   // the paintbrush starts from a fine point and swells into the stroke
   const brushTaper = pts => pts.map((q, i) => i < 9 ? { x: q.x, y: q.y, k: q.k * (.08 + .92 * Math.sin(i / 9 * Math.PI / 2)) } : q);
+  // Brush settings: one Smoothing slider for the pencil, paint brush and rainbow brush (remembered)
+  let brushSmooth = 0; try { brushSmooth = Math.max(0, Math.min(1, (+localStorage.getItem('doodle-clubhouse-smoothing') || 0) / 100)); } catch {}
+  window.openBrushSet = () => {
+    const old = document.getElementById('brushSet'); if (old){ old.remove(); return; }
+    const box = document.createElement('div'); box.id = 'brushSet'; box.className = 'mic-pop';
+    box.innerHTML = '<div class="bs-head">Brush settings<button type="button" class="bs-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
+      + '<div class="bs-lab"><span>Smoothing</span><span class="bs-val"></span></div><input type="range" id="bsSmooth" min="0" max="100" step="1" aria-label="Smoothing">'
+      + '<div class="bs-note">Pencil, paint brush and rainbow brush</div>';
+    document.body.appendChild(box);
+    const inp = box.querySelector('input'), val = box.querySelector('.bs-val');
+    const sync = () => { val.textContent = Math.round(brushSmooth * 100) + '%'; };
+    inp.value = Math.round(brushSmooth * 100); sync();
+    inp.oninput = () => { brushSmooth = (+inp.value || 0) / 100; sync(); try { localStorage.setItem('doodle-clubhouse-smoothing', String(Math.round(brushSmooth * 100))); } catch {} };
+    box.querySelector('.bs-x').onclick = () => box.remove();
+    const mb = document.getElementById('menubar'), r = mb && mb.offsetHeight ? mb.getBoundingClientRect() : { bottom: 60 };
+    box.style.left = Math.max(8, (innerWidth - box.offsetWidth) / 2) + 'px'; box.style.top = Math.round(r.bottom + 12) + 'px';
+  };
   function pencilStart(p){
     const kind = tool === 'brush' ? 'brush' : tool === 'rainbow' ? 'rainbow' : 'pencil', base = kind === 'brush' ? size * 1.5 : size;
-    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null };
+    pencilS = { kind, base, nk: .6, pts: [], s: { x: p.x, y: p.y }, raw: p, scr: W / (c.getBoundingClientRect().width || W), rb: kind === 'rainbow' ? { h0: hue, rate: .6 } : null };
     const k0 = kind === 'brush' ? (widthLocked ? 1 : .6 * (p.pen ? .45 + p.p * 1.25 : 1)) : pencilK(p);
     pencilS.pts.push({ x: p.x, y: p.y, k: k0 }); pencilS.s.k = k0;
     if (kind === 'pencil') try { pencilSnd && pencilSnd.stop(); pencilSnd = pencilSound(); pencilSnd && pencilSnd.touch(); pencilT = performance.now(); pencilDir = null; } catch {}
@@ -3995,6 +4023,14 @@
   }
   function pencilMove(p){
     const st = pencilS, k = 0.26;
+    // Brush settings > Smoothing: the line follows the pen on an invisible string (longer string = smoother line), like StreamLine
+    if (brushSmooth > 0){
+      const R = brushSmooth * 42 * (st.scr || 1), lz = st.lz || (st.lz = { x: st.raw.x, y: st.raw.y });
+      const dx = p.x - lz.x, dy = p.y - lz.y, d = Math.hypot(dx, dy);
+      if (d <= R){ st.rawEnd = p; return; }
+      lz.x += dx * (d - R) / d; lz.y += dy * (d - R) / d; st.rawEnd = p;
+      p = Object.assign({}, p, { x: lz.x, y: lz.y });
+    }
     if (pencilSnd){
       const now = performance.now(), dt = Math.max(8, now - pencilT); pencilT = now;
       const dx = p.x - st.raw.x, dy = p.y - st.raw.y;
@@ -4010,7 +4046,7 @@
     // so the steadying and smoothing never shave a pixel or two off the end of the line
     { const dx = p.x - st.raw.x, dy = p.y - st.raw.y, d = Math.hypot(dx, dy);
       if (d > 1.2){
-        if (st.rd && (dx * st.rd.x + dy * st.rd.y) / d < -0.5){
+        if (brushSmooth < 0.05 && st.rd && (dx * st.rd.x + dy * st.rd.y) / d < -0.5){
           const t = { x: st.raw.x, y: st.raw.y, k: st.s.k || (st.pts[st.pts.length - 1] || {}).k || 1, c: 1 };
           const q0 = st.pts[st.pts.length - 1];
           if (q0 && Math.hypot(t.x - q0.x, t.y - q0.y) < .6) Object.assign(q0, { x: t.x, y: t.y, c: 1 }); else st.pts.push(t);
@@ -4028,6 +4064,12 @@
   }
   function pencilEnd(){
     const st = pencilS; pencilS = null;
+    if (st && st.rawEnd && st.lz){   // smoothing: the line glides the rest of the way to where the pen lifted
+      const e = st.rawEnd, d = Math.hypot(e.x - st.lz.x, e.y - st.lz.y), n = Math.ceil(d / 3);
+      for (let i = 1; i <= n; i++){ const q = Object.assign({}, e, { x: st.lz.x + (e.x - st.lz.x) * i / n, y: st.lz.y + (e.y - st.lz.y) * i / n });
+        const sp = { x: st.s.x + (q.x - st.s.x) * .26, y: st.s.y + (q.y - st.s.y) * .26 }; sp.k = st.kind === 'brush' ? brushK(st, sp, q) : pencilK(q); st.s = sp; st.raw = q;
+        const lq = st.pts[st.pts.length - 1]; if (Math.hypot(sp.x - lq.x, sp.y - lq.y) >= Math.max(2.5, size * 0.22)) st.pts.push(sp); }
+    }
     if (pencilSnd){ try { pencilSnd.stop(); } catch {} pencilSnd = null; }
     cancelAnimationFrame(pencilRaf); pencilRaf = 0;
     lctx.clearRect(0, 0, live.width, live.height);
