@@ -7403,7 +7403,7 @@
     phBox.hidden = phBar.hidden = false; phLoop();
   }, true);
   { // dragging: one finger moves (or resizes / turns from the knobs), two fingers pinch-resize and turn together
-    const ptrs = new Map(); let g0 = null, mode = '';
+    const ptrs = new Map(); let g0 = null, mode = '', tap0 = null;
     const toPage = e => { const r = c.getBoundingClientRect(), k = W / r.width; return { x: (e.clientX - r.left) * k, y: (e.clientY - r.top) * k }; };
     const snap = () => {
       const t = photoT, ps = [...ptrs.values()];
@@ -7414,10 +7414,13 @@
       if (!photoT) return; e.preventDefault(); e.stopPropagation();
       try { phBox.setPointerCapture(e.pointerId); } catch {}
       if (!ptrs.size) mode = e.target.closest('.ph-rot') ? 'rot' : e.target.closest('.ph-size') ? 'size' : 'move';
+      if (!ptrs.size) tap0 = { x: e.clientX, y: e.clientY, t: performance.now(), a: photoT.a, far: false };
       ptrs.set(e.pointerId, toPage(e)); snap(); phCan.style.opacity = '.5';
     });
     phBox.addEventListener('pointermove', e => {
       if (!photoT || !ptrs.has(e.pointerId) || !g0) return; e.preventDefault();
+      if (tap0 && Math.hypot(e.clientX - tap0.x, e.clientY - tap0.y) > 6) tap0.far = true;
+      if (mode === 'rot' && tap0 && !tap0.far) return;   // not turning until you actually drag the knob
       ptrs.set(e.pointerId, toPage(e));
       const t = photoT, ps = [...ptrs.values()], o = g0.t, ar = o.w / o.h;
       if (ps.length >= 2){
@@ -7432,7 +7435,10 @@
       }
       phLayout();
     });
-    const up = e => { if (ptrs.delete(e.pointerId)){ if (ptrs.size) snap(); else { g0 = null; phCan.style.opacity = ''; } } };
+    const up = e => { if (ptrs.delete(e.pointerId)){ if (ptrs.size) snap(); else {
+      // a quick tap on the orange knob: a quarter turn (hold and drag it to turn any amount)
+      if (mode === 'rot' && tap0 && !tap0.far && e.type === 'pointerup' && photoT){ const q = Math.PI / 2; photoT.a = Math.round((tap0.a + q) / q) * q; if (Math.abs(photoT.a) > Math.PI * 2 - .01) photoT.a = 0; phLayout(); }
+      g0 = null; tap0 = null; phCan.style.opacity = ''; } } };
     phBox.addEventListener('pointerup', up); phBox.addEventListener('pointercancel', up);
   }
   $('photoFile').onchange = async () => {
