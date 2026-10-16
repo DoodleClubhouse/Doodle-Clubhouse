@@ -3601,12 +3601,14 @@
   // If a touch grows into a palm mid-stroke, that stroke is taken back.
   const PALM_SIZE = 70, palmIds = new Set();
   const palmSize = e => Math.max(e.width || 0, e.height || 0);
+  // only once an Apple Pencil has been used: drawing with fingers (iPhone, or iPad without a Pencil) never gets cut off
+  const penUsed = () => lastPenAt > 0;
   board.addEventListener('pointerdown', e => {
-    if (e.pointerType !== 'touch') return;
+    if (e.pointerType !== 'touch' || !penUsed()) return;
     if (palmSize(e) > PALM_SIZE){ palmIds.add(e.pointerId); e.stopImmediatePropagation(); }
   }, true);
   board.addEventListener('pointermove', e => {
-    if (e.pointerType !== 'touch') return;
+    if (e.pointerType !== 'touch' || !penUsed()) return;
     if (!palmIds.has(e.pointerId) && palmSize(e) > PALM_SIZE){
       palmIds.add(e.pointerId); touches.delete(e.pointerId);
       if (drawing && activePointer === e.pointerId) cancelStroke();
